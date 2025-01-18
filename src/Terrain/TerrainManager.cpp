@@ -212,9 +212,9 @@ namespace Terrain {
 	}
 
 	void TerrainManager::draw() {
-		activate();
+		// activate();
 		ModelEntity::draw();
-		deactivate();
+		// deactivate();
 	}
 
 	std::shared_ptr<terrain_settings> TerrainManager::refSettings() {

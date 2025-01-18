@@ -4,7 +4,7 @@
 template <typename T>
 class Entity {
 public:
-	Entity() = default;
+	Entity();
 	Entity(T position);
 
 	void move(T change);
@@ -14,6 +14,9 @@ public:
 protected:
 	T m_position;
 };
+
+template <typename T>
+Entity<T>::Entity() : m_position(T()) {};
 
 template <typename T>
 Entity<T>::Entity(T position) : m_position(position) {};

@@ -1,7 +1,7 @@
 #include "DebugGui/TerrainDebugGui.h"
 
 namespace DebugGui {
-	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_guiManager(guiManager), m_noiseGui(name + " Noise", terrain) {}
+	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_settings(*m_terrain.refSettings()), m_guiManager(guiManager), m_noiseGui(name + " Noise", terrain) {}
 
 	bool TerrainDebugGui::render() {
 		ImGui::Begin(m_name.c_str(), &m_open);

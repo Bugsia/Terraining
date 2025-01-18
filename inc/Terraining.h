@@ -8,5 +8,7 @@
 #include "GuiManager.h"
 #include "DebugGui/TerrainDebugGui.h"
 #include "Terrain/TerrainManager.h"
+#include "rlImGui.h"
+#include "Character.h"
 
 // TODO: Reference additional headers your program requires here.
