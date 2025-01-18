@@ -1,0 +1,3 @@
+C:/Users/Felix/source/repos/Terraining/raylibBackend/build/CMakeFiles/raylibBackend.dir
+C:/Users/Felix/source/repos/Terraining/raylibBackend/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Felix/source/repos/Terraining/raylibBackend/build/CMakeFiles/ZERO_CHECK.dir

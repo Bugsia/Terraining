@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\src\Entity\Entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\src\Entity\MeshEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\src\Entity\ModelEntity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\src\Gui\Gui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\src\Gui\GuiManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\src\Noise.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\src\ShaderHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\Drawable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\Entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\Gui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\GuiManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\MeshEntity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\ModelEntity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\Noise.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\ShaderHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\inc\third_party\stb_perlin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Felix\source\repos\Terraining\raylibBackend\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{C0D28FC1-E420-361C-A2EF-E8F077E930B0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{17EAD3F3-AFB8-3EB1-A477-E832E4A7AFE6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

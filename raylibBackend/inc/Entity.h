@@ -1,0 +1,29 @@
+#pragma once
+#include <raylib.h>
+
+template <typename T>
+class Entity {
+public:
+	Entity() = default;
+	Entity(T position);
+
+	void move(T change);
+
+	T getPosition();
+
+protected:
+	T m_position;
+};
+
+template <typename T>
+Entity<T>::Entity(T position) : m_position(position) {};
+
+template <typename T>
+void Entity<T>::move(T change) {
+	m_position += change;
+}
+
+template <typename T>
+T Entity<T>::getPosition() {
+	return m_position;
+}
