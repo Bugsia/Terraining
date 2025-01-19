@@ -28,7 +28,8 @@ int main()
 	terrainManager.generateDefaultTerrain();
 	terrainManager.initializeModel();
 
-	Character<Vector3> character;
+	Character character;
+	DisableCursor();
 
 	while (!WindowShouldClose()) {
 		character.update();
@@ -43,6 +44,8 @@ int main()
 		terrainManager.draw();
 
 		EndMode3D();
+
+		DrawFPS(10.0f, 10.0f);
 
 		EndDrawing();
 	}

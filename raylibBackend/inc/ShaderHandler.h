@@ -13,4 +13,5 @@ public:
 
 private:
 	Shader m_shader;
+	bool shaderSet = false;
 };
