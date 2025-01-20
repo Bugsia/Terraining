@@ -61,7 +61,7 @@ void Character::handleInput() {
 		m_camera.position = Vector3Add(m_camera.position, change);
 		m_camera.target = Vector3Add(m_camera.target, change);
 	}
-	TraceLog(LOG_INFO, "Caemra position: %f %f %f", m_camera.position.x, m_camera.position.y, m_camera.position.z);
+	
 	// Mouse movement
 	Vector2 mouseDelta = GetMouseDelta();
 	if (mouseDelta.x != 0.0f && mouseDelta.y != 0.0f) {

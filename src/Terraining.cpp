@@ -28,11 +28,21 @@ int main()
 	terrainManager.generateDefaultTerrain();
 	terrainManager.initializeModel();
 
+	GuiManager guiManager = GuiManager(true);
+	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
+
 	Character character;
 	DisableCursor();
+	bool cursorActive = false;
 
 	while (!WindowShouldClose()) {
-		character.update();
+		if (IsKeyPressed(KEY_LEFT_ALT)) {
+			if (cursorActive) DisableCursor();
+			else EnableCursor();
+			cursorActive = !cursorActive;
+		}
+		
+		if(!cursorActive) character.update();
 
 		BeginDrawing();
 
@@ -46,6 +56,8 @@ int main()
 		EndMode3D();
 
 		DrawFPS(10.0f, 10.0f);
+
+		guiManager.draw();
 
 		EndDrawing();
 	}

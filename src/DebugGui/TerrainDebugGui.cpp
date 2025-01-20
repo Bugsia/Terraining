@@ -1,7 +1,7 @@
 #include "DebugGui/TerrainDebugGui.h"
 
 namespace DebugGui {
-	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_settings(*m_terrain.refSettings()), m_guiManager(guiManager), m_noiseGui(name + " Noise", terrain) {}
+	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_settings(*m_terrain.refSettings()), m_guiManager(guiManager) {}
 
 	bool TerrainDebugGui::render() {
 		ImGui::Begin(m_name.c_str(), &m_open);
@@ -14,10 +14,9 @@ namespace DebugGui {
 		if (ImGui::InputInt("#Width", &m_settings.numWidth)) m_complexChange = true;
 		if (ImGui::InputInt("#Height", &m_settings.numHeight)) m_complexChange = true;
 		if (ImGui::SliderFloat("Spacing", &m_settings.spacing, 0.1f, 10.0f)) m_complexChange = true;
-		if (ImGui::Button("Open Noise Settings") && !m_noiseGui.isOpen()) {
-			m_noiseGui.isOpen(true);
-			// std::unique_ptr<Gui> noiseGui = std::make_unique<NoiseDebugGui>(m_noiseGui);
-			// m_guiManager->addGui(std::move(noiseGui));
+		if (ImGui::Button("Open Noise Settings") && !m_openNoiseGui) {
+			m_openNoiseGui = true;
+			m_guiManager.addGui(std::make_unique<NoiseDebugGui>(NoiseDebugGui("" + m_name + " Noise", m_terrain)));
 		}
 
 		ImGui::SeparatorText("Drawing Settings");
