@@ -38,7 +38,7 @@ namespace Terrain {
 		std::shared_ptr<terrain_settings> settings; // The terrain settings
 		std::shared_ptr<Noise::noise_settings> noiseSettings; // The noise settings
 
-		bool modelUploaded = false; // True if the model has been uploaded to the GPU, false otherwise
+		std::shared_ptr<bool> modelUploaded = std::make_shared<bool>(false); // True if the model has been uploaded to the GPU, false otherwise
 		std::unordered_set<TerrainElement> elements; // The terrain elements
 
 		Model newModel();

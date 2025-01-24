@@ -32,8 +32,8 @@ int main()
 	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
 
 	Character character;
-	DisableCursor();
-	bool cursorActive = false;
+	character.setPosition(Vector3({ 100.0f, 50.0f, 100.0f }));
+	bool cursorActive = true;
 
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {

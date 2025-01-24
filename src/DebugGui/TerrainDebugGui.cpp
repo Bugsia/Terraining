@@ -1,7 +1,7 @@
 #include "DebugGui/TerrainDebugGui.h"
 
 namespace DebugGui {
-	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_settings(*m_terrain.refSettings()), m_guiManager(guiManager) {}
+	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_settings(*m_terrain.refSettings()), m_guiManager(guiManager), m_drawWired(m_terrain.getDrawWired()), m_drawNormals(m_terrain.getDrawNormals()), m_scale(m_terrain.getScale()), m_tint(m_terrain.getTint()) {}
 
 	bool TerrainDebugGui::render() {
 		ImGui::Begin(m_name.c_str(), &m_open);
@@ -19,11 +19,11 @@ namespace DebugGui {
 			m_guiManager.addGui(std::make_unique<NoiseDebugGui>(NoiseDebugGui("" + m_name + " Noise", m_terrain)));
 		}
 
-		ImGui::SeparatorText("Drawing Settings");
-		ImGui::Checkbox("Wireframe", &m_settings.drawWireframe);
-		ImGui::Checkbox("Normals", &m_settings.drawNormals);
-		ImGui::SliderFloat("Terrain Model Scale", &m_settings.scale, 0.1f, 10.0f);
-		ImGui::ColorEdit4("Tint", (float*)&m_settings.tint);
+		ImGui::SeparatorText("Drawing Settings (Instant)");
+		if (ImGui::Checkbox("Wireframe", &m_drawWired)) m_terrain.setDrawWired(m_drawWired);
+		if(ImGui::Checkbox("Normals", &m_drawNormals)) m_terrain.setDrawNormals(m_drawNormals);
+		if (ImGui::SliderFloat("Terrain Model Scale", &m_scale, 0.1f, 10.0f)) m_terrain.setScale(m_scale);
+		if (ImGui::ColorEdit4("Tint", (float*)&m_tint)) m_terrain.setTint(m_tint);
 
 		ImGui::SeparatorText("");
 		if (ImGui::Button("Apply")) {

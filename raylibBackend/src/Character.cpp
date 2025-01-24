@@ -61,7 +61,7 @@ void Character::handleInput() {
 		m_camera.position = Vector3Add(m_camera.position, change);
 		m_camera.target = Vector3Add(m_camera.target, change);
 	}
-	
+
 	// Mouse movement
 	Vector2 mouseDelta = GetMouseDelta();
 	if (mouseDelta.x != 0.0f && mouseDelta.y != 0.0f) {
@@ -78,6 +78,8 @@ Camera Character::getCamera() {
 }
 
 void Character::setPosition(Vector3 position) {
+	Vector3 deltaPosition = Vector3Subtract(position, m_camera.position);
+	m_camera.target = Vector3Add(m_camera.target, deltaPosition);
 	m_camera.position = position;
 	this->m_position = m_camera.position;
 }

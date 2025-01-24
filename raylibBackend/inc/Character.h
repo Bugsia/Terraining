@@ -18,7 +18,7 @@ private:
 	Camera m_camera;
 	int m_type;
 	float sensitivity = 0.03f;
-	float speed = 3.0f;
+	float speed = 10.0f;
 	float hAngle = 0.0f;
 	float vAngle = 0.0f;
 

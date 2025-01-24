@@ -20,5 +20,9 @@ namespace DebugGui {
 		bool m_openNoiseGui = false;
 		bool m_simpleChange = false;
 		bool m_complexChange = false;
+		bool m_drawWired;
+		bool m_drawNormals;
+		float m_scale;
+		Color m_tint;
 	};
 }

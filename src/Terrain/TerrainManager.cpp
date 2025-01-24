@@ -111,7 +111,7 @@ namespace Terrain {
 
 		TraceLog(LOG_DEBUG, "Terrain: Model has been initialized");
 
-		modelUploaded = true;
+		*modelUploaded = true;
 	}
 
 	void TerrainManager::initializeNoise() {
@@ -159,7 +159,7 @@ namespace Terrain {
 
 	void TerrainManager::renewTerrain() {
 		UnloadModel(m_model);
-		modelUploaded = false;
+		*modelUploaded = false;
 
 		for (std::unordered_set<TerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
 			TerrainElement& element = const_cast<TerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed

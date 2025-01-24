@@ -18,12 +18,6 @@ namespace Terrain {
 		int numWidth; // The number of verticies along the width of the terrain elements
 		int numHeight; // The number of verticies along the height of the terrain elements
 		float spacing; // The distance between each vertex
-
-		// Drawing
-		bool drawWireframe = true; // True if the terrain should be drawn as wireframe, false otherwise
-		bool drawNormals = false; // True if the normals of the terrain should be drawn, false otherwise (TODO: IMPLEMENT)
-		float scale = 1.0f; // Scale of the model when drawn
-		Color tint = BLACK; // Colortint of the model
 	};
 
 	struct PositionIdentifier {
@@ -55,7 +49,7 @@ namespace Terrain {
 		// GETTER AND SETTER
 		unsigned int getId() const;
 		Mesh& refMesh();
-		void setModelUploaded(bool modelUploaded);
+		void setModelUploaded(std::shared_ptr<bool> modelUploaded);
 
 		bool operator==(const TerrainElement& other) const {
 			return id == other.id;
@@ -71,7 +65,7 @@ namespace Terrain {
 		// Mesh
 		bool dynamicMesh = false; // True if the mesh is dynamic, false otherwise
 		bool meshUploaded = false; // True if the mesh has been uploaded to the GPU, false otherwise
-		bool modelUploaded; // The modelUploaded flag of the terrain (owner is Terrain struct)
+		std::shared_ptr<bool> modelUploaded; // The modelUploaded flag of the terrain (owner is Terrain struct)
 		std::vector<unsigned short> indices; // The indices of the terrain element (3 indices per triangle, referring to index in verticies array)
 		std::vector<float> texcoords; // The texcoords of the terrain element (2 floats per vertex)
 		std::vector<float> vertices; // The verticies of the terrain element (3 floats per vertex)

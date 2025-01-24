@@ -25,8 +25,8 @@ namespace DebugGui {
 		Texture2D m_sampleImage;
 		int m_selectedLayerIndex = 0;
 
-		void NoiseLayersList(Noise::noise_settings& settings, std::vector<Color*>& noiseLayers, Texture2D& sampleImage, int& selectedLayerIndex);
+		void NoiseLayersList();
 		static void loadSampleImage(Texture2D& sampleImage, std::vector<Color*>& noiseLayers, int index);
-		bool NoiseLayerSettings(Noise::noise_settings& settings, Texture2D& sampleImage, int& selectedLayerIndex);
+		bool NoiseLayerSettings();
 	};
 }

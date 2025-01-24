@@ -243,7 +243,7 @@ namespace Terrain {
 		return m_mesh;
 	}
 
-	void TerrainElement::setModelUploaded(bool modelUploaded) {
+	void TerrainElement::setModelUploaded(std::shared_ptr<bool> modelUploaded) {
 		this->modelUploaded = modelUploaded;
 	}
 }
