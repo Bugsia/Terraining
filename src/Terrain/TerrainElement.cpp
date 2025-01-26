@@ -11,9 +11,9 @@ namespace Terrain {
 		return { xPos, 0., zPos };
 	}
 
-	std::vector<float> TerrainElement::flatTerrainVertices() {
+	float* TerrainElement::flatTerrainVertices() {
 		int numVertices = settings->numWidth * settings->numHeight;
-		std::vector<float> vertices(numVertices * 3, 0);
+		float* vertices = (float*)RL_MALLOC(numVertices * 3 * sizeof(float));
 
 		int index = 0;
 		for (int x = 0; x < settings->numWidth; x++) {
@@ -26,12 +26,13 @@ namespace Terrain {
 			}
 		}
 
+		m_mesh.vertexCount = numVertices;
 		return vertices;
 	}
 
-	std::vector<float> TerrainElement::flatTerrainTexcoords() {
+	float* TerrainElement::flatTerrainTexcoords() {
 		int numTexcoords = settings->numWidth * settings->numHeight * 2;
-		std::vector<float> texcoords(numTexcoords, 0);
+		float* texcoords = (float*)RL_MALLOC(numTexcoords * sizeof(float));
 
 		int index = 0;
 		for (int x = 0; x < settings->numWidth; x++) {
@@ -46,9 +47,9 @@ namespace Terrain {
 		return texcoords;
 	}
 
-	std::vector<float> TerrainElement::flatTerrainNormals() {
+	float* TerrainElement::flatTerrainNormals() {
 		int numNormals = settings->numWidth * settings->numHeight;
-		std::vector<float> normals(numNormals * 3, 0);
+		float* normals = (float*)RL_MALLOC(numNormals * 3 * sizeof(float));
 
 		int index = 0;
 		for (int x = 0; x < settings->numWidth; x++) {
@@ -63,9 +64,9 @@ namespace Terrain {
 		return normals;
 	}
 
-	std::vector<unsigned short> TerrainElement::flatTerrainIndices() {
+	unsigned short* TerrainElement::flatTerrainIndices() {
 		int numIndices = (settings->numWidth * settings->numHeight) - settings->numHeight;
-		std::vector<unsigned short> indices(numIndices * 6, 0);
+		unsigned short* indices = (unsigned short*)RL_MALLOC(numIndices * 6 * sizeof(unsigned short));
 
 		int index = 0;
 		for (int i = 0; i < numIndices; i++) {
@@ -82,6 +83,7 @@ namespace Terrain {
 			index += 6;
 		}
 
+		m_mesh.triangleCount = numIndices * 2;
 		return indices;
 	}
 
@@ -93,13 +95,10 @@ namespace Terrain {
 	}
 
 	void TerrainElement::initialiseFlatMesh() {
-		vertices = flatTerrainVertices();
-		normals = flatTerrainNormals();
-		indices = flatTerrainIndices();
-		texcoords = flatTerrainTexcoords();
-
-		m_mesh.vertexCount = vertices.size() / 3;
-		m_mesh.triangleCount = indices.size() / 3;
+		m_mesh.vertices = flatTerrainVertices();
+		m_mesh.normals = flatTerrainNormals();
+		m_mesh.indices = flatTerrainIndices();
+		m_mesh.texcoords = flatTerrainTexcoords();
 	}
 
 	int TerrainElement::getIdFromPosId() {
@@ -133,8 +132,7 @@ namespace Terrain {
 	}
 
 	TerrainElement::TerrainElement(const TerrainElement& other) : MeshEntity(other), id(other.id), settings(other.settings), position(other.position), 
-			posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded), indices(other.indices),
-			texcoords(other.texcoords), vertices(other.vertices), normals(other.normals), noiseSettings(other.noiseSettings) {
+			posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded) {
 		noiseLayerPixels = std::vector<Color*>(other.noiseLayerPixels.size(), nullptr);
 		for (int i = 0; i < other.noiseLayerPixels.size(); i++) {
 			noiseLayerPixels[i] = (Color*)RL_MALLOC(sizeof(Color) * settings->numWidth * settings->numHeight);
@@ -203,10 +201,11 @@ namespace Terrain {
 	void TerrainElement::randomizeTerrain() {
 		TraceLog(LOG_DEBUG, "TerrainElement: Randomizing terrain of element %i", id);
 
-		for (int i = 0; i < vertices.size(); i += 3) {
+		int numVertices = m_mesh.vertexCount * 3;
+		for (int i = 0; i < numVertices; i += 3) {
 			int indexX = (i / 3 / settings->numHeight);
 			int indexZ = (i / 3 % settings->numHeight);
-			vertices[i + 1] = Noise::noiseHeight(noiseLayerPixels, noiseSettings->noiseLayerSettings, indexX, indexZ, settings->numWidth);
+			m_mesh.vertices[i + 1] = Noise::noiseHeight(noiseLayerPixels, noiseSettings->noiseLayerSettings, indexX, indexZ, settings->numWidth);
 		}
 	}
 
@@ -222,11 +221,6 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainElement: Updating mesh data of element %i", id);
 
 		bool meshUploaded = this->meshUploaded && modelUploaded;
-
-		copyVectorToMemory(m_mesh.vertices, vertices, meshUploaded);
-		copyVectorToMemory(m_mesh.normals, normals, meshUploaded);
-		copyVectorToMemory(m_mesh.indices, indices, meshUploaded);
-		copyVectorToMemory(m_mesh.texcoords, texcoords, meshUploaded);
 
 		if (!meshUploaded) return;
 
