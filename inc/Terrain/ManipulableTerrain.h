@@ -1,8 +1,43 @@
 #pragma once
 #include <raylib.h>
-#include "MeshEntity.h"
+#include "TerrainElement.h"
 
-class ManipulableTerrain : public MeshEntity<Vector3> {
-public:
-	virtual ~ManipulableTerrain();
-};
+namespace Terrain {
+	class ManipulableTerrain : public TerrainElement {
+	public:
+		enum ManipulateDir {
+			X,
+			Y,
+			Z,
+			NORMAL
+		};
+
+		enum ManipulateForm {
+			CIRCULAR,
+			SQUARE
+		};
+
+		enum ManipulateType {
+			RAISE,
+			LOWER
+		};
+
+		~ManipulableTerrain();
+		ManipulableTerrain(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
+		ManipulableTerrain(PositionIdentifier posId);
+		ManipulableTerrain(const TerrainElement& other);
+
+		void manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition);
+
+	private:
+		struct ValidIndices {
+			int startIndex;
+			int width;
+			int height;
+		};
+
+		ValidIndices getValidIndices(float radius, Vector3 position);
+		float manipulationStrength(ManipulateForm form, float radius, Vector2 center, Vector2 position);
+		void manipulateVertex(ManipulateDir dir, ManipulateType type, float strength, int index);
+	};
+}

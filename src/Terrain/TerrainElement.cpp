@@ -131,7 +131,7 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainElement: New search element %i has been created", id);
 	}
 
-	TerrainElement::TerrainElement(const TerrainElement& other) : ManipulableTerrain(other), id(other.id), settings(other.settings), position(other.position), 
+	TerrainElement::TerrainElement(const TerrainElement& other) : MeshEntity(other), id(other.id), settings(other.settings), position(other.position), 
 			posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded) {
 		noiseLayerPixels = std::vector<Color*>(other.noiseLayerPixels.size(), nullptr);
 		for (int i = 0; i < other.noiseLayerPixels.size(); i++) {
@@ -179,7 +179,7 @@ namespace Terrain {
 	void TerrainElement::Unload() {
 		TraceLog(LOG_DEBUG, "TerrainElement: Unloaded element %i", id);
 
-		if (meshUploaded || *modelUploaded) UnloadMesh(m_mesh); // BETTER WAY TO DECIDE WHEN TO UNLOAD. BEST WOULD BE IF UNLOAD MODEL IS CALLED MESH UPLOADED IS SET TO FALSE FOR EVERYONE
+		if (meshUploaded && *modelUploaded) UnloadMesh(m_mesh); // BETTER WAY TO DECIDE WHEN TO UNLOAD. BEST WOULD BE IF UNLOAD MODEL IS CALLED MESH UPLOADED IS SET TO FALSE FOR EVERYONE
 		UnloadLayers();
 
 		meshUploaded = false;

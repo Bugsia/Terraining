@@ -3,7 +3,7 @@
 #include <raymath.h>
 #include <memory>
 #include <vector>
-#include "ManipulableTerrain.h"
+#include "MeshEntity.h"
 #include "Noise.h"
 
 #define MAX_MESH_VBO 7
@@ -27,9 +27,9 @@ namespace Terrain {
 		int n = 1; // -1 if element is in top half, 1 if element is in bottom half of terrain
 	};
 
-	class TerrainElement : public ManipulableTerrain {
+	class TerrainElement : public MeshEntity<Vector3> {
 	public:
-		~TerrainElement();
+		virtual ~TerrainElement();
 		TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
 		TerrainElement(PositionIdentifier posId);
 		TerrainElement(const TerrainElement& other);
@@ -57,7 +57,7 @@ namespace Terrain {
 			return id == other.id;
 		}
 
-	private:
+	protected:
 		// General
 		unsigned int id = 0; // The unique identifier of the terrain element, which is based on its position
 		std::shared_ptr<terrain_settings> settings; // The settings of the terrain (owner is Terrain struct)

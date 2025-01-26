@@ -12,9 +12,9 @@ namespace Terrain {
 		return model;
 	}
 
-	void TerrainManager::generateNewTerrainElements() {
+	void TerrainManager::generateNewManipulableTerrains() {
 		int projectedNumElements = pow(settings->radius / (std::min(settings->numHeight, settings->numWidth) * settings->spacing) * 2, 2); // The approximate ammount of quadratic elements that would be in a rectange with a side length of the spawning circumfrence
-		elements = std::unordered_set<TerrainElement>(projectedNumElements);
+		elements = std::unordered_set<ManipulableTerrain>(projectedNumElements);
 
 		int counter = 0;
 		bool maxElementsReached = false;
@@ -38,11 +38,11 @@ namespace Terrain {
 		}
 	}
 
-	void TerrainManager::initialiseAndAddNewElement(std::unordered_set<TerrainElement>& newElements, const PositionIdentifier& posId) {
-		// Directly emplace a new TerrainElement into the container
+	void TerrainManager::initialiseAndAddNewElement(std::unordered_set<ManipulableTerrain>& newElements, const PositionIdentifier& posId) {
+		// Directly emplace a new ManipulableTerrain into the container
 		auto result = newElements.emplace(settings, posId);
 		if (result.second) { // Check if insertion was successful
-			TerrainElement& newElement = const_cast<TerrainElement&>(*result.first);
+			ManipulableTerrain& newElement = const_cast<ManipulableTerrain&>(*result.first);
 			newElement.setModelUploaded(modelUploaded);
 			newElement.initialiseMesh();
 			newElement.initialiseElementWithNoiseTerrain(noiseSettings);
@@ -51,7 +51,7 @@ namespace Terrain {
 			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
 		}
 
-		// TerrainElement newElement(settings, posId);
+		// ManipulableTerrain newElement(settings, posId);
 		// newElement.setModelUploaded(modelUploaded);
 		// newElement.initialiseMesh();
 		// newElement.initialiseElementWithNoiseTerrain(noiseSettings);
@@ -71,8 +71,8 @@ namespace Terrain {
 		m_model.meshes = (Mesh*)RL_CALLOC(m_model.meshCount, sizeof(Mesh));
 
 		int index = 0;
-		for (std::unordered_set<TerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
-			TerrainElement& element = const_cast<TerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+		for (std::unordered_set<ManipulableTerrain>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrain& element = const_cast<ManipulableTerrain&>(*it); // Const can be cast away since the hash relevant data is not changed
 			m_model.meshes[index] = element.refMesh();
 			index++;
 		}
@@ -93,8 +93,8 @@ namespace Terrain {
 	}
 
 	void TerrainManager::updateElementsNoise() {
-		for (std::unordered_set<TerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
-			TerrainElement& element = const_cast<TerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+		for (std::unordered_set<ManipulableTerrain>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrain& element = const_cast<ManipulableTerrain&>(*it); // Const can be cast away since the hash relevant data is not changed
 			element.UnloadLayers();
 			element.updateNoiseLayers();
 			element.randomizeTerrain();
@@ -112,7 +112,7 @@ namespace Terrain {
 	}
 
 	void TerrainManager::generateDefaultTerrain() {
-		generateNewTerrainElements();
+		generateNewManipulableTerrains();
 
 		TraceLog(LOG_DEBUG, "Terrain: Default terrain has been generated");
 	}
@@ -144,11 +144,11 @@ namespace Terrain {
 	void TerrainManager::updateTerrain(float oldSpawnRadius) {
 		// Check for maxNumElements
 		if (elements.size() > settings->maxNumElements) {
-			std::unordered_set<TerrainElement>::iterator start = std::next(elements.begin(), settings->maxNumElements);
+			std::unordered_set<ManipulableTerrain>::iterator start = std::next(elements.begin(), settings->maxNumElements);
 		
 			// Free memory used by the elements and delete from the set
-			for (std::unordered_set<TerrainElement>::iterator it = start; it != elements.end();) {
-				TerrainElement& element = const_cast<TerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+			for (std::unordered_set<ManipulableTerrain>::iterator it = start; it != elements.end();) {
+				ManipulableTerrain& element = const_cast<ManipulableTerrain&>(*it); // Const can be cast away since the hash relevant data is not changed
 				element.Unload();
 				it = elements.erase(it);
 			}
@@ -170,12 +170,12 @@ namespace Terrain {
 		UnloadModel(m_model);
 		*modelUploaded = false;
 
-		for (std::unordered_set<TerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
-			TerrainElement& element = const_cast<TerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+		for (std::unordered_set<ManipulableTerrain>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrain& element = const_cast<ManipulableTerrain&>(*it); // Const can be cast away since the hash relevant data is not changed
 			element.UnloadLayers();
 		}
 
-		generateNewTerrainElements();
+		generateNewManipulableTerrains();
 		initializeModel();
 
 		TraceLog(LOG_DEBUG, "Terrain: Terrain has been renewed");
@@ -185,7 +185,7 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "Terrain: Relocating elements of terrain");
 
 		elements.clear();
-		std::unordered_set<TerrainElement> newElements;
+		std::unordered_set<ManipulableTerrain> newElements;
 
 		bool maxElementsReached = false;
 		for (int x = 0; x < round(settings->radius / ((settings->numWidth - 1) * settings->spacing)); x++) {
@@ -201,7 +201,7 @@ namespace Terrain {
 						// DOESNT WORK FOR SOME REASONS. LEAVES HOLES IN THE TERRAIN
 						// Check if there is already a terrain in this position
 						// if (elements.size() != 0) {
-						// 	TerrainElement element({ x, i, z, n });
+						// 	ManipulableTerrain element({ x, i, z, n });
 						// 	auto elementIt = elements.find(element);
 						// 
 						// 	if (elementIt != elements.end()) {
