@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include "MeshEntity.h"
 
-class ManipulableTerrain : MeshEntity<Vector3> {
-
+class ManipulableTerrain : public MeshEntity<Vector3> {
+public:
+	virtual ~ManipulableTerrain();
 };

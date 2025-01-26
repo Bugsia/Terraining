@@ -16,6 +16,7 @@ namespace Terrain {
 		int projectedNumElements = pow(settings->radius / (std::min(settings->numHeight, settings->numWidth) * settings->spacing) * 2, 2); // The approximate ammount of quadratic elements that would be in a rectange with a side length of the spawning circumfrence
 		elements = std::unordered_set<TerrainElement>(projectedNumElements);
 
+		int counter = 0;
 		bool maxElementsReached = false;
 		for (int x = 0; x < round(settings->radius / ((settings->numWidth - 1) * settings->spacing)); x++) {
 			for (int z = 0; z < round(getSpawnHeightAtXPos(x * ((settings->numWidth - 1) * settings->spacing), settings->radius) / ((settings->numHeight - 1) * settings->spacing)); z++) {
@@ -26,6 +27,7 @@ namespace Terrain {
 							maxElementsReached = true;
 							break;
 						}
+
 						initialiseAndAddNewElement(elements, { x, i, z, n });
 					}
 					if (maxElementsReached) break;
@@ -37,15 +39,27 @@ namespace Terrain {
 	}
 
 	void TerrainManager::initialiseAndAddNewElement(std::unordered_set<TerrainElement>& newElements, const PositionIdentifier& posId) {
-		TerrainElement newElement(settings, posId);
-		newElement.setModelUploaded(modelUploaded);
-		newElement.initialiseMesh();
-		newElement.initialiseElementWithNoiseTerrain(noiseSettings);
-		newElement.Upload();
+		// Directly emplace a new TerrainElement into the container
+		auto result = newElements.emplace(settings, posId);
+		if (result.second) { // Check if insertion was successful
+			TerrainElement& newElement = const_cast<TerrainElement&>(*result.first);
+			newElement.setModelUploaded(modelUploaded);
+			newElement.initialiseMesh();
+			newElement.initialiseElementWithNoiseTerrain(noiseSettings);
+			newElement.Upload();
 
-		TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
+			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
+		}
 
-		newElements.insert(newElement);
+		// TerrainElement newElement(settings, posId);
+		// newElement.setModelUploaded(modelUploaded);
+		// newElement.initialiseMesh();
+		// newElement.initialiseElementWithNoiseTerrain(noiseSettings);
+		// newElement.Upload();
+		// 
+		// TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
+		// 
+		// newElements.emplace(std::move(newElement));
 	}
 
 	float TerrainManager::getSpawnHeightAtXPos(const float x, const float spawnRadius) {
@@ -131,21 +145,21 @@ namespace Terrain {
 		// Check for maxNumElements
 		if (elements.size() > settings->maxNumElements) {
 			std::unordered_set<TerrainElement>::iterator start = std::next(elements.begin(), settings->maxNumElements);
-
+		
 			// Free memory used by the elements and delete from the set
 			for (std::unordered_set<TerrainElement>::iterator it = start; it != elements.end();) {
 				TerrainElement& element = const_cast<TerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
 				element.Unload();
 				it = elements.erase(it);
 			}
-
+		
 			updateModel();
 		}
-
+		
 		// Check for radius and maxNumElements increase (for example when circle has been cutoff, so increase elements if that happened)
 		if (elements.size() < settings->maxNumElements || settings->radius != oldSpawnRadius) {
 			relocateElements();
-
+		
 			updateModel();
 		}
 
@@ -170,6 +184,7 @@ namespace Terrain {
 	void TerrainManager::relocateElements() {
 		TraceLog(LOG_DEBUG, "Terrain: Relocating elements of terrain");
 
+		elements.clear();
 		std::unordered_set<TerrainElement> newElements;
 
 		bool maxElementsReached = false;
@@ -183,6 +198,7 @@ namespace Terrain {
 							break;
 						}
 
+						// DOESNT WORK FOR SOME REASONS. LEAVES HOLES IN THE TERRAIN
 						// Check if there is already a terrain in this position
 						// if (elements.size() != 0) {
 						// 	TerrainElement element({ x, i, z, n });
