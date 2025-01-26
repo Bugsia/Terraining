@@ -68,20 +68,16 @@ namespace Terrain {
 		bool dynamicMesh = false; // True if the mesh is dynamic, false otherwise
 		bool meshUploaded = false; // True if the mesh has been uploaded to the GPU, false otherwise
 		std::shared_ptr<bool> modelUploaded; // The modelUploaded flag of the terrain (owner is Terrain struct)
-		std::vector<unsigned short> indices; // The indices of the terrain element (3 indices per triangle, referring to index in verticies array)
-		std::vector<float> texcoords; // The texcoords of the terrain element (2 floats per vertex)
-		std::vector<float> vertices; // The verticies of the terrain element (3 floats per vertex)
-		std::vector<float> normals; // The normals of the terrain element (3 floats per normal, 1 normal per vertex)
 
 		// Noise
 		std::shared_ptr<Noise::noise_settings> noiseSettings; // The noise settings of the terrain
 		std::vector<Color*> noiseLayerPixels; // The pixels of the different noise layers
 
 		Vector3 getPositionFromPosId();
-		std::vector<float> flatTerrainVertices();
-		std::vector<float> flatTerrainTexcoords();
-		std::vector<float> flatTerrainNormals();
-		std::vector<unsigned short> flatTerrainIndices();
+		float* flatTerrainVertices();
+		float* flatTerrainTexcoords();
+		float* flatTerrainNormals();
+		unsigned short* flatTerrainIndices();
 		template<typename T>
 		void copyVectorToMemory(T*& dst, std::vector<T> src, bool uploaded);
 		void initialiseFlatMesh();
