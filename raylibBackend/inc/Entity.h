@@ -9,7 +9,7 @@ public:
 
 	void move(T change);
 
-	T getPosition();
+	T getPosition() const;
 
 protected:
 	T m_position;
@@ -27,6 +27,6 @@ void Entity<T>::move(T change) {
 }
 
 template <typename T>
-T Entity<T>::getPosition() {
+T Entity<T>::getPosition() const {
 	return m_position;
 }

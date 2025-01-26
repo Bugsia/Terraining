@@ -10,6 +10,7 @@ public:
 	Character(Vector3 position, Vector3 target, Vector3 up, float fovy, CameraProjection projection, int type);
 
 	void update();
+	void move(Vector3 change);
 
 	void setPosition(Vector3 position);
 	Camera getCamera();

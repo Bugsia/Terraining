@@ -29,8 +29,10 @@ namespace Terrain {
 
 	class TerrainElement : public MeshEntity<Vector3> {
 	public:
+		~TerrainElement();
 		TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
 		TerrainElement(PositionIdentifier posId);
+		TerrainElement(const TerrainElement& other);
 
 		int getIdFromPosId();
 		void initialiseMesh();

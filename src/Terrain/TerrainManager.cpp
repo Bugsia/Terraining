@@ -141,14 +141,9 @@ namespace Terrain {
 
 			updateModel();
 		}
-		else if (elements.size() < settings->maxNumElements) { // In case that maxNumElements was increased, cause circle has been cutoff before, reload it
-			relocateElements();
 
-			updateModel();
-		}
-
-		// Check for radius
-		if (settings->radius != oldSpawnRadius) {
+		// Check for radius and maxNumElements increase (for example when circle has been cutoff, so increase elements if that happened)
+		if (elements.size() < settings->maxNumElements || settings->radius != oldSpawnRadius) {
 			relocateElements();
 
 			updateModel();
@@ -189,16 +184,18 @@ namespace Terrain {
 						}
 
 						// Check if there is already a terrain in this position
-						TerrainElement element({ x, i, z, n });
-						auto elementIt = elements.find(element);
+						// if (elements.size() != 0) {
+						// 	TerrainElement element({ x, i, z, n });
+						// 	auto elementIt = elements.find(element);
+						// 
+						// 	if (elementIt != elements.end()) {
+						// 		newElements.insert((*elementIt));
+						// 		elements.erase(elementIt);
+						// 		continue;
+						// 	}
+						// }
 
-						if (elementIt != elements.end()) {
-							newElements.insert((*elementIt));
-							elements.erase(elementIt);
-							continue;
-						}
-
-						// There is now terrain there, make new one
+						// There is no terrain there, make new one
 						initialiseAndAddNewElement(newElements, { x, i, z, n });
 					}
 					if (maxElementsReached) break;
@@ -208,7 +205,8 @@ namespace Terrain {
 			if (maxElementsReached) break;
 		}
 
-		elements = newElements;
+		// Set new elements
+		elements = std::move(newElements);
 	}
 
 	void TerrainManager::draw() {

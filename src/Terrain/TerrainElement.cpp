@@ -117,6 +117,10 @@ namespace Terrain {
 		return (((absXIndex + absZIndex) * (absXIndex + absZIndex + 1)) / 2) + absZIndex;
 	}
 
+	TerrainElement::~TerrainElement() {
+		Unload();
+	}
+
 	TerrainElement::TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : settings(settings), posId(posId), meshUploaded(false) {
 		id = getIdFromPosId();
 		position = getPositionFromPosId();
@@ -126,6 +130,16 @@ namespace Terrain {
 
 	TerrainElement::TerrainElement(PositionIdentifier posId) : posId(posId), id(getIdFromPosId()) {
 		TraceLog(LOG_DEBUG, "TerrainElement: New search element %i has been created", id);
+	}
+
+	TerrainElement::TerrainElement(const TerrainElement& other) : MeshEntity(other), id(other.id), settings(other.settings), position(other.position), 
+			posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded), indices(other.indices),
+			texcoords(other.texcoords), vertices(other.vertices), normals(other.normals), noiseSettings(other.noiseSettings) {
+		noiseLayerPixels = std::vector<Color*>(other.noiseLayerPixels.size(), nullptr);
+		for (int i = 0; i < other.noiseLayerPixels.size(); i++) {
+			noiseLayerPixels[i] = (Color*)RL_MALLOC(sizeof(Color) * settings->numWidth * settings->numHeight);
+			memcpy(noiseLayerPixels[i], other.noiseLayerPixels[i], sizeof(Color) * settings->numWidth * settings->numHeight);
+		}
 	}
 
 	void TerrainElement::initialiseMesh() {
@@ -167,7 +181,7 @@ namespace Terrain {
 	void TerrainElement::Unload() {
 		TraceLog(LOG_DEBUG, "TerrainElement: Unloaded element %i", id);
 
-		if (meshUploaded || modelUploaded) UnloadMesh(m_mesh);
+		if (meshUploaded && *modelUploaded) UnloadMesh(m_mesh);
 		UnloadLayers();
 
 		meshUploaded = false;
@@ -176,7 +190,6 @@ namespace Terrain {
 	void TerrainElement::UnloadLayers() {
 		TraceLog(LOG_DEBUG, "TerrainElement: Unloaded layers of element %i", id);
 
-		// for (Color* color : element.noiseLayerPixels) if(color) RL_FREE(color);
 		for (std::vector<Color*>::iterator it = noiseLayerPixels.begin(); it != noiseLayerPixels.end();) {
 			if ((*it)) RL_FREE((*it));
 			it = noiseLayerPixels.erase(it);
