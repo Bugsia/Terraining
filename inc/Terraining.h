@@ -6,6 +6,7 @@
 #include <iostream>
 #include <raylib.h>
 #include "GuiManager.h"
+#include "DebugGui/ManipulableTerrainDebugGui.h"
 #include "DebugGui/TerrainDebugGui.h"
 #include "Terrain/TerrainManager.h"
 #include "rlImGui.h"

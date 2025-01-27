@@ -238,4 +238,36 @@ namespace Terrain {
 	std::shared_ptr<Noise::noise_settings> TerrainManager::refNoiseSettings() {
 		return noiseSettings;
 	}
+
+	BoundingBox TerrainManager::getBoundingBox() {
+		return GetModelBoundingBox(m_model);
+	}
+
+	RayCollision TerrainManager::getRayCollisionWithTerrain(Ray ray) {
+		RayCollision hit = { 0 };
+
+		for (std::unordered_set<ManipulableTerrain>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrain& element = const_cast<ManipulableTerrain&>(*it); // Const can be cast away since the hash relevant data is not changed
+			RayCollision boundingBoxHit = GetRayCollisionBox(ray, element.getBoundingBox());
+			if (boundingBoxHit.hit) {
+				RayCollision elementHit = GetRayCollisionMesh(ray, element.refMesh(), m_model.transform);
+				if (elementHit.hit) {
+					hit = elementHit;
+					break;
+				}
+			}
+		}
+
+		return hit;
+	}
+
+	RayCollision TerrainManager::getRayCollisionWithTerrain(Ray ray, RayCollision boundingBoxHit) {
+		if (!boundingBoxHit.hit) return getRayCollisionWithTerrain(ray);
+		RayCollision hit = { 0 };
+
+		// Look from bounding box hit outwards
+		// TODO: Implement
+
+		return getRayCollisionWithTerrain(ray);
+	}
 }

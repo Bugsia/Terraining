@@ -24,6 +24,21 @@ namespace Terrain {
 	}
 
 	ManipulableTerrain::ValidIndices ManipulableTerrain::getValidIndices(float radius, Vector3 position) {
+		float width = radius * 2;
+		float height = radius * 2;
+		
+		// move position to be inside of the terrain element
+		if (position.x < 0.0f) {
+			width += position.x;
+			position.x = 0.0f;
+		}
+		else if (position.x > settings->numWidth * settings->spacing) return { 0, 0, 0 };
+		if (position.z < 0.0f) {
+			height += position.z;
+			position.z = 0.0f;
+		}
+		else if (position.z > settings->numHeight * settings->spacing) return { 0, 0, 0 };
+		
 		// round position down to the nearest multiple of spacing
 		float x = static_cast<int>(position.x / settings->spacing) * settings->spacing;
 		float z = static_cast<int>(position.z / settings->spacing) * settings->spacing;
@@ -31,7 +46,7 @@ namespace Terrain {
 		// calculate start index of position
 		int startIndex = (x / settings->spacing) * settings->numHeight + (z / settings->spacing);
 
-		return { startIndex, static_cast<int>(radius / settings->spacing) * 2, static_cast<int>(radius / settings->spacing) * 2 };
+		return { startIndex, static_cast<int>(width / settings->spacing), static_cast<int>(height / settings->spacing) };
 	}
 
 	float ManipulableTerrain::manipulationStrength(ManipulateForm form, float radius, Vector2 center, Vector2 position) {

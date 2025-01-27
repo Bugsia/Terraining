@@ -78,7 +78,7 @@ void Character::move(Vector3 change) {
 	m_camera.target = Vector3Add(m_camera.target, change);
 }
 
-Camera Character::getCamera() {
+Camera& Character::getCamera() {
 	return m_camera;
 }
 

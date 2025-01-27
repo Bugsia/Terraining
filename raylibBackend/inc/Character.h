@@ -13,7 +13,7 @@ public:
 	void move(Vector3 change);
 
 	void setPosition(Vector3 position);
-	Camera getCamera();
+	Camera& getCamera();
 
 private:
 	Camera m_camera;

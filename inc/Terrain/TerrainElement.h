@@ -52,6 +52,7 @@ namespace Terrain {
 		unsigned int getId() const;
 		Mesh& refMesh();
 		void setModelUploaded(std::shared_ptr<bool> modelUploaded);
+		BoundingBox getBoundingBox();
 
 		bool operator==(const TerrainElement& other) const {
 			return id == other.id;

@@ -253,4 +253,8 @@ namespace Terrain {
 	void TerrainElement::setModelUploaded(std::shared_ptr<bool> modelUploaded) {
 		this->modelUploaded = modelUploaded;
 	}
+
+	BoundingBox TerrainElement::getBoundingBox() {
+		return GetMeshBoundingBox(m_mesh);
+	}
 }

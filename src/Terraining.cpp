@@ -11,8 +11,8 @@
 #define WINDOW_FLAGS { FLAG_WINDOW_RESIZABLE}
 
 // Terrain constants
-#define TERRAIN_RADIUS 50.0f
-#define TERRAIN_MAX_NUM_ELEMENTS 500
+#define TERRAIN_RADIUS 350.0f
+#define TERRAIN_MAX_NUM_ELEMENTS 20000
 #define TERRAIN_NUM_HEIGHT 20
 #define TERRAIN_NUM_WIDTH 20
 #define TERRAIN_SPACING 1.f
@@ -28,12 +28,13 @@ int main()
 	terrainManager.generateDefaultTerrain();
 	terrainManager.initializeModel();
 
-	GuiManager guiManager = GuiManager(true);
-	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
-
 	Character character;
 	character.setPosition(Vector3({ 100.0f, 50.0f, 100.0f }));
 	bool cursorActive = true;
+
+	GuiManager guiManager = GuiManager(true);
+	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
+	guiManager.addGui(std::make_unique<DebugGui::ManipulableTerrainDebugGui>("Manipulable Terrain", terrainManager, character.getCamera()));
 
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {
