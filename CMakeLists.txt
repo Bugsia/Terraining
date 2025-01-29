@@ -13,7 +13,7 @@ project ("Terraining")
 
 # Add include folder
 include_directories(${CMAKE_SOURCE_DIR}/inc)
-include_directories(${CMAKE_SOURCE_DIR}/raylib-5.5/include)
+include_directories(${CMAKE_SOURCE_DIR}/raylib-master/build/raylib/include)
 include_directories(${CMAKE_SOURCE_DIR}/rlImGui/inc)
 include_directories(${CMAKE_SOURCE_DIR}/imgui/inc)
 include_directories(${CMAKE_SOURCE_DIR}/raylibBackend/inc)
