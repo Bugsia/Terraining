@@ -65,11 +65,12 @@ namespace Terrain {
 	}
 
 	unsigned short* TerrainElement::flatTerrainIndices() {
-		int numIndices = (settings->numWidth * settings->numHeight) - settings->numHeight;
-		unsigned short* indices = (unsigned short*)RL_MALLOC(numIndices * 6 * sizeof(unsigned short));
+		int numIndices = (settings->numWidth - 1) * (settings->numHeight - 1) * 6;
+		unsigned short* indices = (unsigned short*)RL_MALLOC(numIndices * sizeof(unsigned short));
 
 		int index = 0;
-		for (int i = 0; i < numIndices; i++) {
+		int loopIterations = (numIndices / 6) + (settings->numWidth - 1);
+		for (int i = 0; i < loopIterations; i++) {
 			if ((i + 1) % settings->numHeight == 0) continue;
 
 			indices[index] = i;
@@ -83,8 +84,29 @@ namespace Terrain {
 			index += 6;
 		}
 
-		m_mesh.triangleCount = numIndices * 2;
+		m_mesh.triangleCount = numIndices / 3;
 		return indices;
+
+		// int numIndices = (settings->numWidth * settings->numHeight) - settings->numHeight;
+		// unsigned short* indices = (unsigned short*)RL_MALLOC(numIndices * 6 * sizeof(unsigned short));
+		// 
+		// int index = 0;
+		// for (int i = 0; i < numIndices; i++) {
+		// 	if ((i + 1) % settings->numHeight == 0) continue;
+		// 
+		// 	indices[index] = i;
+		// 	indices[index + 1] = i + 1;
+		// 	indices[index + 2] = i + settings->numHeight;
+		// 
+		// 	indices[index + 3] = i + 1;
+		// 	indices[index + 4] = i + settings->numHeight + 1;
+		// 	indices[index + 5] = i + settings->numHeight;
+		// 
+		// 	index += 6;
+		// }
+		// 
+		// m_mesh.triangleCount = numIndices * 2;
+		// return indices;
 	}
 
 	template <typename T>
