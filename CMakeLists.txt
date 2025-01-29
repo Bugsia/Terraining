@@ -11,6 +11,8 @@ endif()
 
 project ("Terraining")
 
+add_subdirectory(raylib-master)
+
 # Add include folder
 include_directories(${CMAKE_SOURCE_DIR}/inc)
 include_directories(${CMAKE_SOURCE_DIR}/raylib-master/build/raylib/include)
