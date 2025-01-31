@@ -18,9 +18,9 @@ namespace Terrain {
 		int index = 0;
 		for (int x = 0; x < settings->numWidth; x++) {
 			for (int z = 0; z < settings->numHeight; z++) {
-				vertices[index] = static_cast<float>(x * settings->spacing) + position.x;
-				vertices[index + 1] = position.y;
-				vertices[index + 2] = static_cast<float>(z * settings->spacing) + position.z;
+				vertices[index] = static_cast<float>(x * settings->spacing) + m_position.x;
+				vertices[index + 1] = m_position.y;
+				vertices[index + 2] = static_cast<float>(z * settings->spacing) + m_position.z;
 
 				index += 3;
 			}
@@ -123,7 +123,7 @@ namespace Terrain {
 
 	TerrainElement::TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : settings(settings), posId(posId), meshUploaded(false) {
 		id = getIdFromPosId();
-		position = getPositionFromPosId();
+		m_position = getPositionFromPosId();
 
 		TraceLog(LOG_DEBUG, "TerrainElement: New element %i has been created", id);
 	}
@@ -132,8 +132,7 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainElement: New search element %i has been created", id);
 	}
 
-	TerrainElement::TerrainElement(const TerrainElement& other) : MeshEntity(other), id(other.id), settings(other.settings), position(other.position), 
-			posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded) {
+	TerrainElement::TerrainElement(const TerrainElement& other) : MeshEntity(other), id(other.id), settings(other.settings), posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded) {
 		noiseLayerPixels = std::vector<Color*>(other.noiseLayerPixels.size(), nullptr);
 		for (int i = 0; i < other.noiseLayerPixels.size(); i++) {
 			noiseLayerPixels[i] = (Color*)RL_MALLOC(sizeof(Color) * settings->numWidth * settings->numHeight);
@@ -197,7 +196,7 @@ namespace Terrain {
 	}
 
 	void TerrainElement::updateNoiseLayers() {
-		noiseLayerPixels = Noise::generateNoiseLayers(noiseSettings, position, settings->numWidth, settings->numHeight, settings->spacing, noiseSettings->seed);
+		noiseLayerPixels = Noise::generateNoiseLayers(noiseSettings, m_position, settings->numWidth, settings->numHeight, settings->spacing, noiseSettings->seed);
 	}
 
 	void TerrainElement::randomizeTerrain() {
@@ -212,7 +211,7 @@ namespace Terrain {
 	}
 
 	void TerrainElement::updatePosition() {
-		position = getPositionFromPosId();
+		m_position = getPositionFromPosId();
 	}
 
 	void TerrainElement::updateNormals() {

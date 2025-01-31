@@ -227,6 +227,14 @@ namespace Terrain {
 		elements = std::move(newElements);
 	}
 
+	void TerrainManager::manipulateTerrain(ManipulableTerrain::ManipulateDir dir, ManipulableTerrain::ManipulateForm form, ManipulableTerrain::ManipulateType type, float strength, float radius, Vector3 position) {
+		// TODO: Make it so that not all elements are manipulated, but only the ones that are in the radius of the manipulation
+		for (std::unordered_set<ManipulableTerrain>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrain& element = const_cast<ManipulableTerrain&>(*it); // Const can be cast away since the hash relevant data is not changed
+			element.manipulateTerrain(dir, form, type, strength, radius, Vector3Subtract(position, element.getPosition()));
+		}
+	}
+
 	void TerrainManager::draw() {
 		// activate();
 		ModelEntity::draw();

@@ -28,6 +28,7 @@ namespace Terrain {
 		void renewTerrain();
 		void relocateElements();
 		void updateTerrainNoise();
+		void manipulateTerrain(ManipulableTerrain::ManipulateDir dir, ManipulableTerrain::ManipulateForm form, ManipulableTerrain::ManipulateType type, float strength, float radius, Vector3 position);
 		void draw();
 
 		// GETTER AND SETTER
@@ -36,7 +37,7 @@ namespace Terrain {
 		RayCollision getRayCollisionWithTerrain(Ray ray);
 		RayCollision getRayCollisionWithTerrain(Ray ray, RayCollision boundingBoxHit);
 
-	private:
+	protected:
 		std::shared_ptr<terrain_settings> settings; // The terrain settings
 		std::shared_ptr<Noise::noise_settings> noiseSettings; // The noise settings
 

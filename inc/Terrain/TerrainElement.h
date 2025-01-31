@@ -61,7 +61,7 @@ namespace Terrain {
 		// General
 		unsigned int id = 0; // The unique identifier of the terrain element, which is based on its position
 		std::shared_ptr<terrain_settings> settings; // The settings of the terrain (owner is Terrain struct)
-		Vector3 position = { 0, 0, 0 }; // The position of the bottom left corner (local x and y = 0) of the terrain Element
+		// Vector3 m_position = { 0, 0, 0 }; // The position of the bottom left corner (local x and y = 0) of the terrain Element
 		PositionIdentifier posId; // Used to store information about the position of a element in the terrain
 
 		// Mesh

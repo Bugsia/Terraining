@@ -11,38 +11,49 @@ namespace Terrain {
 
 	void ManipulableTerrain::manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition) {
 		ValidIndices indices = getValidIndices(radius, relativePosition);
+		if (indices.startIndex == -1) return;
 
-		// ?? Maybe simplify math(ideally making it faster) by not going through Vector2 but instead directly going of indexX and indexZ
-		int index = indices.startIndex;
-		for (int x = 0; x < indices.width; x++, index += settings->numHeight - indices.height) {
-			for (int z = 0; z < indices.height; z++, index++) {
-				if (index < 0 || index >= settings->numWidth * settings->numHeight) continue; // TODO: Improve error handling. Ideally in such a way that getValidIndices only give the onces on this terain
-				float strengthFactor = manipulationStrength(form, radius, { relativePosition.x, relativePosition.z }, { x * settings->spacing, z * settings->spacing });
+		// TraceLog(LOG_INFO, "start index: %i, width: %i, height: %i", indices.startIndex, indices.width, indices.height);
+		Vector2 vertexPos = { m_mesh.vertices[indices.startIndex * 3] - m_position.x, m_mesh.vertices[indices.startIndex * 3 + 2] - m_position.z };
+		int index = indices.startIndex * 3;
+		for (int x = 0; x < indices.width; x++, index += (settings->numHeight - indices.height) * 3, vertexPos.x += settings->spacing, vertexPos.y = m_mesh.vertices[indices.startIndex * 3 + 2] - m_position.z) {
+			for (int z = 0; z < indices.height; z++, index += 3, vertexPos.y += settings->spacing) {
+				float strengthFactor = manipulationStrength(form, radius, { relativePosition.x, relativePosition.z }, vertexPos);
 				manipulateVertex(dir, type, strength * strengthFactor, index);
 			}
 		}
+
+		reloadMeshData();
 	}
 
 	ManipulableTerrain::ValidIndices ManipulableTerrain::getValidIndices(float radius, Vector3 position) {
+		// round position down to the nearest multiple of spacing
+		float x = static_cast<int>((position.x - radius) / settings->spacing) * settings->spacing;
+		float z = static_cast<int>((position.z - radius) / settings->spacing) * settings->spacing;
+
 		float width = radius * 2;
 		float height = radius * 2;
 		
 		// move position to be inside of the terrain element
-		if (position.x < 0.0f) {
-			width += position.x;
-			position.x = 0.0f;
-		}
-		else if (position.x > settings->numWidth * settings->spacing) return { 0, 0, 0 };
-		if (position.z < 0.0f) {
-			height += position.z;
-			position.z = 0.0f;
-		}
-		else if (position.z > settings->numHeight * settings->spacing) return { 0, 0, 0 };
-		
-		// round position down to the nearest multiple of spacing
-		float x = static_cast<int>(position.x / settings->spacing) * settings->spacing;
-		float z = static_cast<int>(position.z / settings->spacing) * settings->spacing;
+		// check if whole area is outside of the terrain element
+		if (x + width < 0.0f) return { -1, 0, 0 };
+		else if (x > settings->numWidth * settings->spacing) return { -1, 0, 0 };
+		if (z + height < 0.0f) return { -1, 0, 0 };
+		else if (z > settings->numHeight * settings->spacing) return { -1, 0, 0 };
 
+		// check and fix partial areas being outside
+		if (x < 0.0f) {
+			width += x;
+			x = 0.0f;
+		}
+		else if (x + width > settings->numWidth * settings->spacing) width = settings->numWidth * settings->spacing - x;
+		if (z < 0.0f) {
+			height += z;
+			z = 0.0f;
+		}
+		else if (z + height > settings->numHeight * settings->spacing) height = settings->numHeight * settings->spacing - z;
+
+		TraceLog(LOG_INFO, "X: %f, Z: %f, Width: %f, Height: %f", x, z, width, height);
 		// calculate start index of position
 		int startIndex = (x / settings->spacing) * settings->numHeight + (z / settings->spacing);
 
@@ -84,6 +95,9 @@ namespace Terrain {
 		case ManipulateDir::NORMAL:
 			TraceLog(LOG_WARNING, "Manipulation along normal is not yet implemented!");
 			break;
+		default:
+			TraceLog(LOG_WARNING, "Invalid ManipulateDir!");
+			return;
 		}
 
 		switch (type) {
