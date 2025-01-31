@@ -36,11 +36,12 @@ namespace DebugGui {
 			if (terrainCollsion.hit) {
 				m_mouseCollision = terrainCollsion;
 			}
+			m_mouseCollision.hit = terrainCollsion.hit; // If no hit has been made update this in the gui but retain other data of last succesful hit
 		}
 	}
 
 	void ManipulableTerrainDebugGui::renderManualManipulation() {
-		ImGui::SeparatorText("Mouse Hit Information");
+		ImGui::SeparatorText("Manual Manipulation");
 		
 	}
 }

@@ -21,28 +21,30 @@ public:
 	Color getTint();
 	void setTint(Color tint);
 	Model getModel();
+	BoundingBox getBoundingBox();
 
 protected:
 	Model m_model;
+	BoundingBox m_boundingBox;
 	float m_scale;
 	Color m_tint;
 	bool m_drawWired;
 	bool m_drawNormals;
 
-private:
-	RenderTexture m_normalsRender;
+	void updateBoundingBox();
 
+private:
 	void drawNormals();
 };
 
 template <typename T>
-ModelEntity<T>::ModelEntity() : m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_normalsRender(LoadRenderTexture(GetScreenWidth(), GetScreenHeight())) {}
+ModelEntity<T>::ModelEntity() : m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {}
 
 template <typename T>
-ModelEntity<T>::ModelEntity(T position) : Entity<T>(position), m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_normalsRender(LoadRenderTexture(GetScreenWidth(), GetScreenHeight())) {}
+ModelEntity<T>::ModelEntity(T position) : Entity<T>(position), m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {}
 
 template <typename T>
-ModelEntity<T>::ModelEntity(T position, Model model, float scale, Color tint) : Entity<T>(position), m_model(model), m_scale(scale), m_tint(tint), m_drawWired(false), m_normalsRender(LoadRenderTexture(GetScreenWidth(), GetScreenHeight())) {}
+ModelEntity<T>::ModelEntity(T position, Model model, float scale, Color tint) : Entity<T>(position), m_model(model), m_scale(scale), m_tint(tint), m_drawWired(false), m_drawNormals(false) {}
 
 template <typename T>
 void ModelEntity<T>::draw() {
@@ -61,6 +63,11 @@ void ModelEntity<T>::drawNormals() {
 			DrawLine3D(vertex, Vector3Add(vertex, normal), RED);
 		}
 	}
+}
+
+template <typename T>
+void ModelEntity<T>::updateBoundingBox() {
+	m_boundingBox = GetModelBoundingBox(m_model);
 }
 
 template <typename T>
@@ -106,4 +113,9 @@ void ModelEntity<T>::setTint(Color tint) {
 template <typename T>
 Model ModelEntity<T>::getModel() {
 	return m_model;
+}
+
+template <typename T>
+BoundingBox ModelEntity<T>::getBoundingBox() {
+	return m_boundingBox;
 }

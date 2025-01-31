@@ -109,6 +109,7 @@ namespace Terrain {
 		RL_FREE(m_model.meshMaterial);
 		loadElementsIntoModel();
 		initializeModelMaterials();
+		updateBoundingBox();
 	}
 
 	void TerrainManager::generateDefaultTerrain() {
@@ -122,6 +123,7 @@ namespace Terrain {
 
 		loadElementsIntoModel();
 		initializeModelMaterials();
+		updateBoundingBox();
 
 		TraceLog(LOG_DEBUG, "Terrain: Model has been initialized");
 
@@ -237,10 +239,6 @@ namespace Terrain {
 
 	std::shared_ptr<Noise::noise_settings> TerrainManager::refNoiseSettings() {
 		return noiseSettings;
-	}
-
-	BoundingBox TerrainManager::getBoundingBox() {
-		return GetModelBoundingBox(m_model);
 	}
 
 	RayCollision TerrainManager::getRayCollisionWithTerrain(Ray ray) {

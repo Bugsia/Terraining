@@ -33,7 +33,6 @@ namespace Terrain {
 		// GETTER AND SETTER
 		std::shared_ptr<terrain_settings> refSettings();
 		std::shared_ptr<Noise::noise_settings> refNoiseSettings();
-		BoundingBox getBoundingBox();
 		RayCollision getRayCollisionWithTerrain(Ray ray);
 		RayCollision getRayCollisionWithTerrain(Ray ray, RayCollision boundingBoxHit);
 

@@ -13,9 +13,13 @@ public:
 	MeshEntity(const MeshEntity& other);
 
 	Mesh getMesh() const;
+	BoundingBox getBoundingBox() const;
 
 protected:
 	Mesh m_mesh;
+	BoundingBox m_boundingBox;
+
+	void updateBoundingBox();
 
 private:
 	template <typename K>
@@ -53,6 +57,11 @@ MeshEntity<T>::MeshEntity(const MeshEntity& other) : Entity<T>(other.m_position)
 }
 
 template <typename T>
+void MeshEntity<T>::updateBoundingBox() {
+	m_boundingBox = GetMeshBoundingBox(m_mesh);
+}
+
+template <typename T>
 template <typename K>
 K* MeshEntity<T>::copyIfValid(K* src, int size) {
 	if (src == nullptr) return nullptr;
@@ -64,4 +73,9 @@ K* MeshEntity<T>::copyIfValid(K* src, int size) {
 template <typename T>
 Mesh MeshEntity<T>::getMesh() const {
 	return m_mesh;
+}
+
+template <typename T>
+BoundingBox MeshEntity<T>::getBoundingBox() const {
+	return m_boundingBox;
 }
