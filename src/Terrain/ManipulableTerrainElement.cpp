@@ -3,11 +3,30 @@
 namespace Terrain {
 	ManipulableTerrainElement::~ManipulableTerrainElement() {}
 
-	ManipulableTerrainElement::ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : TerrainElement(settings, posId) { }
+	ManipulableTerrainElement::ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : TerrainElement(settings, posId) { 
+		initialiseDifference();
+	}
 
 	ManipulableTerrainElement::ManipulableTerrainElement(PositionIdentifier posId) : TerrainElement(posId) { }
 
-	ManipulableTerrainElement::ManipulableTerrainElement(const TerrainElement& other) : TerrainElement(other) { }
+	ManipulableTerrainElement::ManipulableTerrainElement(const TerrainElement& other) : TerrainElement(other) {
+		initialiseDifference();
+	}
+
+	ManipulableTerrainElement::ManipulableTerrainElement(const ManipulableTerrainElement& other) : TerrainElement(other) {
+		m_difference = new float[settings->numWidth * settings->numHeight * 3];
+		for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
+			m_mesh.vertices[i] += other.m_difference[i];
+			m_difference[i] = other.m_difference[i];
+		}
+	}
+
+	void ManipulableTerrainElement::initialiseDifference() {
+		m_difference = new float[settings->numWidth * settings->numHeight * 3];
+		for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
+			m_difference[i] = 0.0f;
+		}
+	}
 
 	void ManipulableTerrainElement::manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition) {
 		ValidIndices indices = getValidIndices(radius, relativePosition);
@@ -21,6 +40,22 @@ namespace Terrain {
 				float strengthFactor = manipulationStrength(form, radius, { relativePosition.x, relativePosition.z }, vertexPos);
 				manipulateVertex(dir, type, strength * strengthFactor, index);
 			}
+		}
+
+		reloadMeshData();
+	}
+
+	void ManipulableTerrainElement::removeDifference() {
+		for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
+			m_mesh.vertices[i] -= m_difference[i];
+		}
+
+		reloadMeshData();
+	}
+
+	void ManipulableTerrainElement::addDifference() {
+		for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
+			m_mesh.vertices[i] += m_difference[i];
 		}
 
 		reloadMeshData();
@@ -53,7 +88,6 @@ namespace Terrain {
 		}
 		if (z + height > settings->numHeight * settings->spacing) height = settings->numHeight * settings->spacing - z;
 
-		TraceLog(LOG_INFO, "X: %f, Z: %f, Width: %f, Height: %f", x, z, width, height);
 		// calculate start index of position
 		int startIndex = (x / settings->spacing) * settings->numHeight + (z / settings->spacing);
 
@@ -80,17 +114,17 @@ namespace Terrain {
 	}
 
 	void ManipulableTerrainElement::manipulateVertex(ManipulateDir dir, ManipulateType type, float strength, int index) {
-		float* vertexToManipulate;
+		int manipulationIndex;
 		
 		switch (dir) {
 		case ManipulateDir::X:
-			vertexToManipulate = &m_mesh.vertices[index];
+			manipulationIndex = index;
 			break;
 		case ManipulateDir::Y:
-			vertexToManipulate = &m_mesh.vertices[index + 1];
+			manipulationIndex = index + 1;
 			break;
 		case ManipulateDir::Z:
-			vertexToManipulate = &m_mesh.vertices[index + 2];
+			manipulationIndex = index + 2;
 			break;
 		case ManipulateDir::NORMAL:
 			TraceLog(LOG_WARNING, "Manipulation along normal is not yet implemented!");
@@ -102,10 +136,12 @@ namespace Terrain {
 
 		switch (type) {
 		case ManipulateType::RAISE:
-			*vertexToManipulate += strength;
+			m_mesh.vertices[manipulationIndex] += strength;
+			m_difference[manipulationIndex] += strength;
 			break;
 		case ManipulateType::LOWER:
-			*vertexToManipulate  -= strength;
+			m_mesh.vertices[manipulationIndex] -= strength;	
+			m_difference[manipulationIndex] -= strength;
 			break;
 		}
 	}

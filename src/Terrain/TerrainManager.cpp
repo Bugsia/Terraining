@@ -38,6 +38,20 @@ namespace Terrain {
 		}
 	}
 
+	void TerrainManager::removeDifference() {
+		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+			element.removeDifference();
+		}
+	}
+
+	void TerrainManager::addDifference() {
+		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+			element.addDifference();
+		}
+	}
+
 	void TerrainManager::initialiseAndAddNewElement(std::unordered_set<ManipulableTerrainElement>& newElements, const PositionIdentifier& posId) {
 		// Directly emplace a new ManipulableTerrain into the container
 		auto result = newElements.emplace(settings, posId);

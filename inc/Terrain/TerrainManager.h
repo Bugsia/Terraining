@@ -31,6 +31,9 @@ namespace Terrain {
 		void manipulateTerrain(ManipulableTerrainElement::ManipulateDir dir, ManipulableTerrainElement::ManipulateForm form, ManipulableTerrainElement::ManipulateType type, float strength, float radius, Vector3 position);
 		void draw();
 
+		void removeDifference();
+		void addDifference();
+
 		// GETTER AND SETTER
 		std::shared_ptr<terrain_settings> refSettings();
 		std::shared_ptr<Noise::noise_settings> refNoiseSettings();

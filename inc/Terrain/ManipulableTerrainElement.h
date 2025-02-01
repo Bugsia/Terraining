@@ -26,8 +26,11 @@ namespace Terrain {
 		ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
 		ManipulableTerrainElement(PositionIdentifier posId);
 		ManipulableTerrainElement(const TerrainElement& other);
+		ManipulableTerrainElement(const ManipulableTerrainElement& other);
 
 		void manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition);
+		void removeDifference();
+		void addDifference();
 
 	private:
 		struct ValidIndices {
@@ -36,8 +39,11 @@ namespace Terrain {
 			int height;
 		};
 
+		float* m_difference;
+
 		ValidIndices getValidIndices(float radius, Vector3 position);
 		float manipulationStrength(ManipulateForm form, float radius, Vector2 center, Vector2 position);
 		void manipulateVertex(ManipulateDir dir, ManipulateType type, float strength, int index);
+		void initialiseDifference();
 	};
 }

@@ -15,6 +15,9 @@ namespace DebugGui {
 		
 		renderManualManipulation();
 
+		if (ImGui::Button("Remove Difference")) m_terrain.removeDifference();
+		if (ImGui::Button("Add Difference")) m_terrain.addDifference();
+
 		ImGui::End();
 
 		return m_open;
