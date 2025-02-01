@@ -46,12 +46,12 @@ namespace Terrain {
 			width += x;
 			x = 0.0f;
 		}
-		else if (x + width > settings->numWidth * settings->spacing) width = settings->numWidth * settings->spacing - x;
+		if (x + width > settings->numWidth * settings->spacing) width = settings->numWidth * settings->spacing - x;
 		if (z < 0.0f) {
 			height += z;
 			z = 0.0f;
 		}
-		else if (z + height > settings->numHeight * settings->spacing) height = settings->numHeight * settings->spacing - z;
+		if (z + height > settings->numHeight * settings->spacing) height = settings->numHeight * settings->spacing - z;
 
 		TraceLog(LOG_INFO, "X: %f, Z: %f, Width: %f, Height: %f", x, z, width, height);
 		// calculate start index of position
