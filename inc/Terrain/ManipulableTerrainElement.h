@@ -3,7 +3,7 @@
 #include "TerrainElement.h"
 
 namespace Terrain {
-	class ManipulableTerrain : public TerrainElement {
+	class ManipulableTerrainElement : public TerrainElement {
 	public:
 		enum ManipulateDir {
 			X,
@@ -22,10 +22,10 @@ namespace Terrain {
 			LOWER
 		};
 
-		~ManipulableTerrain();
-		ManipulableTerrain(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
-		ManipulableTerrain(PositionIdentifier posId);
-		ManipulableTerrain(const TerrainElement& other);
+		~ManipulableTerrainElement();
+		ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
+		ManipulableTerrainElement(PositionIdentifier posId);
+		ManipulableTerrainElement(const TerrainElement& other);
 
 		void manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition);
 

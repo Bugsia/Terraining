@@ -2,7 +2,7 @@
 #include <raylib.h>
 #include "Gui.h"
 #include "Terrain/TerrainManager.h"
-#include "Terrain/ManipulableTerrain.h"
+#include "Terrain/ManipulableTerrainElement.h"
 
 namespace DebugGui {
 	class ManipulableTerrainDebugGui : public Gui {
@@ -20,9 +20,9 @@ namespace DebugGui {
 
 		// Manipulation
 		bool m_checkMouse = false;
-		Terrain::ManipulableTerrain::ManipulateDir m_manipulateDir = Terrain::ManipulableTerrain::ManipulateDir::Y;
-		Terrain::ManipulableTerrain::ManipulateForm m_manipulateForm = Terrain::ManipulableTerrain::ManipulateForm::CIRCULAR;
-		Terrain::ManipulableTerrain::ManipulateType m_manipulateType = Terrain::ManipulableTerrain::ManipulateType::RAISE;
+		Terrain::ManipulableTerrainElement::ManipulateDir m_manipulateDir = Terrain::ManipulableTerrainElement::ManipulateDir::Y;
+		Terrain::ManipulableTerrainElement::ManipulateForm m_manipulateForm = Terrain::ManipulableTerrainElement::ManipulateForm::CIRCULAR;
+		Terrain::ManipulableTerrainElement::ManipulateType m_manipulateType = Terrain::ManipulableTerrainElement::ManipulateType::RAISE;
 		float m_manipulateStrength = 1.0f;
 		float m_manipulateRadius = 5.0f;
 

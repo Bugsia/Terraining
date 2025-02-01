@@ -24,23 +24,23 @@ namespace DebugGui {
 		ImGui::SeparatorText("Manipulation Settings");
 		ImGui::Text("Manipulation Direction");
 		ImGui::SameLine();
-		ImGui::RadioButton("X", (int*)&m_manipulateDir, Terrain::ManipulableTerrain::ManipulateDir::X);
+		ImGui::RadioButton("X", (int*)&m_manipulateDir, Terrain::ManipulableTerrainElement::ManipulateDir::X);
 		ImGui::SameLine();
-		ImGui::RadioButton("Y", (int*)&m_manipulateDir, Terrain::ManipulableTerrain::ManipulateDir::Y);
+		ImGui::RadioButton("Y", (int*)&m_manipulateDir, Terrain::ManipulableTerrainElement::ManipulateDir::Y);
 		ImGui::SameLine();
-		ImGui::RadioButton("Z", (int*)&m_manipulateDir, Terrain::ManipulableTerrain::ManipulateDir::Z);
+		ImGui::RadioButton("Z", (int*)&m_manipulateDir, Terrain::ManipulableTerrainElement::ManipulateDir::Z);
 		
 		ImGui::Text("Manipulation Form");
 		ImGui::SameLine();
-		ImGui::RadioButton("Circular", (int*)&m_manipulateForm, Terrain::ManipulableTerrain::ManipulateForm::CIRCULAR);
+		ImGui::RadioButton("Circular", (int*)&m_manipulateForm, Terrain::ManipulableTerrainElement::ManipulateForm::CIRCULAR);
 		ImGui::SameLine();
-		ImGui::RadioButton("Square", (int*)&m_manipulateForm, Terrain::ManipulableTerrain::ManipulateForm::SQUARE);
+		ImGui::RadioButton("Square", (int*)&m_manipulateForm, Terrain::ManipulableTerrainElement::ManipulateForm::SQUARE);
 	
 		ImGui::Text("Manipulation Type");
 		ImGui::SameLine();
-		ImGui::RadioButton("Raise", (int*)&m_manipulateType, Terrain::ManipulableTerrain::ManipulateType::RAISE);
+		ImGui::RadioButton("Raise", (int*)&m_manipulateType, Terrain::ManipulableTerrainElement::ManipulateType::RAISE);
 		ImGui::SameLine();
-		ImGui::RadioButton("Lower", (int*)&m_manipulateType, Terrain::ManipulableTerrain::ManipulateType::LOWER);
+		ImGui::RadioButton("Lower", (int*)&m_manipulateType, Terrain::ManipulableTerrainElement::ManipulateType::LOWER);
 
 		ImGui::SliderFloat("Strength", &m_manipulateStrength, 0.0f, 25.0f);
 		ImGui::SliderFloat("Radius", &m_manipulateRadius, 0.0f, 25.0f);

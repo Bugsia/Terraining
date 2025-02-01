@@ -1,15 +1,15 @@
-#include "Terrain/ManipulableTerrain.h"
+#include "Terrain/ManipulableTerrainElement.h"
 
 namespace Terrain {
-	ManipulableTerrain::~ManipulableTerrain() {}
+	ManipulableTerrainElement::~ManipulableTerrainElement() {}
 
-	ManipulableTerrain::ManipulableTerrain(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : TerrainElement(settings, posId) { }
+	ManipulableTerrainElement::ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : TerrainElement(settings, posId) { }
 
-	ManipulableTerrain::ManipulableTerrain(PositionIdentifier posId) : TerrainElement(posId) { }
+	ManipulableTerrainElement::ManipulableTerrainElement(PositionIdentifier posId) : TerrainElement(posId) { }
 
-	ManipulableTerrain::ManipulableTerrain(const TerrainElement& other) : TerrainElement(other) { }
+	ManipulableTerrainElement::ManipulableTerrainElement(const TerrainElement& other) : TerrainElement(other) { }
 
-	void ManipulableTerrain::manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition) {
+	void ManipulableTerrainElement::manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition) {
 		ValidIndices indices = getValidIndices(radius, relativePosition);
 		if (indices.startIndex == -1) return;
 
@@ -26,7 +26,7 @@ namespace Terrain {
 		reloadMeshData();
 	}
 
-	ManipulableTerrain::ValidIndices ManipulableTerrain::getValidIndices(float radius, Vector3 position) {
+	ManipulableTerrainElement::ValidIndices ManipulableTerrainElement::getValidIndices(float radius, Vector3 position) {
 		// round position down to the nearest multiple of spacing
 		float x = static_cast<int>((position.x - radius) / settings->spacing) * settings->spacing;
 		float z = static_cast<int>((position.z - radius) / settings->spacing) * settings->spacing;
@@ -60,7 +60,7 @@ namespace Terrain {
 		return { startIndex, static_cast<int>(width / settings->spacing), static_cast<int>(height / settings->spacing) };
 	}
 
-	float ManipulableTerrain::manipulationStrength(ManipulateForm form, float radius, Vector2 center, Vector2 position) {
+	float ManipulableTerrainElement::manipulationStrength(ManipulateForm form, float radius, Vector2 center, Vector2 position) {
 		float strengthFactor = 0.0f;
 		float distance;
 
@@ -79,7 +79,7 @@ namespace Terrain {
 		return strengthFactor;
 	}
 
-	void ManipulableTerrain::manipulateVertex(ManipulateDir dir, ManipulateType type, float strength, int index) {
+	void ManipulableTerrainElement::manipulateVertex(ManipulateDir dir, ManipulateType type, float strength, int index) {
 		float* vertexToManipulate;
 		
 		switch (dir) {
