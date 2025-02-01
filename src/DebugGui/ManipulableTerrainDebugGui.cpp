@@ -68,6 +68,10 @@ namespace DebugGui {
 	}
 
 	void ManipulableTerrainDebugGui::updateMouseInformation() {
+		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
+			m_mouseCollision.hit = false;
+			return;
+		}
 		m_mouseRay = GetMouseRay(GetMousePosition(), m_camera);
 		RayCollision collision = GetRayCollisionBox(m_mouseRay, m_terrain.getBoundingBox());
 		if (collision.hit) {
