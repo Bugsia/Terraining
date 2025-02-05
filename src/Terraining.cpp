@@ -19,8 +19,13 @@
 
 int main()
 {
+	// Test JSON Adapter
+	JSONAdapter json("test.json");
+	json.load();
+
 	InitWindow(1280, 720, "Terraining");
 	SetTargetFPS(60);
+	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 
 	Terrain::terrain_settings terrainSettings = { TERRAIN_RADIUS, TERRAIN_MAX_NUM_ELEMENTS, TERRAIN_NUM_WIDTH, TERRAIN_NUM_HEIGHT, TERRAIN_SPACING };
 	Terrain::TerrainManager terrainManager(terrainSettings);

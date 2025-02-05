@@ -11,5 +11,6 @@
 #include "Terrain/TerrainManager.h"
 #include "rlImGui.h"
 #include "Character.h"
+#include "JSONAdapter.h"
 
 // TODO: Reference additional headers your program requires here.
