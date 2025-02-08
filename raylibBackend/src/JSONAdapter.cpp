@@ -183,6 +183,12 @@ std::any JSONAdapter::getValue(std::string key) {
 	else return std::any();
 }
 
+std::vector<std::any> JSONAdapter::getArray(std::string key) {
+	std::unordered_set<JSONArray>::iterator it = m_arrays.find(JSONArray(key));
+	if (it != m_arrays.end()) return it->getValues();
+	else return std::vector<std::any>();
+}
+
 std::string JSONAdapter::readKey(std::ifstream& file, char& curPart) {
 	// Read key
 	file.get(curPart);

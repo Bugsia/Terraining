@@ -76,6 +76,7 @@ public:
 	void addValue(std::string key, JSONValueType type, std::any value);
 	void addArray(std::string key, JSONValueType type, std::vector<std::any> values);
 	std::any getValue(std::string key);
+	std::vector<std::any> getArray(std::string key);
 
 	void save();
 	void save(std::string filename);
