@@ -45,11 +45,29 @@ public:
 
 	class JSONArray {
 	public:
+		JSONArray(std::string key);
+		JSONArray(std::string key, JSONValueType type, std::vector<std::any> values);
+
+		void addValue(std::any value);
+		void removeValue(int index);
+		std::vector<std::any> getValues() const;
+		std::string getKey() const;
+		JSONValueType getType() const;
+
+		bool operator==(const JSONArray& other) const {
+			return m_key == other.m_key;
+		}
 
 	private:
 		std::string m_key;
 		JSONValueType m_type;
 		std::vector<std::any> m_values;
+	};
+
+	struct JSONArrayHash {
+		size_t operator()(const JSONArray& field) const {
+			return std::hash<std::string>()(field.getKey());
+		}
 	};
 
 	JSONAdapter(std::string filename);
@@ -67,8 +85,12 @@ private:
 	const int m_indentation = 4;
 	const std::string m_filename;
 	std::unordered_set<JSONField, JSONFieldHash> m_fields;
+	std::unordered_set<JSONArray, JSONArrayHash> m_arrays;
 
-	std::string readKey(std::ifstream& file);
-	std::pair<std::any, JSONValueType> readValue(std::ifstream& file);
-	JSONField readField(std::ifstream& file);
+	std::string readKey(std::ifstream& file, char& curPart);
+	std::pair<std::any, JSONValueType> readValue(std::ifstream& file, char& curPart);
+	JSONField readField(std::ifstream& file, std::string key, char& curPart);
+	JSONArray readArray(std::ifstream& file, std::string key, char& curPart);
+
+	void writeField(std::ofstream& file, JSONField field);
 };

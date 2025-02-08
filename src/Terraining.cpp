@@ -21,7 +21,7 @@ int main()
 {
 	// Test JSON Adapter
 	JSONAdapter json("data/settings.json");
-	json.addValue("test", JSONAdapter::JSONValueType::JSON_INT, 5);
+	// json.addValue("tes2t", JSONAdapter::JSONValueType::JSON_INT, 5);
 	json.save();
 
 	InitWindow(1280, 720, "Terraining");
