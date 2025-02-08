@@ -3,6 +3,10 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
+set(DATA_SOURCE_DIR ${CMAKE_SOURCE_DIR}/data)
+set(DATA_DEST_DIR ${CMAKE_BINARY_DIR}/)
+file(COPY ${DATA_SOURCE_DIR} DESTINATION ${DATA_DEST_DIR})
+
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)

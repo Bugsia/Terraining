@@ -20,7 +20,7 @@
 int main()
 {
 	// Test JSON Adapter
-	JSONAdapter json("test.json");
+	JSONAdapter json("data/test.json");
 	json.load();
 
 	InitWindow(1280, 720, "Terraining");
