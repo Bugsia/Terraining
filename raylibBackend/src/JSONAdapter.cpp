@@ -23,7 +23,29 @@ JSONAdapter::JSONValueType JSONAdapter::JSONField::getType() const {
 }
 
 // JSONArray
-// TODO
+JSONAdapter::JSONArray::JSONArray(std::string key) : m_key(key), m_type(JSON_NULL) {}
+
+JSONAdapter::JSONArray::JSONArray(std::string key, JSONValueType type, std::vector<std::any> values) : m_key(key), m_type(type), m_values(values) {}
+
+void JSONAdapter::JSONArray::addValue(std::any value) {
+	m_values.push_back(value);
+}
+
+void JSONAdapter::JSONArray::removeValue(int index) {
+	m_values.erase(m_values.begin() + index);
+}
+
+std::vector<std::any> JSONAdapter::JSONArray::getValues() const {
+	return m_values;
+}
+
+std::string JSONAdapter::JSONArray::getKey() const {
+	return m_key;
+}
+
+JSONAdapter::JSONValueType JSONAdapter::JSONArray::getType() const {
+	return m_type;
+}
 
 // JSONAdapter
 JSONAdapter::JSONAdapter(std::string filename) : m_filename(filename) {
@@ -44,29 +66,60 @@ void JSONAdapter::save(std::string filename) {
 
 	file << "{\n";
 
+	// Write fields
 	for (std::unordered_set<JSONField>::iterator it = m_fields.begin(); it != m_fields.end(); it++) {
-		file << std::string(m_indentation, ' ') << "\"" << it->getKey() << "\": ";
-		switch (it->getType()) {
-		case JSONValueType::JSON_BOOL:
-			file << std::any_cast<bool>(it->getValue());
-			break;
-		case JSONValueType::JSON_INT:
-			file << std::any_cast<int>(it->getValue());
-			break;
-		case JSONValueType::JSON_FLOAT:
-			file << std::any_cast<float>(it->getValue());
-			break;
-		case JSONValueType::JSON_STRING:
-			file << "\"" << std::any_cast<std::string>(it->getValue()) << "\"";
-			break;
-		}
+		writeField(file, *it);
+		if (std::next(it) != m_fields.end() || m_arrays.size() != 0) file << ",";
+		file << "\n";
+	}
 
-		if (std::next(it) != m_fields.end()) file << ",";
+	// Write arrays
+	for (std::unordered_set<JSONArray>::iterator it = m_arrays.begin(); it != m_arrays.end(); it++) {
+		file << std::string(m_indentation, ' ') << "\"" << it->getKey() << "\": [";
+
+		std::vector<std::any> values = it->getValues();
+		for (std::vector<std::any>::iterator vecIt = values.begin(); vecIt != values.end(); vecIt++) {
+			switch (it->getType()) {
+			case JSONValueType::JSON_BOOL:
+				file << std::any_cast<bool>(*vecIt);
+				break;
+			case JSONValueType::JSON_INT:
+				file << std::any_cast<int>(*vecIt);
+				break;
+			case JSONValueType::JSON_FLOAT:
+				file << std::any_cast<float>(*vecIt);
+				break;
+			case JSONValueType::JSON_STRING:
+				file << "\"" << std::any_cast<std::string>(*vecIt) << "\"";
+				break;
+			}
+			if (std::next(vecIt) != values.end()) file << ", ";
+		}
+		file << "]";
+		if (std::next(it) != m_arrays.end()) file << ",";
 		file << "\n";
 	}
 
 	file << "}\n";
 	file.close();
+}
+
+void JSONAdapter::writeField(std::ofstream& file, JSONField field) {
+	file << std::string(m_indentation, ' ') << "\"" << field.getKey() << "\": ";
+	switch (field.getType()) {
+	case JSONValueType::JSON_BOOL:
+		file << std::any_cast<bool>(field.getValue());
+		break;
+	case JSONValueType::JSON_INT:
+		file << std::any_cast<int>(field.getValue());
+		break;
+	case JSONValueType::JSON_FLOAT:
+		file << std::any_cast<float>(field.getValue());
+		break;
+	case JSONValueType::JSON_STRING:
+		file << "\"" << std::any_cast<std::string>(field.getValue()) << "\"";
+		break;
+	}
 }
 
 void JSONAdapter::save() {
@@ -91,9 +144,22 @@ void JSONAdapter::load() {
 	int index = 0;
 	while (!file.eof()) {
 		if (curPart == '\"') {
-			JSONField field = readField(file);
-			m_fields.insert(field);
-			index++;
+			std::string key = readKey(file, curPart);
+
+			// Skip to start of value
+			while (curPart == ' ' || curPart == ':') file.get(curPart);
+
+			// Check if value is an array
+			if (curPart == '[') {
+				JSONArray array = readArray(file, key, curPart);
+				m_arrays.insert(array);
+				index++;
+			}
+			else {
+				JSONField field = readField(file, key, curPart);
+				m_fields.insert(field);
+				index++;
+			}
 		}
 		file.get(curPart);
 	}
@@ -106,17 +172,20 @@ void JSONAdapter::addValue(std::string key, JSONValueType type, std::any value) 
 	m_fields.insert(field);
 }
 
+void JSONAdapter::addArray(std::string key, JSONValueType type, std::vector<std::any> values) {
+	JSONArray array(key, type, values);
+	m_arrays.insert(array);
+}
+
 std::any JSONAdapter::getValue(std::string key) {
 	std::unordered_set<JSONField>::iterator it = m_fields.find(JSONField(key));
 	if (it != m_fields.end()) return it->getValue();
 	else return std::any();
 }
 
-std::string JSONAdapter::readKey(std::ifstream& file) {
-	char curPart;
-	file.get(curPart);
-
+std::string JSONAdapter::readKey(std::ifstream& file, char& curPart) {
 	// Read key
+	file.get(curPart);
 	std::string key = "";
 
 	while (curPart != '\"') {
@@ -124,13 +193,14 @@ std::string JSONAdapter::readKey(std::ifstream& file) {
 		file.get(curPart);
 	}
 
+	// Skip to end of value
+	file.get(curPart);
+	while (curPart == ' ') file.get(curPart);
+
 	return key;
 }
 
-std::pair<std::any, JSONAdapter::JSONValueType> JSONAdapter::readValue(std::ifstream& file) {
-	char curPart;
-	file.get(curPart);
-
+std::pair<std::any, JSONAdapter::JSONValueType> JSONAdapter::readValue(std::ifstream& file, char& curPart) {
 	JSONValueType type = JSONValueType::JSON_NULL;
 	std::string value = "";
 
@@ -145,6 +215,9 @@ std::pair<std::any, JSONAdapter::JSONValueType> JSONAdapter::readValue(std::ifst
 		case '\\':
 			ignoreNextChar = true;
 			break;
+		case ',':
+			if (type != JSONValueType::JSON_STRING && !ignoreNextChar) isDone = true;
+			continue;
 		case '\"':
 			if (ignoreNextChar) break;
 			if (type == JSONValueType::JSON_STRING) isDone = true; // End of string since beginning has already been detected
@@ -168,6 +241,7 @@ std::pair<std::any, JSONAdapter::JSONValueType> JSONAdapter::readValue(std::ifst
 			}
 			break;
 		case '}':
+		case ']':
 		case '\n':
 			isDone = true;
 			continue;
@@ -198,13 +272,30 @@ std::pair<std::any, JSONAdapter::JSONValueType> JSONAdapter::readValue(std::ifst
 	}
 
 	// Advance file stream to end of current value (so ,)
-	while (curPart != ',' && curPart != '}') file.get(curPart);
+	while (curPart != ',' && curPart != '}' && curPart != ']') file.get(curPart);
 
 	return std::pair<std::any, JSONValueType>(valueAny, type);
 }
 
-JSONAdapter::JSONField JSONAdapter::readField(std::ifstream& file) {
-	std::string key = readKey(file);
-	std::pair<std::any, JSONValueType> value = readValue(file);
+JSONAdapter::JSONField JSONAdapter::readField(std::ifstream& file, std::string key, char& curPart) {
+	std::pair<std::any, JSONValueType> value = readValue(file, curPart);
 	return JSONField(key, value.second, value.first);
+}
+
+JSONAdapter::JSONArray JSONAdapter::readArray(std::ifstream& file, std::string key, char& curPart) {
+	std::vector<std::any> values;
+	JSONValueType type = JSON_NULL;
+
+	// Check for array end
+	file.get(curPart);
+	while (curPart != ']') {
+		std::pair<std::any, JSONValueType> value = readValue(file, curPart);
+		values.push_back(value.first);
+		type = value.second;
+		if (curPart == ']' || curPart == '\n' || curPart == '}') break;
+		file.get(curPart);
+		while (curPart == ' ') file.get(curPart);
+	}
+	
+	return JSONAdapter::JSONArray(key, type, values);
 }
