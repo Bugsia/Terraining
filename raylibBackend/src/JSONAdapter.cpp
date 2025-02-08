@@ -10,7 +10,7 @@ void JSONAdapter::JSONField::setValue(JSONValueType type, std::any value) {
 	m_value = value;
 }
 
-std::any JSONAdapter::JSONField::getValue() {
+std::any JSONAdapter::JSONField::getValue() const {
 	return m_value;
 }
 
@@ -18,13 +18,60 @@ std::string JSONAdapter::JSONField::getKey() const {
 	return m_key;
 }
 
+JSONAdapter::JSONValueType JSONAdapter::JSONField::getType() const {
+	return m_type;
+}
+
 // JSONArray
 // TODO
 
 // JSONAdapter
-JSONAdapter::JSONAdapter(std::string filename) : m_filename(filename) {}
+JSONAdapter::JSONAdapter(std::string filename) : m_filename(filename) {
+	load();
+}
 
-JSONAdapter::JSONAdapter(std::string filename, int indentation) : m_filename(filename), m_indentation(indentation) {}
+JSONAdapter::JSONAdapter(std::string filename, int indentation) : m_filename(filename), m_indentation(indentation) {
+	load();
+}
+
+void JSONAdapter::save(std::string filename) {
+	std::ofstream file(filename);
+
+	if (!file.is_open()) {
+		TraceLog(LOG_WARNING, "JSONAdapter: Could not open file %s", filename.c_str());
+		return;
+	}
+
+	file << "{\n";
+
+	for (std::unordered_set<JSONField>::iterator it = m_fields.begin(); it != m_fields.end(); it++) {
+		file << std::string(m_indentation, ' ') << "\"" << it->getKey() << "\": ";
+		switch (it->getType()) {
+		case JSONValueType::JSON_BOOL:
+			file << std::any_cast<bool>(it->getValue());
+			break;
+		case JSONValueType::JSON_INT:
+			file << std::any_cast<int>(it->getValue());
+			break;
+		case JSONValueType::JSON_FLOAT:
+			file << std::any_cast<float>(it->getValue());
+			break;
+		case JSONValueType::JSON_STRING:
+			file << "\"" << std::any_cast<std::string>(it->getValue()) << "\"";
+			break;
+		}
+
+		if (std::next(it) != m_fields.end()) file << ",";
+		file << "\n";
+	}
+
+	file << "}\n";
+	file.close();
+}
+
+void JSONAdapter::save() {
+	save(m_filename);
+}
 
 void JSONAdapter::load() {
 	std::ifstream file(m_filename);
@@ -45,19 +92,24 @@ void JSONAdapter::load() {
 	while (!file.eof()) {
 		if (curPart == '\"') {
 			JSONField field = readField(file);
-			if (index != 4) {
-				std::string value = std::any_cast<std::string>(field.getValue());
-				TraceLog(LOG_INFO, "Field has been read. Value: %s", value.c_str());
-			}
-			else {
-				TraceLog(LOG_INFO, "Field has been read. Value: %i", std::any_cast<int>(field.getValue()));
-			}
+			m_fields.insert(field);
 			index++;
 		}
 		file.get(curPart);
 	}
 
 	file.close();
+}
+
+void JSONAdapter::addValue(std::string key, JSONValueType type, std::any value) {
+	JSONField field(key, type, value);
+	m_fields.insert(field);
+}
+
+std::any JSONAdapter::getValue(std::string key) {
+	std::unordered_set<JSONField>::iterator it = m_fields.find(JSONField(key));
+	if (it != m_fields.end()) return it->getValue();
+	else return std::any();
 }
 
 std::string JSONAdapter::readKey(std::ifstream& file) {
@@ -148,7 +200,7 @@ std::pair<std::any, JSONAdapter::JSONValueType> JSONAdapter::readValue(std::ifst
 	// Advance file stream to end of current value (so ,)
 	while (curPart != ',' && curPart != '}') file.get(curPart);
 
-	return std::pair<std::any, JSONValueType>(value, type);
+	return std::pair<std::any, JSONValueType>(valueAny, type);
 }
 
 JSONAdapter::JSONField JSONAdapter::readField(std::ifstream& file) {

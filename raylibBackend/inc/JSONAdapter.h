@@ -23,8 +23,9 @@ public:
 		JSONField(std::string key, JSONValueType type, std::any value);
 
 		void setValue(JSONValueType type, std::any value);
-		std::any getValue();
+		std::any getValue() const;
 		std::string getKey() const;
+		JSONValueType getType() const;
 
 		bool operator==(const JSONField& other) const {
 			return m_key == other.m_key;
@@ -34,6 +35,12 @@ public:
 		std::string m_key;
 		JSONValueType m_type;
 		std::any m_value;
+	};
+
+	struct JSONFieldHash {
+		size_t operator()(const JSONField& field) const {
+			return std::hash<std::string>()(field.getKey());
+		}
 	};
 
 	class JSONArray {
@@ -48,28 +55,20 @@ public:
 	JSONAdapter(std::string filename);
 	JSONAdapter(std::string filename, int indentation);
 
-	// void addValue(std::string key, JSONValueType type, std::any value);
+	void addValue(std::string key, JSONValueType type, std::any value);
 	// void addArray(std::string key, JSONValueType type, std::vector<std::any> values);
-	// std::any getValue(std::string key);
-	// 
-	// void save();
+	std::any getValue(std::string key);
+
+	void save();
+	void save(std::string filename);
 	void load();
 
 private:
 	const int m_indentation = 4;
 	const std::string m_filename;
-	// std::unordered_set<JSONField> m_fields;
+	std::unordered_set<JSONField, JSONFieldHash> m_fields;
 
 	std::string readKey(std::ifstream& file);
 	std::pair<std::any, JSONValueType> readValue(std::ifstream& file);
 	JSONField readField(std::ifstream& file);
 };
-
-namespace std {
-	template <>
-	struct hash<JSONAdapter::JSONField> {
-		size_t operator()(const JSONAdapter::JSONField& field) const {
-			return hash<std::string>()(field.getKey()); // Use std::string hash
-		}
-	};
-}
