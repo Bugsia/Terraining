@@ -6,6 +6,7 @@
 #include <fstream>
 #include <utility>
 #include <raylib.h>
+#include <iomanip>
 #include "FileAdapter.h"
 
 class JSONAdapter : public FileAdapter {
