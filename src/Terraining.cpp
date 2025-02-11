@@ -3,28 +3,46 @@
 
 #include "Terraining.h"
 
-// Window constants
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 720
-#define WINDOW_TITLE "Portfolio"
-#define TARGET_FPS 60
-#define WINDOW_FLAGS { FLAG_WINDOW_RESIZABLE}
+#define SETTINGS_FILE "data/settings.json"
+#define INDENTATION 4
 
-// Terrain constants
-#define TERRAIN_RADIUS 350.0f
-#define TERRAIN_MAX_NUM_ELEMENTS 1500
-#define TERRAIN_NUM_HEIGHT 20
-#define TERRAIN_NUM_WIDTH 20
-#define TERRAIN_SPACING 1.f
+struct window_settings {
+	int width;
+	int height;
+	std::string title;
+	int targetFps;
+	std::vector<unsigned int> flags;
+};
+
+window_settings loadWindowSettings(FileAdapter& windowSettings) {
+	std::vector<unsigned int> flags;
+	for (std::any flag : windowSettings.getArray("flags").getValue()) {
+		flags.push_back(std::any_cast<int>(flag));
+	}
+
+	window_settings settings = {
+		std::any_cast<int>(windowSettings.getField("width").getValue()),
+		std::any_cast<int>(windowSettings.getField("height").getValue()),
+		std::any_cast<std::string>(windowSettings.getField("title").getValue()),
+		std::any_cast<int>(windowSettings.getField("target_fps").getValue()),
+		flags
+	};
+
+	return settings;
+}
 
 int main()
 {
-	InitWindow(1280, 720, "Terraining");
-	SetTargetFPS(60);
-	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+	JSONAdapter json(SETTINGS_FILE, INDENTATION);
 
-	Terrain::terrain_settings terrainSettings = { TERRAIN_RADIUS, TERRAIN_MAX_NUM_ELEMENTS, TERRAIN_NUM_WIDTH, TERRAIN_NUM_HEIGHT, TERRAIN_SPACING };
-	Terrain::TerrainManager terrainManager(terrainSettings);
+	window_settings settings = loadWindowSettings(json.getSubElement("window_settings"));
+	InitWindow(settings.width, settings.height, settings.title.c_str());
+	SetTargetFPS(settings.targetFps);
+	for (unsigned int flag : settings.flags) {
+		SetConfigFlags(flag);
+	}
+
+	Terrain::TerrainManager terrainManager(json.getSubElement("terrain_settings"));
 	terrainManager.initializeNoise();
 	terrainManager.generateDefaultTerrain();
 	terrainManager.initializeModel();

@@ -5,6 +5,20 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
+	TerrainManager::TerrainManager(std::string filename) : TerrainManager(JSONAdapter(filename).getSubElement("terrain_settings")) {
+		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
+	}
+
+	TerrainManager::TerrainManager(FileAdapter& settings) {
+		this->settings = std::make_shared<terrain_settings>();
+		this->settings->radius = std::any_cast<float>(settings.getField("radius").getValue());
+		this->settings->numWidth = std::any_cast<int>(settings.getField("num_width").getValue());
+		this->settings->numHeight = std::any_cast<int>(settings.getField("num_height").getValue());
+		this->settings->maxNumElements = std::any_cast<int>(settings.getField("max_num_elements").getValue());
+		this->settings->spacing = std::any_cast<float>(settings.getField("spacing").getValue());
+		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
+	}
+
 	Model TerrainManager::newModel() {
 		Model model = { 0 };
 		model.transform = MatrixIdentity();

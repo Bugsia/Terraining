@@ -2,9 +2,11 @@
 #include <raylib.h>
 #include <memory>
 #include <unordered_set>
+#include <string>
 #include "Terrain/ManipulableTerrainElement.h"
 #include "ModelEntity.h"
 #include "ShaderHandler.h"
+#include "FileAdapters/JSONAdapter.h"
 
 // Custom hash function for ManipulableTerrain
 namespace std {
@@ -20,6 +22,8 @@ namespace Terrain {
 	class TerrainManager : public ModelEntity<Vector3>, public ShaderHandler {
 	public:
 		TerrainManager(terrain_settings terrainSettings);
+		TerrainManager(std::string filename);
+		TerrainManager(FileAdapter& settings);
 
 		void generateDefaultTerrain();
 		void initializeModel();
