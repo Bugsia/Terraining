@@ -88,7 +88,9 @@ void JSONAdapter::writeFieldToFile(std::ofstream& file, FileField field, int ind
 		file << std::any_cast<int>(field.getValue());
 		break;
 	case FileAdapter::ValueType::FLOAT:
-		file << std::any_cast<float>(field.getValue());
+		// Ensure at least one decimal place is shown, but more are shown when the number is more precise
+		if (std::floor(std::any_cast<float>(field.getValue())) == std::any_cast<float>(field.getValue())) file << std::fixed << std::setprecision(1) << std::any_cast<float>(field.getValue());
+		else file << std::any_cast<float>(field.getValue());
 		break;
 	case FileAdapter::ValueType::STRING:
 		file << "\"" << std::any_cast<std::string>(field.getValue()) << "\"";

@@ -1,6 +1,10 @@
 #include "Terrain/TerrainManager.h"
 
 namespace Terrain {
+	TerrainManager::~TerrainManager() {
+		saveTerrainSettings();
+	}
+
 	TerrainManager::TerrainManager(terrain_settings terrainSettings) : settings(std::make_shared<terrain_settings>(terrainSettings)) {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
@@ -9,7 +13,7 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(FileAdapter& settings) {
+	TerrainManager::TerrainManager(FileAdapter& settings) : m_filename(settings.getFilename()) {
 		this->settings = std::make_shared<terrain_settings>();
 		this->settings->radius = std::any_cast<float>(settings.getField("radius").getValue());
 		this->settings->numWidth = std::any_cast<int>(settings.getField("num_width").getValue());
@@ -64,6 +68,22 @@ namespace Terrain {
 			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
 			element.addDifference();
 		}
+	}
+
+	void TerrainManager::saveTerrainSettings() {
+		saveTerrainSettings(m_filename);
+	}
+
+	void TerrainManager::saveTerrainSettings(std::string filename) {
+		JSONAdapter json(filename, 4);
+		FileAdapter& settings = json.getSubElement("terrain_settings");
+		settings.clear();
+		settings.addField(FileAdapter::FileField("radius", FileAdapter::ValueType::FLOAT, this->settings->radius));
+		settings.addField(FileAdapter::FileField("num_width", FileAdapter::ValueType::INT, this->settings->numWidth));
+		settings.addField(FileAdapter::FileField("num_height", FileAdapter::ValueType::INT, this->settings->numHeight));
+		settings.addField(FileAdapter::FileField("max_num_elements", FileAdapter::ValueType::INT, static_cast<int>(this->settings->maxNumElements)));
+		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
+		json.save();
 	}
 
 	void TerrainManager::initialiseAndAddNewElement(std::unordered_set<ManipulableTerrainElement>& newElements, const PositionIdentifier& posId) {

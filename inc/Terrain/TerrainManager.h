@@ -21,6 +21,8 @@ namespace std {
 namespace Terrain {
 	class TerrainManager : public ModelEntity<Vector3>, public ShaderHandler {
 	public:
+		virtual ~TerrainManager();
+
 		TerrainManager(terrain_settings terrainSettings);
 		TerrainManager(std::string filename);
 		TerrainManager(FileAdapter& settings);
@@ -38,6 +40,9 @@ namespace Terrain {
 		void removeDifference();
 		void addDifference();
 
+		void saveTerrainSettings();
+		void saveTerrainSettings(std::string filename);
+
 		// GETTER AND SETTER
 		std::shared_ptr<terrain_settings> refSettings();
 		std::shared_ptr<Noise::noise_settings> refNoiseSettings();
@@ -45,6 +50,7 @@ namespace Terrain {
 		RayCollision getRayCollisionWithTerrain(Ray ray, RayCollision boundingBoxHit);
 
 	protected:
+		std::string m_filename;
 		std::shared_ptr<terrain_settings> settings; // The terrain settings
 		std::shared_ptr<Noise::noise_settings> noiseSettings; // The noise settings
 
