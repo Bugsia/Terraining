@@ -149,6 +149,7 @@ public:
 	virtual void addField(FileField field);
 	virtual void addArray(FileArray array);
 	virtual void addSubElement(FileAdapter subElement);
+	virtual void clear();
 
 	// Load/Save
 	virtual void load() {}

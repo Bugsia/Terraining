@@ -8,6 +8,10 @@ std::string FileAdapter::getKey() const {
 	return m_key;
 }
 
+std::string FileAdapter::getFilename() const {
+	return m_filename;
+}
+
 FileAdapter::FileField& FileAdapter::getField(std::string key) {
 	std::unordered_set<std::shared_ptr<FileField>>::iterator field = m_fields.find(std::make_shared<FileField>(key));
 	if (field == m_fields.end()) return **m_fields.insert(std::make_shared<FileField>(key)).first;
@@ -54,4 +58,10 @@ void FileAdapter::addArray(FileArray array) {
 
 void FileAdapter::addSubElement(FileAdapter subElement) {
 	m_subElements.insert(std::make_shared<FileAdapter>(subElement));
+}
+
+void FileAdapter::clear() {
+	m_fields.clear();
+	m_arrays.clear();
+	m_subElements.clear();
 }
