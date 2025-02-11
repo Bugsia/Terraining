@@ -56,6 +56,12 @@ public:
 		}
 	};
 
+	struct FileFieldEqual {
+		bool operator()(const std::shared_ptr<FileField>& field1, const std::shared_ptr<FileField>& field2) const {
+			return field1->getKey() == field2->getKey();
+		}
+	};
+
 	class FileArray {
 	public:
 		virtual ~FileArray() = default;
@@ -106,12 +112,24 @@ public:
 		}
 	};
 
+	struct FileArrayEqual {
+		bool operator()(const std::shared_ptr<FileArray>& array1, const std::shared_ptr<FileArray>& array2) const {
+			return array1->getKey() == array2->getKey();
+		}
+	};
+
 	struct FileAdapterHash {
 		size_t operator()(const std::shared_ptr<FileAdapter>& adapter) const {
 			return std::hash<std::string>()(adapter->getKey());
 		}
 	};
 	
+	struct FileAdapterEqual {
+		bool operator()(const std::shared_ptr<FileAdapter>& adapter1, const std::shared_ptr<FileAdapter>& adapter2) const {
+			return adapter1->getKey() == adapter2->getKey();
+		}
+	};
+
 	virtual ~FileAdapter() = default;
 
 	FileAdapter(std::string key);
@@ -144,7 +162,7 @@ public:
 protected:
 	const std::string m_filename;
 	std::string m_key = "";
-	std::unordered_set<std::shared_ptr<FileField>, FileFieldHash> m_fields;
-	std::unordered_set<std::shared_ptr<FileArray>, FileArrayHash> m_arrays;
-	std::unordered_set<std::shared_ptr<FileAdapter>, FileAdapterHash> m_subElements;
+	std::unordered_set<std::shared_ptr<FileField>, FileFieldHash, FileFieldEqual> m_fields;
+	std::unordered_set<std::shared_ptr<FileArray>, FileArrayHash, FileArrayEqual> m_arrays;
+	std::unordered_set<std::shared_ptr<FileAdapter>, FileAdapterHash, FileAdapterEqual> m_subElements;
 };
