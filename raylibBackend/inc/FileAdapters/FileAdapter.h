@@ -137,6 +137,7 @@ public:
 
 	// Get
 	virtual std::string getKey() const;
+	virtual std::string getFilename() const;
 	virtual FileField& getField(std::string key); // Should add field if it does not exist
 	virtual FileField getField(std::string key) const;
 	virtual FileArray& getArray(std::string key); // Should add array if it does not exist
