@@ -82,7 +82,8 @@ void JSONAdapter::writeFieldToFile(std::ofstream& file, FileField field, int ind
 	file << std::string(indentation, ' ') << "\"" << field.getKey() << "\": ";
 	switch (field.getType()) {
 	case FileAdapter::ValueType::BOOL:
-		file << std::any_cast<bool>(field.getValue());
+		if (std::any_cast<bool>(field.getValue())) file << "true";
+		else file << "false";
 		break;
 	case FileAdapter::ValueType::INT:
 		file << std::any_cast<int>(field.getValue());

@@ -138,10 +138,13 @@ public:
 	// Get
 	virtual std::string getKey() const;
 	virtual std::string getFilename() const;
+	virtual std::vector<std::string> getAllFieldKeys() const;
 	virtual FileField& getField(std::string key); // Should add field if it does not exist
 	virtual FileField getField(std::string key) const;
+	virtual std::vector<std::string> getAllArrayKeys() const;
 	virtual FileArray& getArray(std::string key); // Should add array if it does not exist
 	virtual FileArray getArray(std::string key) const;
+	virtual std::vector<std::string> getAllSubKeys() const;
 	virtual FileAdapter& getSubElement(std::string key); // Should add sub element if it does not exist
 	virtual FileAdapter getSubElement(std::string key) const;
 

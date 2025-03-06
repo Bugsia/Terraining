@@ -12,6 +12,16 @@ std::string FileAdapter::getFilename() const {
 	return m_filename;
 }
 
+std::vector<std::string> FileAdapter::getAllFieldKeys() const {
+	std::vector<std::string> keys;
+
+	for (std::unordered_set<std::shared_ptr<FileField>>::iterator it = m_fields.begin(); it != m_fields.end(); it++) {
+		keys.push_back((*it)->getKey());
+	}
+
+	return keys;
+}
+
 FileAdapter::FileField& FileAdapter::getField(std::string key) {
 	std::unordered_set<std::shared_ptr<FileField>>::iterator field = m_fields.find(std::make_shared<FileField>(key));
 	if (field == m_fields.end()) return **m_fields.insert(std::make_shared<FileField>(key)).first;
@@ -24,6 +34,16 @@ FileAdapter::FileField FileAdapter::getField(std::string key) const {
 	else return **field;
 }
 
+std::vector<std::string> FileAdapter::getAllArrayKeys() const {
+	std::vector<std::string> keys;
+
+	for (std::unordered_set<std::shared_ptr<FileArray>>::iterator it = m_arrays.begin(); it != m_arrays.end(); it++) {
+		keys.push_back((*it)->getKey());
+	}
+
+	return keys;
+}
+
 FileAdapter::FileArray& FileAdapter::getArray(std::string key) {
 	std::unordered_set<std::shared_ptr<FileArray>>::iterator array = m_arrays.find(std::make_shared<FileArray>(key));
 	if (array == m_arrays.end()) return **m_arrays.insert(std::make_shared<FileArray>(key)).first;
@@ -34,6 +54,16 @@ FileAdapter::FileArray FileAdapter::getArray(std::string key) const {
 	std::unordered_set<std::shared_ptr<FileArray>>::iterator array = m_arrays.find(std::make_shared<FileArray>(key));
 	if (array == m_arrays.end()) return FileArray("");
 	else return **array;
+}
+
+std::vector<std::string> FileAdapter::getAllSubKeys() const {
+	std::vector<std::string> keys;
+
+	for (std::unordered_set<std::shared_ptr<FileAdapter>>::iterator it = m_subElements.begin(); it != m_subElements.end(); it++) {
+		keys.push_back((*it)->getKey());
+	}
+
+	return keys;
 }
 
 FileAdapter& FileAdapter::getSubElement(std::string key) {
