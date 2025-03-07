@@ -28,6 +28,19 @@ namespace Terrain {
 		}
 	}
 
+	void ManipulableTerrainElement::loadDifference(std::vector<std::any> heightVector) {
+		if (heightVector.size() > settings->numHeight * settings->numHeight * 3) return;
+		if (m_difference == nullptr) initialiseDifference();
+		
+		for (int i = 0; i < heightVector.size(); i++) {
+			m_difference[i] = std::any_cast<float>(heightVector[i]);
+			m_mesh.vertices[i] += m_difference[i];
+		}
+
+		reloadMeshData();
+		m_hasDifference = true;
+	}
+
 	void ManipulableTerrainElement::manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition) {
 		ValidIndices indices = getValidIndices(radius, relativePosition);
 		if (indices.startIndex == -1) return;
@@ -43,6 +56,7 @@ namespace Terrain {
 		}
 
 		reloadMeshData();
+		m_hasDifference = true;
 	}
 
 	void ManipulableTerrainElement::removeDifference() {
@@ -128,6 +142,7 @@ namespace Terrain {
 			break;
 		case ManipulateDir::NORMAL:
 			TraceLog(LOG_WARNING, "Manipulation along normal is not yet implemented!");
+			return;
 			break;
 		default:
 			TraceLog(LOG_WARNING, "Invalid ManipulateDir!");
@@ -144,5 +159,13 @@ namespace Terrain {
 			m_difference[manipulationIndex] -= strength;
 			break;
 		}
+	}
+
+	const float* ManipulableTerrainElement::getDifference() const {
+		return m_difference;
+	}
+
+	bool ManipulableTerrainElement::getHasDifference() const {
+		return m_hasDifference;
 	}
 }

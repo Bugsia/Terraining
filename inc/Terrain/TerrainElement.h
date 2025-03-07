@@ -34,7 +34,7 @@ namespace Terrain {
 		TerrainElement(PositionIdentifier posId);
 		TerrainElement(const TerrainElement& other);
 
-		int getIdFromPosId();
+		int getIdFromPosId(PositionIdentifier posId);
 		void initialiseMesh();
 		void initialiseElementWithFlatTerrain();
 		void initialiseElementWithNoiseTerrain(std::shared_ptr<Noise::noise_settings> noiseSettings);
@@ -50,6 +50,7 @@ namespace Terrain {
 
 		// GETTER AND SETTER
 		unsigned int getId() const;
+		PositionIdentifier getPosId() const;
 		Mesh& refMesh();
 		void setModelUploaded(std::shared_ptr<bool> modelUploaded);
 

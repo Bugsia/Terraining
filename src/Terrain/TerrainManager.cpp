@@ -2,7 +2,7 @@
 
 namespace Terrain {
 	TerrainManager::~TerrainManager() {
-		saveTerrainSettings();
+		save();
 	}
 
 	TerrainManager::TerrainManager(terrain_settings terrainSettings) : settings(std::make_shared<terrain_settings>(terrainSettings)) {
@@ -13,7 +13,7 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(FileAdapter& settings) : m_filename(settings.getFilename()) {
+	TerrainManager::TerrainManager(const FileAdapter& settings) : m_filename(settings.getFilename()) {
 		this->settings = std::make_shared<terrain_settings>();
 		this->settings->radius = std::any_cast<float>(settings.getField("radius").getValue());
 		this->settings->numWidth = std::any_cast<int>(settings.getField("num_width").getValue());
@@ -70,12 +70,25 @@ namespace Terrain {
 		}
 	}
 
+	void TerrainManager::save() {
+		JSONAdapter json(m_filename, 4);
+		saveTerrainSettings(json);
+		saveNoiseSettings(json);
+		saveTerrainElements(json);
+		json.save();
+	}
+
 	void TerrainManager::saveTerrainSettings() {
 		saveTerrainSettings(m_filename);
 	}
 
 	void TerrainManager::saveTerrainSettings(std::string filename) {
 		JSONAdapter json(filename, 4);
+		saveTerrainSettings(json);
+		json.save();
+	}
+
+	void TerrainManager::saveTerrainSettings(JSONAdapter& json) {
 		FileAdapter& settings = json.getSubElement("terrain_settings");
 		settings.clear();
 		settings.addField(FileAdapter::FileField("radius", FileAdapter::ValueType::FLOAT, this->settings->radius));
@@ -83,7 +96,61 @@ namespace Terrain {
 		settings.addField(FileAdapter::FileField("num_height", FileAdapter::ValueType::INT, this->settings->numHeight));
 		settings.addField(FileAdapter::FileField("max_num_elements", FileAdapter::ValueType::INT, static_cast<int>(this->settings->maxNumElements)));
 		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
+	}
+
+	void TerrainManager::saveNoiseSettings() {
+		saveNoiseSettings(m_filename);
+	}
+
+	void TerrainManager::saveNoiseSettings(std::string filename) {
+		JSONAdapter json(filename, 4);
+		saveNoiseSettings(json);
 		json.save();
+	}
+
+	void TerrainManager::saveNoiseSettings(JSONAdapter& json) {
+		FileAdapter& noise = json.getSubElement("noise_settings");
+		noise.clear();
+		noise.addField(FileAdapter::FileField("seed", FileAdapter::ValueType::INT, noiseSettings->seed));
+		int index = 0;
+		for (Noise::noise_layer_settings& curNoiseLayer : noiseSettings->noiseLayerSettings) {
+			FileAdapter& curNoiseLayerFile = noise.getSubElement(std::to_string(index));
+			curNoiseLayerFile.clear();
+			curNoiseLayerFile.addField(FileAdapter::FileField("horizontal_scale", FileAdapter::ValueType::FLOAT, curNoiseLayer.horizontalScale));
+			curNoiseLayerFile.addField(FileAdapter::FileField("vertical_scale", FileAdapter::ValueType::FLOAT, curNoiseLayer.verticalScale));
+			curNoiseLayerFile.addField(FileAdapter::FileField("offset_x", FileAdapter::ValueType::INT, curNoiseLayer.offsetX));
+			curNoiseLayerFile.addField(FileAdapter::FileField("offset_z", FileAdapter::ValueType::INT, curNoiseLayer.offsetZ));
+			curNoiseLayerFile.addField(FileAdapter::FileField("lacunarity", FileAdapter::ValueType::FLOAT, curNoiseLayer.lacunarity));
+			curNoiseLayerFile.addField(FileAdapter::FileField("gain", FileAdapter::ValueType::FLOAT, curNoiseLayer.gain));
+			curNoiseLayerFile.addField(FileAdapter::FileField("octaves", FileAdapter::ValueType::INT, curNoiseLayer.octaves));
+			curNoiseLayerFile.addField(FileAdapter::FileField("around_zero", FileAdapter::ValueType::BOOL, curNoiseLayer.aroundZero));
+			index++;
+		}
+	}
+
+	void TerrainManager::saveTerrainElements() {
+		saveTerrainElements(m_filename);
+	}
+
+	void TerrainManager::saveTerrainElements(std::string filename) {
+		JSONAdapter json(filename, 4);
+		saveTerrainElements(json);
+		json.save();
+	}
+
+	void TerrainManager::saveTerrainElements(JSONAdapter& json) {
+		FileAdapter& elements = json.getSubElement("terrain_elements");
+		elements.clear();
+		for (std::unordered_set<ManipulableTerrainElement>::iterator it = this->elements.begin(); it != this->elements.end(); it++) {
+			if (!it->getHasDifference()) continue;
+			PositionIdentifier posId = it->getPosId();
+			std::string key = "x" + std::to_string(posId.x) + "i" + std::to_string(posId.i) + "z" + std::to_string(posId.z) + "n" + std::to_string(posId.n);
+			FileAdapter& curElement = elements.getSubElement(key);
+			curElement.clear();
+			const float* heightArray = it->getDifference();
+			std::vector<std::any> heightDifference(heightArray, heightArray + (settings->numWidth * settings->numHeight * 3));
+			curElement.addArray(FileAdapter::FileArray("heightDifference", FileAdapter::ValueType::FLOAT, heightDifference));
+		}
 	}
 
 	void TerrainManager::initialiseAndAddNewElement(std::unordered_set<ManipulableTerrainElement>& newElements, const PositionIdentifier& posId) {
@@ -166,6 +233,30 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "Terrain: Default terrain has been generated");
 	}
 
+	void TerrainManager::loadTerrainElements(const FileAdapter& elements) {
+		generateNewManipulableTerrains();
+
+		for (std::string key : elements.getAllSubKeys()) {
+			FileAdapter curElementFile = elements.getSubElement(key);
+			PositionIdentifier posId = getPositionIdentifierFromKey(key);
+			std::unordered_set<ManipulableTerrainElement>::iterator it = this->elements.find(ManipulableTerrainElement(posId));
+			if (it == this->elements.end()) continue;
+			ManipulableTerrainElement& curElement = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+			curElement.loadDifference(curElementFile.getArray("heightDifference").getValue());
+		}
+
+		TraceLog(LOG_DEBUG, "Terrain: Terrain elements have been loaded");
+	}
+
+	PositionIdentifier TerrainManager::getPositionIdentifierFromKey(std::string key) {
+		PositionIdentifier posId;
+		posId.x = std::stoi(key.substr(1, key.find("i") - 1));
+		posId.i = std::stoi(key.substr(key.find("i") + 1, key.find("z") - key.find("i") - 1));
+		posId.z = std::stoi(key.substr(key.find("z") + 1, key.find("n") - key.find("z") - 1));
+		posId.n = std::stoi(key.substr(key.find("n") + 1, key.length() - key.find("n") - 1));
+		return posId;
+	}
+
 	void TerrainManager::initializeModel() {
 		m_model = newModel();
 
@@ -176,6 +267,30 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "Terrain: Model has been initialized");
 
 		*modelUploaded = true;
+	}
+
+	void TerrainManager::loadNoiseSettings(const FileAdapter& settingsFile) {
+		noiseSettings = std::make_shared<Noise::noise_settings>(Noise::newNoiseSettings());
+
+		noiseSettings->seed = std::any_cast<int>(settingsFile.getField("seed").getValue());
+		
+		for (int index = 0; ; index++) {
+			FileAdapter curNoiseLayerFile = settingsFile.getSubElement(std::to_string(index));
+			if (curNoiseLayerFile.getKey() == "") break;
+
+			Noise::noise_layer_settings curNoiseLayer;
+			curNoiseLayer.horizontalScale = std::any_cast<float>(curNoiseLayerFile.getField("horizontal_scale").getValue());
+			curNoiseLayer.verticalScale = std::any_cast<float>(curNoiseLayerFile.getField("vertical_scale").getValue());
+			curNoiseLayer.offsetX = std::any_cast<int>(curNoiseLayerFile.getField("offset_x").getValue());
+			curNoiseLayer.offsetZ = std::any_cast<int>(curNoiseLayerFile.getField("offset_z").getValue());
+			curNoiseLayer.lacunarity = std::any_cast<float>(curNoiseLayerFile.getField("lacunarity").getValue());
+			curNoiseLayer.gain = std::any_cast<float>(curNoiseLayerFile.getField("gain").getValue());
+			curNoiseLayer.octaves = std::any_cast<int>(curNoiseLayerFile.getField("octaves").getValue());
+			curNoiseLayer.aroundZero = std::any_cast<bool>(curNoiseLayerFile.getField("around_zero").getValue());
+			noiseSettings->noiseLayerSettings.push_back(curNoiseLayer);
+		}
+
+		TraceLog(LOG_DEBUG, "Terrain: Noise has been loaded");
 	}
 
 	void TerrainManager::initializeNoise() {

@@ -1,5 +1,6 @@
 #pragma once
 #include <raylib.h>
+#include <any>
 #include "TerrainElement.h"
 
 namespace Terrain {
@@ -29,8 +30,12 @@ namespace Terrain {
 		ManipulableTerrainElement(const ManipulableTerrainElement& other);
 
 		void manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition);
+		void loadDifference(std::vector<std::any> heightVector);
 		void removeDifference();
 		void addDifference();
+
+		const float* getDifference() const;
+		bool getHasDifference() const;
 
 	private:
 		struct ValidIndices {
@@ -40,6 +45,7 @@ namespace Terrain {
 		};
 
 		float* m_difference;
+		bool m_hasDifference = false;
 
 		ValidIndices getValidIndices(float radius, Vector3 position);
 		float manipulationStrength(ManipulateForm form, float radius, Vector2 center, Vector2 position);

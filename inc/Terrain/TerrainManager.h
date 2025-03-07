@@ -25,10 +25,12 @@ namespace Terrain {
 
 		TerrainManager(terrain_settings terrainSettings);
 		TerrainManager(std::string filename);
-		TerrainManager(FileAdapter& settings);
+		TerrainManager(const FileAdapter& settings);
 
 		void generateDefaultTerrain();
+		void loadTerrainElements(const FileAdapter& elements);
 		void initializeModel();
+		void loadNoiseSettings(const FileAdapter& settingsFile);
 		void initializeNoise();
 		void updateTerrain(float oldRadius);
 		void renewTerrain();
@@ -40,8 +42,13 @@ namespace Terrain {
 		void removeDifference();
 		void addDifference();
 
+		void save();
 		void saveTerrainSettings();
 		void saveTerrainSettings(std::string filename);
+		void saveNoiseSettings();
+		void saveNoiseSettings(std::string filename);
+		void saveTerrainElements();
+		void saveTerrainElements(std::string filename);
 
 		// GETTER AND SETTER
 		std::shared_ptr<terrain_settings> refSettings();
@@ -65,5 +72,10 @@ namespace Terrain {
 		void initializeModelMaterials(); // Initializes the model with the default material and sets it to be the material of every mesh
 		void updateElementsNoise();
 		void updateModel();
+		PositionIdentifier getPositionIdentifierFromKey(std::string key);
+
+		void saveTerrainSettings(JSONAdapter& json);
+		void saveNoiseSettings(JSONAdapter& jsone);
+		void saveTerrainElements(JSONAdapter& json);
 	};
 }

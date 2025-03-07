@@ -102,7 +102,7 @@ namespace Terrain {
 		m_mesh.texcoords = flatTerrainTexcoords();
 	}
 
-	int TerrainElement::getIdFromPosId() {
+	int TerrainElement::getIdFromPosId(PositionIdentifier posId) {
 		// Since x and z in posId are only in top right quadrant this calculates actual x and z index
 		int absXIndex = (posId.x * posId.i) + (std::min(0, posId.i));
 		int absZIndex = (posId.z * posId.n) + (std::min(0, posId.n));
@@ -122,13 +122,13 @@ namespace Terrain {
 	}
 
 	TerrainElement::TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : settings(settings), posId(posId), meshUploaded(false) {
-		id = getIdFromPosId();
+		id = getIdFromPosId(posId);
 		m_position = getPositionFromPosId();
 
 		TraceLog(LOG_DEBUG, "TerrainElement: New element %i has been created", id);
 	}
 
-	TerrainElement::TerrainElement(PositionIdentifier posId) : posId(posId), id(getIdFromPosId()) {
+	TerrainElement::TerrainElement(PositionIdentifier posId) : posId(posId), id(getIdFromPosId(posId)) {
 		TraceLog(LOG_DEBUG, "TerrainElement: New search element %i has been created", id);
 	}
 
@@ -247,6 +247,10 @@ namespace Terrain {
 
 	unsigned int TerrainElement::getId() const {
 		return id;
+	}
+
+	PositionIdentifier TerrainElement::getPosId() const {
+		return posId;
 	}
 
 	Mesh& TerrainElement::refMesh() {

@@ -3,8 +3,8 @@
 
 #include "Terraining.h"
 
-#define SETTINGS_FILE "data/settings.json"
-#define INDENTATION 4
+constexpr auto SETTINGS_FILE = "data/settings.json";
+constexpr int INDENTATION = 4;
 
 struct window_settings {
 	int width;
@@ -36,15 +36,15 @@ int main()
 	JSONAdapter json(SETTINGS_FILE, INDENTATION);
 
 	window_settings settings = loadWindowSettings(json.getSubElement("window_settings"));
-	InitWindow(settings.width, settings.height, settings.title.c_str());
-	SetTargetFPS(settings.targetFps);
 	for (unsigned int flag : settings.flags) {
 		SetConfigFlags(flag);
 	}
+	InitWindow(settings.width, settings.height, settings.title.c_str());
+	SetTargetFPS(settings.targetFps);
 
 	Terrain::TerrainManager terrainManager(json.getSubElement("terrain_settings"));
-	terrainManager.initializeNoise();
-	terrainManager.generateDefaultTerrain();
+	terrainManager.loadNoiseSettings(json.getSubElement("noise_settings"));
+	terrainManager.loadTerrainElements(json.getSubElement("terrain_elements"));
 	terrainManager.initializeModel();
 
 	Character character;
