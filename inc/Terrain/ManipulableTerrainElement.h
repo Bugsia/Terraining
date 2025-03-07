@@ -20,7 +20,8 @@ namespace Terrain {
 
 		enum ManipulateType {
 			RAISE,
-			LOWER
+			LOWER,
+			FLATTEN
 		};
 
 		~ManipulableTerrainElement();
@@ -50,7 +51,7 @@ namespace Terrain {
 
 		ValidIndices getValidIndices(float radius, Vector3 position);
 		float manipulationStrength(ManipulateForm form, float radius, Vector2 center, Vector2 position);
-		void manipulateVertex(ManipulateDir dir, ManipulateType type, float strength, int index);
+		void manipulateVertex(ManipulateDir dir, ManipulateType type, float strengthFactor, float strength, int index);
 		void initialiseDifference();
 	};
 }

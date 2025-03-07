@@ -53,7 +53,7 @@ namespace Terrain {
 		for (int x = 0; x < indices.width; x++, index += (settings->numHeight - indices.height) * 3, vertexPos.x += settings->spacing, vertexPos.y = m_mesh.vertices[indices.startIndex * 3 + 2] - m_position.z) {
 			for (int z = 0; z < indices.height; z++, index += 3, vertexPos.y += settings->spacing) {
 				float strengthFactor = manipulationStrength(form, radius, { relativePosition.x, relativePosition.z }, vertexPos);
-				manipulateVertex(dir, type, strength * strengthFactor, index);
+				manipulateVertex(dir, type, strengthFactor, strength, index);
 			}
 		}
 
@@ -138,7 +138,7 @@ namespace Terrain {
 		return strengthFactor;
 	}
 
-	void ManipulableTerrainElement::manipulateVertex(ManipulateDir dir, ManipulateType type, float strength, int index) {
+	void ManipulableTerrainElement::manipulateVertex(ManipulateDir dir, ManipulateType type, float strengthFactor, float strength, int index) {
 		int manipulationIndex;
 		
 		switch (dir) {
@@ -162,13 +162,17 @@ namespace Terrain {
 
 		switch (type) {
 		case ManipulateType::RAISE:
-			m_mesh.vertices[manipulationIndex] += strength;
-			m_difference[manipulationIndex] += strength;
+			m_mesh.vertices[manipulationIndex] += strengthFactor * strength;
+			m_difference[manipulationIndex] += strengthFactor * strength;
 			break;
 		case ManipulateType::LOWER:
-			m_mesh.vertices[manipulationIndex] -= strength;	
-			m_difference[manipulationIndex] -= strength;
+			m_mesh.vertices[manipulationIndex] -= strengthFactor * strength;
+			m_difference[manipulationIndex] -= strengthFactor * strength;
 			break;
+		case ManipulateType::FLATTEN:
+			m_difference[manipulationIndex] = strengthFactor * (strength - m_mesh.vertices[manipulationIndex]);
+			m_mesh.vertices[manipulationIndex] += m_difference[manipulationIndex];
+		break;
 		}
 	}
 

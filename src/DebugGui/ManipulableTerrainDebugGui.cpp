@@ -45,6 +45,8 @@ namespace DebugGui {
 		ImGui::RadioButton("Raise", (int*)&m_manipulateType, Terrain::ManipulableTerrainElement::ManipulateType::RAISE);
 		ImGui::SameLine();
 		ImGui::RadioButton("Lower", (int*)&m_manipulateType, Terrain::ManipulableTerrainElement::ManipulateType::LOWER);
+		ImGui::SameLine();
+		ImGui::RadioButton("Flatten", (int*)&m_manipulateType, Terrain::ManipulableTerrainElement::ManipulateType::FLATTEN);
 
 		ImGui::SliderFloat("Strength", &m_manipulateStrength, 0.0f, 25.0f);
 		ImGui::SliderFloat("Radius", &m_manipulateRadius, 0.0f, 25.0f);
