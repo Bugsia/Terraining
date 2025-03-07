@@ -9,7 +9,7 @@ namespace Noise {
 	struct noise_layer_settings;
 
 	struct noise_settings {
-		long seed;
+		int seed;
 		std::vector<noise_layer_settings> noiseLayerSettings;
 	};
 
