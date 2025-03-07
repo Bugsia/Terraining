@@ -1,7 +1,9 @@
 #include "Terrain/ManipulableTerrainElement.h"
 
 namespace Terrain {
-	ManipulableTerrainElement::~ManipulableTerrainElement() {}
+	ManipulableTerrainElement::~ManipulableTerrainElement() {
+		if(m_difference) delete[] m_difference;
+	}
 
 	ManipulableTerrainElement::ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : TerrainElement(settings, posId) { 
 		initialiseDifference();
@@ -73,6 +75,15 @@ namespace Terrain {
 		}
 
 		reloadMeshData();
+	}
+
+	void ManipulableTerrainElement::clearDifference() {
+		if(m_difference) delete[] m_difference;
+		initialiseDifference();
+		randomizeTerrain();
+		updateNormals();
+		reloadMeshData();
+		m_hasDifference = false;
 	}
 
 	ManipulableTerrainElement::ValidIndices ManipulableTerrainElement::getValidIndices(float radius, Vector3 position) {

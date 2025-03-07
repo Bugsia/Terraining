@@ -33,6 +33,7 @@ namespace Terrain {
 		void loadDifference(std::vector<std::any> heightVector);
 		void removeDifference();
 		void addDifference();
+		void clearDifference();
 
 		const float* getDifference() const;
 		bool getHasDifference() const;
@@ -44,7 +45,7 @@ namespace Terrain {
 			int height;
 		};
 
-		float* m_difference;
+		float* m_difference = nullptr;
 		bool m_hasDifference = false;
 
 		ValidIndices getValidIndices(float radius, Vector3 position);

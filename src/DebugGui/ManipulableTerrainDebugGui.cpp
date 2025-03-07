@@ -17,6 +17,7 @@ namespace DebugGui {
 
 		if (ImGui::Button("Remove Difference")) m_terrain.removeDifference();
 		if (ImGui::Button("Add Difference")) m_terrain.addDifference();
+		if (ImGui::Button("Clear Difference")) m_terrain.clearDifference();
 
 		ImGui::End();
 

@@ -70,6 +70,13 @@ namespace Terrain {
 		}
 	}
 
+	void TerrainManager::clearDifference() {
+		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
+			element.clearDifference();
+		}
+	}
+
 	void TerrainManager::save() {
 		JSONAdapter json(m_filename, 4);
 		saveTerrainSettings(json);
@@ -214,6 +221,7 @@ namespace Terrain {
 			element.updateNoiseLayers();
 			element.randomizeTerrain();
 			element.updateNormals();
+			element.addDifference();
 			element.reloadMeshData();
 		}
 	}

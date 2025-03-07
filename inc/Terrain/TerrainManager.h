@@ -41,6 +41,7 @@ namespace Terrain {
 
 		void removeDifference();
 		void addDifference();
+		void clearDifference();
 
 		void save();
 		void saveTerrainSettings();
