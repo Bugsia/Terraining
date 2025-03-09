@@ -7,6 +7,7 @@
 #include "ModelEntity.h"
 #include "ShaderHandler.h"
 #include "FileAdapters/JSONAdapter.h"
+#include "FileAdapters/Saveable.h"
 
 // Custom hash function for ManipulableTerrain
 namespace std {
@@ -43,13 +44,14 @@ namespace Terrain {
 		void addDifference();
 		void clearDifference();
 
-		void save();
-		void saveTerrainSettings();
-		void saveTerrainSettings(std::string filename);
-		void saveNoiseSettings();
-		void saveNoiseSettings(std::string filename);
-		void saveTerrainElements();
-		void saveTerrainElements(std::string filename);
+		void save() const;
+		void save(std::string filename) const;
+		void save(FileAdapter& file) const;
+		void saveTerrainSettings() const;
+		void saveTerrainSettings(std::string filename) const;
+		void saveNoiseSettings() const;
+		void saveNoiseSettings(std::string filename) const;
+		void saveTerrainElements() const;
 
 		// GETTER AND SETTER
 		std::shared_ptr<terrain_settings> refSettings();
@@ -58,7 +60,6 @@ namespace Terrain {
 		RayCollision getRayCollisionWithTerrain(Ray ray, RayCollision boundingBoxHit);
 
 	protected:
-		std::string m_filename;
 		std::shared_ptr<terrain_settings> settings; // The terrain settings
 		std::shared_ptr<Noise::noise_settings> noiseSettings; // The noise settings
 
@@ -75,8 +76,9 @@ namespace Terrain {
 		void updateModel();
 		PositionIdentifier getPositionIdentifierFromKey(std::string key);
 
-		void saveTerrainSettings(JSONAdapter& json);
-		void saveNoiseSettings(JSONAdapter& jsone);
-		void saveTerrainElements(JSONAdapter& json);
+		void saveTerrainElements(std::string filename) const;
+		void saveTerrainSettings(FileAdapter& json) const;
+		void saveNoiseSettings(FileAdapter& jsone) const;
+		void saveTerrainElements(FileAdapter& json) const;
 	};
 }

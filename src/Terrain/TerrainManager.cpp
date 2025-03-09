@@ -77,25 +77,34 @@ namespace Terrain {
 		}
 	}
 
-	void TerrainManager::save() {
-		JSONAdapter json(m_filename, 4);
-		saveTerrainSettings(json);
-		saveNoiseSettings(json);
-		saveTerrainElements(json);
-		json.save();
+	void TerrainManager::save() const {
+		save(m_filename);
 	}
 
-	void TerrainManager::saveTerrainSettings() {
+	void TerrainManager::save(std::string filename) const {
+		JSONAdapter json(filename, 4);
+		save(json.getSubElement(m_name));
+	}
+
+	void TerrainManager::save(FileAdapter& file) const {
+		Entity::save(file);
+		saveTerrainSettings(file);
+		saveNoiseSettings(file);
+		saveTerrainElements(file);
+		file.save();
+	}
+
+	void TerrainManager::saveTerrainSettings() const {
 		saveTerrainSettings(m_filename);
 	}
 
-	void TerrainManager::saveTerrainSettings(std::string filename) {
+	void TerrainManager::saveTerrainSettings(std::string filename) const {
 		JSONAdapter json(filename, 4);
 		saveTerrainSettings(json);
 		json.save();
 	}
 
-	void TerrainManager::saveTerrainSettings(JSONAdapter& json) {
+	void TerrainManager::saveTerrainSettings(FileAdapter& json) const {
 		FileAdapter& settings = json.getSubElement("terrain_settings");
 		settings.clear();
 		settings.addField(FileAdapter::FileField("radius", FileAdapter::ValueType::FLOAT, this->settings->radius));
@@ -105,17 +114,17 @@ namespace Terrain {
 		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
 	}
 
-	void TerrainManager::saveNoiseSettings() {
+	void TerrainManager::saveNoiseSettings() const {
 		saveNoiseSettings(m_filename);
 	}
 
-	void TerrainManager::saveNoiseSettings(std::string filename) {
+	void TerrainManager::saveNoiseSettings(std::string filename) const {
 		JSONAdapter json(filename, 4);
 		saveNoiseSettings(json);
 		json.save();
 	}
 
-	void TerrainManager::saveNoiseSettings(JSONAdapter& json) {
+	void TerrainManager::saveNoiseSettings(FileAdapter& json) const {
 		FileAdapter& noise = json.getSubElement("noise_settings");
 		noise.clear();
 		noise.addField(FileAdapter::FileField("seed", FileAdapter::ValueType::INT, noiseSettings->seed));
@@ -135,18 +144,18 @@ namespace Terrain {
 		}
 	}
 
-	void TerrainManager::saveTerrainElements() {
+	void TerrainManager::saveTerrainElements() const {
 		saveTerrainElements(m_filename);
 	}
 
-	void TerrainManager::saveTerrainElements(std::string filename) {
+	void TerrainManager::saveTerrainElements(std::string filename) const {
 		JSONAdapter json(filename, 4);
 		saveTerrainElements(json);
 		json.save();
 	}
 
-	void TerrainManager::saveTerrainElements(JSONAdapter& json) {
-		FileAdapter& elements = json.getSubElement("terrain_elements");
+	void TerrainManager::saveTerrainElements(FileAdapter& file) const {
+		FileAdapter& elements = file.getSubElement("terrain_elements");
 		elements.clear();
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = this->elements.begin(); it != this->elements.end(); it++) {
 			if (!it->getHasDifference()) continue;
