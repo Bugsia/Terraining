@@ -3,8 +3,9 @@
 #include <raymath.h>
 #include <memory>
 #include <vector>
-#include "MeshEntity.h"
+#include "MeshObject.h"
 #include "Noise.h"
+#include "Entity.h"
 
 #define MAX_MESH_VBO 7
 
@@ -27,7 +28,7 @@ namespace Terrain {
 		int n = 1; // -1 if element is in top half, 1 if element is in bottom half of terrain
 	};
 
-	class TerrainElement : public MeshEntity<Vector3> {
+	class TerrainElement : public MeshObject<Entity<Vector3>> {
 	public:
 		virtual ~TerrainElement();
 		TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);

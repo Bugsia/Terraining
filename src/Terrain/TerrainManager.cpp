@@ -5,15 +5,18 @@ namespace Terrain {
 		save();
 	}
 
-	TerrainManager::TerrainManager(terrain_settings terrainSettings) : settings(std::make_shared<terrain_settings>(terrainSettings)) {
+	TerrainManager::TerrainManager(std::string name, terrain_settings terrainSettings) : settings(std::make_shared<terrain_settings>(terrainSettings)) {
+		m_name = name;
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(std::string filename) : TerrainManager(JSONAdapter(filename).getSubElement("terrain_settings")) {
+	TerrainManager::TerrainManager(std::string name, std::string filename) : TerrainManager(name, JSONAdapter(filename).getSubElement("terrain_settings")) {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(const FileAdapter& settings) : m_filename(settings.getFilename()) {
+	TerrainManager::TerrainManager(std::string name, const FileAdapter& settings) {
+		m_name = name;
+		m_filename = settings.getFilename();
 		this->settings = std::make_shared<terrain_settings>();
 		this->settings->radius = std::any_cast<float>(settings.getField("radius").getValue());
 		this->settings->numWidth = std::any_cast<int>(settings.getField("num_width").getValue());
@@ -87,7 +90,7 @@ namespace Terrain {
 	}
 
 	void TerrainManager::save(FileAdapter& file) const {
-		Entity::save(file);
+		Actor::save(file);
 		saveTerrainSettings(file);
 		saveNoiseSettings(file);
 		saveTerrainElements(file);
@@ -417,7 +420,7 @@ namespace Terrain {
 
 	void TerrainManager::draw() {
 		// activate();
-		ModelEntity::draw();
+		ModelObject::draw();
 		// deactivate();
 	}
 

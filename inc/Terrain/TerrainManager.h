@@ -4,10 +4,9 @@
 #include <unordered_set>
 #include <string>
 #include "Terrain/ManipulableTerrainElement.h"
-#include "ModelEntity.h"
-#include "ShaderHandler.h"
+#include "ModelObject.h"
+#include "Actor.h"
 #include "FileAdapters/JSONAdapter.h"
-#include "FileAdapters/Saveable.h"
 
 // Custom hash function for ManipulableTerrain
 namespace std {
@@ -20,13 +19,13 @@ namespace std {
 }
 
 namespace Terrain {
-	class TerrainManager : public ModelEntity<Vector3>, public ShaderHandler {
+	class TerrainManager : public ModelObject<Actor<Vector3>> {
 	public:
 		virtual ~TerrainManager();
 
-		TerrainManager(terrain_settings terrainSettings);
-		TerrainManager(std::string filename);
-		TerrainManager(const FileAdapter& settings);
+		TerrainManager(std::string name, terrain_settings terrainSettings);
+		TerrainManager(std::string name, std::string filename);
+		TerrainManager(std::string name, const FileAdapter& settings);
 
 		void generateDefaultTerrain();
 		void loadTerrainElements(const FileAdapter& elements);
@@ -46,7 +45,6 @@ namespace Terrain {
 
 		void save() const;
 		void save(std::string filename) const;
-		void save(FileAdapter& file) const;
 		void saveTerrainSettings() const;
 		void saveTerrainSettings(std::string filename) const;
 		void saveNoiseSettings() const;
@@ -76,6 +74,7 @@ namespace Terrain {
 		void updateModel();
 		PositionIdentifier getPositionIdentifierFromKey(std::string key);
 
+		void save(FileAdapter& file) const;
 		void saveTerrainElements(std::string filename) const;
 		void saveTerrainSettings(FileAdapter& json) const;
 		void saveNoiseSettings(FileAdapter& jsone) const;

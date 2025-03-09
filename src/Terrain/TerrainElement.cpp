@@ -132,7 +132,7 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainElement: New search element %i has been created", id);
 	}
 
-	TerrainElement::TerrainElement(const TerrainElement& other) : MeshEntity(other), id(other.id), settings(other.settings), posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded) {
+	TerrainElement::TerrainElement(const TerrainElement& other) : MeshObject(other), id(other.id), settings(other.settings), posId(other.posId), dynamicMesh(other.dynamicMesh), meshUploaded(other.meshUploaded), modelUploaded(other.modelUploaded) {
 		noiseLayerPixels = std::vector<Color*>(other.noiseLayerPixels.size(), nullptr);
 		for (int i = 0; i < other.noiseLayerPixels.size(); i++) {
 			noiseLayerPixels[i] = (Color*)RL_MALLOC(sizeof(Color) * settings->numWidth * settings->numHeight);

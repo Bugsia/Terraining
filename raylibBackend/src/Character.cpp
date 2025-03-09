@@ -24,8 +24,8 @@ void Character::update() {
 void Character::handleInput() {
 	Vector3 forward = Vector3Subtract(m_camera.target, m_camera.position);
 	Vector3 left = Vector3Normalize(Vector3CrossProduct(m_camera.up, forward));
-	float deltaSpeed = GetFrameTime() * speed;
-	float deltaSensitivity = GetFrameTime() * sensitivity;
+	float deltaSpeed = GetFrameTime() * m_speed;
+	float deltaSensitivity = GetFrameTime() * m_sensitivity;
 
 	// Keyboard movement
 	if (IsKeyDown(KEY_LEFT_SHIFT)) deltaSpeed *= 2.0f;
@@ -76,6 +76,25 @@ void Character::handleInput() {
 void Character::move(Vector3 change) {
 	m_camera.position = Vector3Add(m_camera.position, change);
 	m_camera.target = Vector3Add(m_camera.target, change);
+}
+
+void Character::save() const {
+	save(m_filename);
+}
+
+void Character::save(std::string filename) const {
+	JSONAdapter json(filename, 4);
+	save(json);
+	json.save();
+}
+
+void Character::save(FileAdapter& file) const {
+	Actor::save(file);
+	file.getField("type").setValue(FileAdapter::INT, m_type);
+	file.getField("sensitivity").setValue(FileAdapter::FLOAT, m_sensitivity);
+	file.getField("speed").setValue(FileAdapter::FLOAT, m_speed);
+	file.getField("hAngle").setValue(FileAdapter::FLOAT, hAngle);
+	file.getField("vAngle").setValue(FileAdapter::FLOAT, vAngle);
 }
 
 Camera& Character::getCamera() {

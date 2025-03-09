@@ -42,7 +42,7 @@ int main()
 	InitWindow(settings.width, settings.height, settings.title.c_str());
 	SetTargetFPS(settings.targetFps);
 
-	Terrain::TerrainManager terrainManager(json.getSubElement("terrain_settings"));
+	Terrain::TerrainManager terrainManager("Terrain", json.getSubElement("terrain_settings"));
 	terrainManager.loadNoiseSettings(json.getSubElement("noise_settings"));
 	terrainManager.loadTerrainElements(json.getSubElement("terrain_elements"));
 	terrainManager.initializeModel();
