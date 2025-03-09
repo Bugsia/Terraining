@@ -1,28 +1,28 @@
 #include "Terrain/TerrainManager.h"
 
 namespace Terrain {
-	TerrainManager::~TerrainManager() {
-		save();
-	}
-
 	TerrainManager::TerrainManager(std::string name, terrain_settings terrainSettings) : settings(std::make_shared<terrain_settings>(terrainSettings)) {
 		m_name = name;
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(std::string name, std::string filename) : TerrainManager(name, JSONAdapter(filename).getSubElement("terrain_settings")) {
+	TerrainManager::TerrainManager(std::string name, std::string filename) : TerrainManager(JSONAdapter(filename, 4).getSubElement(name)) {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(std::string name, const FileAdapter& settings) {
-		m_name = name;
+	TerrainManager::TerrainManager(const FileAdapter& settings) {
+		m_name = settings.getKey();
 		m_filename = settings.getFilename();
+		const FileAdapter& terrainSettingsFile = settings.getSubElement("terrain_settings");
 		this->settings = std::make_shared<terrain_settings>();
-		this->settings->radius = std::any_cast<float>(settings.getField("radius").getValue());
-		this->settings->numWidth = std::any_cast<int>(settings.getField("num_width").getValue());
-		this->settings->numHeight = std::any_cast<int>(settings.getField("num_height").getValue());
-		this->settings->maxNumElements = std::any_cast<int>(settings.getField("max_num_elements").getValue());
-		this->settings->spacing = std::any_cast<float>(settings.getField("spacing").getValue());
+		this->settings->radius = std::any_cast<float>(terrainSettingsFile.getField("radius").getValue());
+		this->settings->numWidth = std::any_cast<int>(terrainSettingsFile.getField("num_width").getValue());
+		this->settings->numHeight = std::any_cast<int>(terrainSettingsFile.getField("num_height").getValue());
+		this->settings->maxNumElements = std::any_cast<int>(terrainSettingsFile.getField("max_num_elements").getValue());
+		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
+		loadNoiseSettings(settings.getSubElement("noise_settings"));
+		loadTerrainElements(settings.getSubElement("terrain_elements"));
+		Actor::load(settings);
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
@@ -87,6 +87,7 @@ namespace Terrain {
 	void TerrainManager::save(std::string filename) const {
 		JSONAdapter json(filename, 4);
 		save(json.getSubElement(m_name));
+		json.save();
 	}
 
 	void TerrainManager::save(FileAdapter& file) const {
@@ -94,17 +95,6 @@ namespace Terrain {
 		saveTerrainSettings(file);
 		saveNoiseSettings(file);
 		saveTerrainElements(file);
-		file.save();
-	}
-
-	void TerrainManager::saveTerrainSettings() const {
-		saveTerrainSettings(m_filename);
-	}
-
-	void TerrainManager::saveTerrainSettings(std::string filename) const {
-		JSONAdapter json(filename, 4);
-		saveTerrainSettings(json);
-		json.save();
 	}
 
 	void TerrainManager::saveTerrainSettings(FileAdapter& json) const {
@@ -115,16 +105,6 @@ namespace Terrain {
 		settings.addField(FileAdapter::FileField("num_height", FileAdapter::ValueType::INT, this->settings->numHeight));
 		settings.addField(FileAdapter::FileField("max_num_elements", FileAdapter::ValueType::INT, static_cast<int>(this->settings->maxNumElements)));
 		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
-	}
-
-	void TerrainManager::saveNoiseSettings() const {
-		saveNoiseSettings(m_filename);
-	}
-
-	void TerrainManager::saveNoiseSettings(std::string filename) const {
-		JSONAdapter json(filename, 4);
-		saveNoiseSettings(json);
-		json.save();
 	}
 
 	void TerrainManager::saveNoiseSettings(FileAdapter& json) const {
@@ -145,16 +125,6 @@ namespace Terrain {
 			curNoiseLayerFile.addField(FileAdapter::FileField("around_zero", FileAdapter::ValueType::BOOL, curNoiseLayer.aroundZero));
 			index++;
 		}
-	}
-
-	void TerrainManager::saveTerrainElements() const {
-		saveTerrainElements(m_filename);
-	}
-
-	void TerrainManager::saveTerrainElements(std::string filename) const {
-		JSONAdapter json(filename, 4);
-		saveTerrainElements(json);
-		json.save();
 	}
 
 	void TerrainManager::saveTerrainElements(FileAdapter& file) const {

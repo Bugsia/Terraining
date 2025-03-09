@@ -21,11 +21,9 @@ namespace std {
 namespace Terrain {
 	class TerrainManager : public ModelObject<Actor<Vector3>> {
 	public:
-		virtual ~TerrainManager();
-
 		TerrainManager(std::string name, terrain_settings terrainSettings);
 		TerrainManager(std::string name, std::string filename);
-		TerrainManager(std::string name, const FileAdapter& settings);
+		TerrainManager(const FileAdapter& settings);
 
 		void generateDefaultTerrain();
 		void loadTerrainElements(const FileAdapter& elements);
@@ -45,11 +43,7 @@ namespace Terrain {
 
 		void save() const;
 		void save(std::string filename) const;
-		void saveTerrainSettings() const;
-		void saveTerrainSettings(std::string filename) const;
-		void saveNoiseSettings() const;
-		void saveNoiseSettings(std::string filename) const;
-		void saveTerrainElements() const;
+		void save(FileAdapter& file) const;
 
 		// GETTER AND SETTER
 		std::shared_ptr<terrain_settings> refSettings();
@@ -74,8 +68,6 @@ namespace Terrain {
 		void updateModel();
 		PositionIdentifier getPositionIdentifierFromKey(std::string key);
 
-		void save(FileAdapter& file) const;
-		void saveTerrainElements(std::string filename) const;
 		void saveTerrainSettings(FileAdapter& json) const;
 		void saveNoiseSettings(FileAdapter& jsone) const;
 		void saveTerrainElements(FileAdapter& json) const;

@@ -42,9 +42,7 @@ int main()
 	InitWindow(settings.width, settings.height, settings.title.c_str());
 	SetTargetFPS(settings.targetFps);
 
-	Terrain::TerrainManager terrainManager("Terrain", json.getSubElement("terrain_settings"));
-	terrainManager.loadNoiseSettings(json.getSubElement("noise_settings"));
-	terrainManager.loadTerrainElements(json.getSubElement("terrain_elements"));
+	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"));
 	terrainManager.initializeModel();
 
 	Character character;
@@ -81,5 +79,9 @@ int main()
 
 		EndDrawing();
 	}
+
+	terrainManager.save(json.getSubElement(terrainManager.getName()));
+	json.save();
+
 	return 0;
 }
