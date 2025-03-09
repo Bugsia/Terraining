@@ -80,6 +80,11 @@ public:
 			m_values.erase(m_values.begin() + index);
 		}
 
+		virtual void setValues(ValueType type, std::vector<std::any> values) {
+			m_type = type;
+			m_values = values;
+		}
+
 		virtual std::string getKey() const {
 			return m_key;
 		}
