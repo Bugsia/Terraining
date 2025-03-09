@@ -11,6 +11,7 @@ concept validTypes = std::same_as<T, Vector2> || std::same_as<T, Vector3>;
 template <validTypes T>
 class Entity : public Saveable {
 public:
+	virtual ~Entity() = default;
 	Entity();
 	Entity(T position);
 

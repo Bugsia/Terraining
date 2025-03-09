@@ -6,6 +6,7 @@
 template <typename T>
 class ModelEntity : public Entity<T>, public Drawable {
 public:
+	virtual ~ModelEntity() = default;
 	ModelEntity();
 	ModelEntity(T position);
 	ModelEntity(T position, Model modell, float scale, Color tint);
