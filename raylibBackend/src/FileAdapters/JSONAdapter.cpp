@@ -55,7 +55,9 @@ void JSONAdapter::save(std::ofstream& file, int indentation) const {
 				file << std::any_cast<int>(*vecIt);
 				break;
 			case FileAdapter::ValueType::FLOAT:
-				file << std::any_cast<float>(*vecIt);
+				// Ensure at least one decimal place is shown, but more are shown when the number is more precise
+				if (std::floor(std::any_cast<float>(*vecIt) == std::any_cast<float>(*vecIt))) file << std::fixed << std::setprecision(1) << std::any_cast<float>(*vecIt);
+				else file << std::any_cast<float>(*vecIt);
 				break;
 			case FileAdapter::ValueType::STRING:
 				file << "\"" << std::any_cast<std::string>(*vecIt) << "\"";
