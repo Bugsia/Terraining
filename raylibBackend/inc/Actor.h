@@ -5,17 +5,12 @@
 template <typename T>
 class Actor : public Entity<T>, public Saveable {
 public:
-	Actor();
 	Actor(std::string name);
 	Actor(std::string name, T position);
 
 	virtual void save(FileAdapter& file) const;
 	virtual void load(const FileAdapter& file);
 };
-
-template <typename T>
-Actor<T>::Actor() : Saveable("") {
-}
 
 template <typename T>
 Actor<T>::Actor(std::string name) : Saveable(name) {

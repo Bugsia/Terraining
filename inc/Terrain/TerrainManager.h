@@ -19,7 +19,7 @@ namespace std {
 }
 
 namespace Terrain {
-	class TerrainManager : public ModelObject<Actor<Vector3>> {
+	class TerrainManager : public ModelObject, public Actor<Vector3>, public Drawable {
 	public:
 		TerrainManager(std::string name, terrain_settings terrainSettings);
 		TerrainManager(std::string name, std::string filename);

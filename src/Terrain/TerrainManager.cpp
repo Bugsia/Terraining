@@ -390,7 +390,7 @@ namespace Terrain {
 
 	void TerrainManager::draw() {
 		// activate();
-		ModelObject::draw();
+		ModelObject::draw(m_position);
 		// deactivate();
 	}
 

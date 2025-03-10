@@ -28,7 +28,7 @@ namespace Terrain {
 		int n = 1; // -1 if element is in top half, 1 if element is in bottom half of terrain
 	};
 
-	class TerrainElement : public MeshObject<Entity<Vector3>> {
+	class TerrainElement : public MeshObject, public Entity<Vector3> {
 	public:
 		virtual ~TerrainElement();
 		TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
