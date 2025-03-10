@@ -4,7 +4,6 @@
 
 class Saveable {
 public:
-	Saveable() = default; // Maybe at some point remove this constructor to force the user to provide a name
 	Saveable(std::string name);
 
 	virtual void save(FileAdapter& file) const = 0;
