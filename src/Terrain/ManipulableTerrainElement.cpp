@@ -170,8 +170,8 @@ namespace Terrain {
 			m_difference[manipulationIndex] -= strengthFactor * strength;
 			break;
 		case ManipulateType::FLATTEN:
-			m_difference[manipulationIndex] = strengthFactor * (strength - m_mesh.vertices[manipulationIndex]);
-			m_mesh.vertices[manipulationIndex] += m_difference[manipulationIndex];
+			m_difference[manipulationIndex] += strengthFactor * (strength - m_mesh.vertices[manipulationIndex]);
+			m_mesh.vertices[manipulationIndex] += strengthFactor * (strength - m_mesh.vertices[manipulationIndex]);
 		break;
 		}
 	}

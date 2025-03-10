@@ -16,7 +16,8 @@ struct window_settings {
 
 window_settings loadWindowSettings(const FileAdapter& windowSettings) {
 	std::vector<unsigned int> flags;
-	for (std::any flag : windowSettings.getArray("flags").getValue()) {
+	std::vector<std::any> anyFlags = windowSettings.getArray("flags").getValue();
+	for (std::any flag : anyFlags) {
 		flags.push_back(std::any_cast<int>(flag));
 	}
 
