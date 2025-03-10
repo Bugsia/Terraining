@@ -1,8 +1,7 @@
 #include "Terrain/TerrainManager.h"
 
 namespace Terrain {
-	TerrainManager::TerrainManager(std::string name, terrain_settings terrainSettings) : settings(std::make_shared<terrain_settings>(terrainSettings)) {
-		m_name = name;
+	TerrainManager::TerrainManager(std::string name, terrain_settings terrainSettings) : Actor<Vector3>(name), settings(std::make_shared<terrain_settings>(terrainSettings)) {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
@@ -10,8 +9,7 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(const FileAdapter& settings) {
-		m_name = settings.getKey();
+	TerrainManager::TerrainManager(const FileAdapter& settings) : Actor<Vector3>(settings.getKey()) {
 		m_filename = settings.getFilename();
 		const FileAdapter& terrainSettingsFile = settings.getSubElement("terrain_settings");
 		this->settings = std::make_shared<terrain_settings>();

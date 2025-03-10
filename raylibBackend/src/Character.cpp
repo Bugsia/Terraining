@@ -26,7 +26,6 @@ void Character::handleInput() {
 	Vector3 forward = Vector3Subtract(m_camera.target, m_camera.position);
 	Vector3 left = Vector3Normalize(Vector3CrossProduct(m_camera.up, forward));
 	float deltaSpeed = GetFrameTime() * m_speed;
-	float deltaSensitivity = GetFrameTime() * m_sensitivity;
 
 	// Keyboard movement
 	if (IsKeyDown(KEY_LEFT_SHIFT)) deltaSpeed *= 2.0f;
@@ -65,13 +64,17 @@ void Character::handleInput() {
 
 	// Mouse movement
 	Vector2 mouseDelta = GetMouseDelta();
-	if (mouseDelta.x != 0.0f && mouseDelta.y != 0.0f) {
-		vAngle += -asinf(mouseDelta.y * deltaSensitivity);
-		hAngle += asinf(mouseDelta.x * deltaSensitivity);
-	
-		// Update target
-		m_camera.target = Vector3Add(m_camera.position, { cosf(vAngle) * cosf(hAngle), sinf(vAngle), cosf(vAngle) * sinf(hAngle) });
-	}
+	if (mouseDelta.x != 0.0f && mouseDelta.y != 0.0f) updateCameraTarget(mouseDelta);
+}
+
+void Character::updateCameraTarget(Vector2 mouseDelta) {
+	float deltaSensitivity = GetFrameTime() * m_sensitivity;
+
+	vAngle += -asinf(mouseDelta.y * deltaSensitivity);
+	hAngle += asinf(mouseDelta.x * deltaSensitivity);
+
+	// Update target
+	m_camera.target = Vector3Add(m_camera.position, { cosf(vAngle) * cosf(hAngle), sinf(vAngle), cosf(vAngle) * sinf(hAngle) });
 }
 
 void Character::move(Vector3 change) {
@@ -95,6 +98,10 @@ void Character::load(const FileAdapter& file) {
 	m_speed = any_cast<float>(file.getField("speed").getValue());
 	hAngle = any_cast<float>(file.getField("hAngle").getValue());
 	vAngle = any_cast<float>(file.getField("vAngle").getValue());
+
+	// Set camera properties
+	m_camera.position = m_position;
+	updateCameraTarget({ 0.0f, 0.0f });
 }
 
 Camera& Character::getCamera() {

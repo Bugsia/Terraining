@@ -29,4 +29,5 @@ private:
 	float vAngle = 0.0f;
 
 	void handleInput();
+	void updateCameraTarget(Vector2 mouseDelta);
 };
