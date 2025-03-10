@@ -78,16 +78,6 @@ void Character::move(Vector3 change) {
 	m_camera.target = Vector3Add(m_camera.target, change);
 }
 
-void Character::save() const {
-	save(m_filename);
-}
-
-void Character::save(std::string filename) const {
-	JSONAdapter json(filename, 4);
-	save(json);
-	json.save();
-}
-
 void Character::save(FileAdapter& file) const {
 	Actor::save(file);
 	file.getField("type").setValue(FileAdapter::INT, m_type);
@@ -95,6 +85,15 @@ void Character::save(FileAdapter& file) const {
 	file.getField("speed").setValue(FileAdapter::FLOAT, m_speed);
 	file.getField("hAngle").setValue(FileAdapter::FLOAT, hAngle);
 	file.getField("vAngle").setValue(FileAdapter::FLOAT, vAngle);
+}
+
+void Character::load(const FileAdapter& file) {
+	Actor::load(file);
+	m_type = any_cast<int>(file.getField("type").getValue());
+	m_sensitivity = any_cast<float>(file.getField("sensitivity").getValue());
+	m_speed = any_cast<float>(file.getField("speed").getValue());
+	hAngle = any_cast<float>(file.getField("hAngle").getValue());
+	vAngle = any_cast<float>(file.getField("vAngle").getValue());
 }
 
 Camera& Character::getCamera() {

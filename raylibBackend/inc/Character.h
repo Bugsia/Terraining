@@ -14,9 +14,8 @@ public:
 	void update();
 	void move(Vector3 change);
 
-	void save() const;
-	void save(std::string filename) const;
 	void save(FileAdapter& file) const;
+	void load(const FileAdapter& file);
 
 	void setPosition(Vector3 position);
 	Camera& getCamera();
