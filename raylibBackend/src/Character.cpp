@@ -68,10 +68,8 @@ void Character::handleInput() {
 }
 
 void Character::updateCameraTarget(Vector2 mouseDelta) {
-	float deltaSensitivity = GetFrameTime() * m_sensitivity;
-
-	vAngle += -asinf(mouseDelta.y * deltaSensitivity);
-	hAngle += asinf(mouseDelta.x * deltaSensitivity);
+	vAngle += -asinf(mouseDelta.y * m_sensitivity);
+	hAngle += asinf(mouseDelta.x * m_sensitivity);
 
 	// Update target
 	m_camera.target = Vector3Add(m_camera.position, { cosf(vAngle) * cosf(hAngle), sinf(vAngle), cosf(vAngle) * sinf(hAngle) });
