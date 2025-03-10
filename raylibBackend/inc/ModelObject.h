@@ -47,8 +47,9 @@ private:
 	void drawNormals();
 };
 
+// TODO: Maybe make Model and MeshObject be owned by other classes rather than them inheriting from them (Because right now Actor has a default constructor that is only there because when Actor is the base class then it is needed here)
 template <typename baseTypeModel>
-ModelObject<baseTypeModel>::ModelObject() : m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {}
+ModelObject<baseTypeModel>::ModelObject() : m_model({0}), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {}
 
 template <typename baseTypeModel>
 ModelObject<baseTypeModel>::ModelObject(Vector3 position) : baseTypeModel(position), m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {}

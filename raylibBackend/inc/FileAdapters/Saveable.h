@@ -7,7 +7,7 @@ public:
 	Saveable(std::string name);
 
 	virtual void save(FileAdapter& file) const = 0;
-	virtual void load(FileAdapter& file) const = 0;
+	virtual void load(const FileAdapter& file) = 0;
 
 	std::string getName() const;
 

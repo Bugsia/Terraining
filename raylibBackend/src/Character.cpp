@@ -1,6 +1,6 @@
 #include "Character.h"
 
-Character::Character() {
+Character::Character(std::string name) : Actor<Vector3>(name) {
 	m_camera = { 0 };
 	m_camera.position = { 0.0f, 0.0f, 0.0f };
 	this->m_position = m_camera.position;
@@ -11,7 +11,8 @@ Character::Character() {
 	m_type = CAMERA_CUSTOM;
 }
 
-Character::Character(Vector3 position, Vector3 target, Vector3 up, float fovy, CameraProjection projection, int type) : m_camera({ position, target, up, fovy, type }), m_type(type) {
+Character::Character(std::string name, Vector3 position, Vector3 target, Vector3 up, float fovy, CameraProjection projection, int type) : Actor<Vector3>(name), m_camera({ position, target, up, fovy, type }), m_type(type) {
+	m_name = name;
 	this->m_position = m_camera.position;
 }
 

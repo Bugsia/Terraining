@@ -45,7 +45,7 @@ int main()
 	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"));
 	terrainManager.initializeModel();
 
-	Character character;
+	Character character("MainCamera");
 	character.setPosition(Vector3({ 100.0f, 50.0f, 100.0f }));
 	bool cursorActive = true;
 
