@@ -57,7 +57,7 @@ void testinMulti() {
 	bool cursorActive = true;
 	std::atomic<bool> updateMesh{ false };
 
-	ThreadPool pool(2);
+	ThreadPool pool(5);
 
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {
@@ -86,7 +86,7 @@ void testinMulti() {
 			UpdateMeshBuffer(mesh, 0, mesh.vertices, mesh.vertexCount * 3 * sizeof(float), 0);
 		}
 		if (IsKeyPressed(KEY_I)) {
-			pool.addTask([&mesh]() { TraceLog(LOG_INFO, "Task is being done!"); updateMeshVertices(&mesh); }, &updateMesh);
+			pool.addTask([&mesh]() { updateMeshVertices(&mesh); }, &updateMesh);
 		}
 
 		pool.update();
@@ -98,8 +98,6 @@ void testinMulti() {
 
 		EndDrawing();
 	}
-
-	pool.shutdown();
 }
 
 int main()

@@ -8,6 +8,7 @@
 
 class ThreadPool : public Updatable {
 public:
+	~ThreadPool();
 	ThreadPool(int numberOfThreads);
 
 	void update();
@@ -16,12 +17,13 @@ public:
 	void addTask(std::function<void()> task, std::atomic<bool>* flag);
 
 private:
-	std::vector<std::thread> m_threads;
-	std::vector<std::function<void()>> m_tasks;
-	std::vector<std::atomic<bool>*> m_returnFlags;
+	const int m_numberOfThreads;
+	std::thread* m_threads;
+	std::function<void()>* m_tasks;
+	std::atomic<bool>** m_returnFlags;
+	std::atomic<bool>* m_isFree;
 	std::queue<std::function<void()>> m_tasksQueue;
 	std::queue<std::atomic<bool>*> m_flagsQueue;
-	std::vector<std::shared_ptr<std::atomic<bool>>> m_isFree;
 	std::atomic<bool> m_shutdown{ false };
 
 	static void ThreadRunner(const std::atomic<bool>* shutdown, const std::function<void()>* task, std::atomic<bool>** returnFlag, std::atomic<bool>* isFree);
