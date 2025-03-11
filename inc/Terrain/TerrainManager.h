@@ -24,7 +24,7 @@ namespace Terrain {
 	public:
 		TerrainManager(std::string name, terrain_settings terrainSettings);
 		TerrainManager(std::string name, std::string filename);
-		TerrainManager(const FileAdapter& settings);
+		TerrainManager(const FileAdapter& settings, Character* camera);
 
 		void generateDefaultTerrain();
 		void loadTerrainElements(const FileAdapter& elements);
@@ -44,6 +44,7 @@ namespace Terrain {
 		void clearDifference();
 
 		void setThreadPool(ThreadPool* threadPool);
+		void setCamera(Character* camera);
 
 		void save() const;
 		void save(std::string filename) const;

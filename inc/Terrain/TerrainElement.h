@@ -7,6 +7,7 @@
 #include "Noise.h"
 #include "ThreadPool.h"
 #include "Entity.h"
+#include "Character.h"
 
 #define MAX_MESH_VBO 7
 
@@ -17,6 +18,7 @@ namespace Terrain {
 		unsigned int maxNumElements; // The maximum number of terrain elements that can spawn
 		bool updateWithThreadPool = false;
 		ThreadPool* threadPool = nullptr;
+		Character* camera = nullptr;
 
 		// Terrain element
 		int numWidth; // The number of verticies along the width of the terrain elements

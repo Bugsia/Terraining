@@ -115,14 +115,15 @@ int main()
 
 	ThreadPool pool(5);
 	
-	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"));
-	terrainManager.initializeModel();
-	terrainManager.setThreadPool(&pool);
-
 	Character character("MainCamera");
 	character.load(json.getSubElement(character.getName()));
-	character.setPosition(Vector3({ 100.0f, 50.0f, 100.0f }));
+	character.setPosition(Vector3({ 0.0f, 50.0f, 0.0f }));
 	bool cursorActive = true;
+
+	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"), &character);
+	// terrainManager.setCamera(&character);
+	terrainManager.initializeModel();
+	terrainManager.setThreadPool(&pool);
 
 	GuiManager guiManager = GuiManager(true);
 	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
