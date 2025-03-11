@@ -245,6 +245,13 @@ namespace Terrain {
 		initialiseElementWithNoiseTerrain(noiseSettings);
 	}
 
+	void TerrainElement::update() {
+		if (m_reload.load()) {
+			reloadMeshData();
+			m_reload.store(false);
+		}
+	}
+
 	unsigned int TerrainElement::getId() const {
 		return id;
 	}
@@ -259,5 +266,9 @@ namespace Terrain {
 
 	void TerrainElement::setModelUploaded(std::shared_ptr<bool> modelUploaded) {
 		this->modelUploaded = modelUploaded;
+	}
+
+	std::atomic<bool>* TerrainElement::getReloadFlag() {
+		return &m_reload;
 	}
 }

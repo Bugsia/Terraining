@@ -7,6 +7,7 @@
 #include "ModelObject.h"
 #include "Actor.h"
 #include "FileAdapters/JSONAdapter.h"
+#include "ThreadPool.h"
 
 // Custom hash function for ManipulableTerrain
 namespace std {
@@ -35,11 +36,14 @@ namespace Terrain {
 		void relocateElements();
 		void updateTerrainNoise();
 		void manipulateTerrain(ManipulableTerrainElement::ManipulateDir dir, ManipulableTerrainElement::ManipulateForm form, ManipulableTerrainElement::ManipulateType type, float strength, float radius, Vector3 position);
+		void update();
 		void draw();
 
 		void removeDifference();
 		void addDifference();
 		void clearDifference();
+
+		void setThreadPool(ThreadPool* threadPool);
 
 		void save() const;
 		void save(std::string filename) const;
@@ -57,6 +61,7 @@ namespace Terrain {
 
 		std::shared_ptr<bool> modelUploaded = std::make_shared<bool>(false); // True if the model has been uploaded to the GPU, false otherwise
 		std::unordered_set<ManipulableTerrainElement> elements; // The terrain elements
+		std::atomic<bool> m_reloadElements{ false };
 
 		Model newModel();
 		void generateNewManipulableTerrains();

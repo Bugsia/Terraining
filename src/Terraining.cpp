@@ -102,8 +102,8 @@ void testinMulti() {
 
 int main()
 {
-	testinMulti();
-	/*
+	// testinMulti();
+
 	JSONAdapter json(SETTINGS_FILE, INDENTATION);
 
 	window_settings settings = loadWindowSettings(json.getSubElement("window_settings"));
@@ -113,8 +113,11 @@ int main()
 	InitWindow(settings.width, settings.height, settings.title.c_str());
 	SetTargetFPS(settings.targetFps);
 
+	ThreadPool pool(5);
+	
 	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"));
 	terrainManager.initializeModel();
+	terrainManager.setThreadPool(&pool);
 
 	Character character("MainCamera");
 	character.load(json.getSubElement(character.getName()));
@@ -150,11 +153,14 @@ int main()
 		guiManager.draw();
 
 		EndDrawing();
+
+		pool.update();
+		terrainManager.update();
 	}
 
 	terrainManager.save(json.getSubElement(terrainManager.getName()));
 	character.save(json.getSubElement(character.getName()));
 	json.save();
-	*/
+	
 	return 0;
 }

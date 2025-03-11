@@ -18,6 +18,7 @@ namespace Terrain {
 		this->settings->numHeight = std::any_cast<int>(terrainSettingsFile.getField("num_height").getValue());
 		this->settings->maxNumElements = std::any_cast<int>(terrainSettingsFile.getField("max_num_elements").getValue());
 		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
+		this->settings->updateWithThreadPool = std::any_cast<bool>(terrainSettingsFile.getField("update_with_thread_pool").getValue());
 		loadNoiseSettings(settings.getSubElement("noise_settings"));
 		loadTerrainElements(settings.getSubElement("terrain_elements"));
 		Actor::load(settings);
@@ -78,6 +79,10 @@ namespace Terrain {
 		}
 	}
 
+	void TerrainManager::setThreadPool(ThreadPool* threadPool) {
+		settings->threadPool = threadPool;
+	}
+
 	void TerrainManager::save() const {
 		save(m_filename);
 	}
@@ -103,6 +108,7 @@ namespace Terrain {
 		settings.addField(FileAdapter::FileField("num_height", FileAdapter::ValueType::INT, this->settings->numHeight));
 		settings.addField(FileAdapter::FileField("max_num_elements", FileAdapter::ValueType::INT, static_cast<int>(this->settings->maxNumElements)));
 		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
+		settings.addField(FileAdapter::FileField("update_with_thread_pool", FileAdapter::ValueType::BOOL, this->settings->updateWithThreadPool));
 	}
 
 	void TerrainManager::saveNoiseSettings(FileAdapter& json) const {
@@ -196,13 +202,19 @@ namespace Terrain {
 
 	void TerrainManager::updateElementsNoise() {
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
-			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
-			element.UnloadLayers();
-			element.updateNoiseLayers();
-			element.randomizeTerrain();
-			element.updateNormals();
-			element.addDifference();
-			element.reloadMeshData();
+			ManipulableTerrainElement* element = const_cast<ManipulableTerrainElement*>(&*it); // Const can be cast away since the hash relevant data is not changed
+			auto updateNoise = [element]() {
+				element->UnloadLayers();
+				element->updateNoiseLayers();
+				element->randomizeTerrain();
+				element->updateNormals();
+				element->addDifference();
+				};
+			if (settings->updateWithThreadPool && settings->threadPool) settings->threadPool->addTask(updateNoise, element->getReloadFlag());
+			else {
+				updateNoise();
+				element->reloadMeshData();
+			}
 		}
 	}
 
@@ -383,6 +395,13 @@ namespace Terrain {
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
 			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
 			element.manipulateTerrain(dir, form, type, strength, radius, Vector3Subtract(position, element.getPosition()));
+		}
+	}
+
+	void TerrainManager::update() {
+		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it);
+			element.update();
 		}
 	}
 
