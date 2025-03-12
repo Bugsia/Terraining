@@ -37,7 +37,6 @@ namespace Terrain {
 		int projectedNumElements = pow(settings->radius / (std::min(settings->numHeight, settings->numWidth) * settings->spacing) * 2, 2); // The approximate ammount of quadratic elements that would be in a rectange with a side length of the spawning circumfrence
 		elements = std::unordered_set<ManipulableTerrainElement>(projectedNumElements);
 
-		int counter = 0;
 		bool maxElementsReached = false;
 		Vector3 position = { 0.0f, 0.0f, 0.0f };
 		if (settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
@@ -49,7 +48,6 @@ namespace Terrain {
 		int numPerQuadrantZ = round(settings->radius / height);
 		float x = position.x - numPerQuadrantX * width;
 		float z = position.z - numPerQuadrantZ * height;
-		bool maxElementsReached = false;
 		for (int i = -numPerQuadrantX; i < numPerQuadrantX; i++, x += width) {
 			float circleHeight = getSpawnHeightAtXPos(x - position.x + (width / 2), settings->radius);
 			for (int j = -numPerQuadrantZ; j < numPerQuadrantZ; j++, z += height) {
@@ -366,44 +364,54 @@ namespace Terrain {
 	void TerrainManager::relocateElements() {
 		TraceLog(LOG_DEBUG, "Terrain: Relocating elements of terrain");
 
-		elements.clear();
 		std::unordered_set<ManipulableTerrainElement> newElements;
 
+		Vector3 position = { 0.0f, 0.0f, 0.0f };
+		if (settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
+
+		// Spawning elements from the bottom left corner
+		float width = (settings->numWidth - 1) * settings->spacing;
+		float height = (settings->numHeight - 1) * settings->spacing;
+		int numPerQuadrantX = round(settings->radius / width);
+		int numPerQuadrantZ = round(settings->radius / height);
+		float x = position.x - numPerQuadrantX * width;
+		float z = position.z - numPerQuadrantZ * height;
 		bool maxElementsReached = false;
-		for (int x = 0; x < round(settings->radius / ((settings->numWidth - 1) * settings->spacing)); x++) {
-			for (int z = 0; z < round(getSpawnHeightAtXPos(x * ((settings->numWidth - 1) * settings->spacing), settings->radius) / ((settings->numHeight - 1) * settings->spacing)); z++) {
-				// Add 4 elements, one for each quadrant
-				for (int i = -1; i <= 1; i += 2) {
-					for (int n = -1; n <= 1; n += 2) {
-						if (newElements.size() >= settings->maxNumElements) {
-							maxElementsReached = true;
-							break;
-						}
+		for (int i = -numPerQuadrantX; i < numPerQuadrantX; i++, x += width) {
+			float circleHeight = getSpawnHeightAtXPos(x - position.x + (width / 2), settings->radius);
+			for (int j = -numPerQuadrantZ; j < numPerQuadrantZ; j++, z += height) {
+				if (std::abs(z - position.z + (height / 2)) > circleHeight) continue;
 
-						// DOESNT WORK FOR SOME REASONS. LEAVES HOLES IN THE TERRAIN
-						// Check if there is already a terrain in this position
-						// if (elements.size() != 0) {
-						// 	ManipulableTerrain element({ x, i, z, n });
-						// 	auto elementIt = elements.find(element);
-						// 
-						// 	if (elementIt != elements.end()) {
-						// 		newElements.insert((*elementIt));
-						// 		elements.erase(elementIt);
-						// 		continue;
-						// 	}
-						// }
+				int i = x < 0 ? -1 : 1;
+				int posX = (x - width * std::min(0, i)) / (width * i);
+				int n = z < 0 ? -1 : 1;
+				int posZ = (z - height * std::min(0, n)) / (height * n);
 
-						// There is no terrain there, make new one
-						initialiseAndAddNewElement(newElements, { x, i, z, n });
+				// If there is already a element present here, then keep it
+				if (elements.size() > 0) {
+					ManipulableTerrainElement element({ posX, i, posZ, n });
+					auto newElement = elements.extract(element);
+
+					if (!newElement.empty()) {
+						newElements.insert(std::move(newElement));
+						continue;
 					}
-					if (maxElementsReached) break;
 				}
-				if (maxElementsReached) break;
+
+				// There is no element already present, so make a new one
+				initialiseAndAddNewElement(newElements, { posX, i, posZ, n });
+
+				if (newElements.size() >= settings->maxNumElements) {
+					maxElementsReached = true;
+					break;
+				}
 			}
+			z = position.z - numPerQuadrantZ * height;
 			if (maxElementsReached) break;
 		}
 
-		// Set new elements
+		// Set new elements and elements that aren't needed anymore
+		elements.clear();
 		elements = std::move(newElements);
 	}
 
