@@ -14,7 +14,7 @@ namespace DebugGui {
 
 	class NoiseDebugGui : public Gui {
 	public:
-		NoiseDebugGui(std::string name, Terrain::TerrainManager& terrain);
+		NoiseDebugGui(std::string name, Terrain::TerrainManager& terrain, bool* open);
 
 		bool render();
 
@@ -24,6 +24,7 @@ namespace DebugGui {
 		Noise::noise_settings m_settings;
 		Texture2D m_sampleImage;
 		int m_selectedLayerIndex = 0;
+		bool* m_openPointer;
 
 		void NoiseLayersList();
 		static void loadSampleImage(Texture2D& sampleImage, std::vector<Color*>& noiseLayers, int index);

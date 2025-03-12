@@ -18,6 +18,7 @@ namespace DebugGui {
 		GuiManager& m_guiManager;
 		Terrain::terrain_settings m_settings;
 		bool m_openNoiseGui = false;
+		bool m_settingsChange = false;
 		bool m_simpleChange = false;
 		bool m_complexChange = false;
 		bool m_drawWired;
