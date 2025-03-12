@@ -20,6 +20,7 @@ namespace Terrain {
 		bool updateWithThreadPool = false;
 		ThreadPool* threadPool = nullptr;
 		Character* camera = nullptr;
+		float distToRelocating = 0.0f;
 
 		// Terrain element
 		int numWidth; // The number of verticies along the width of the terrain elements

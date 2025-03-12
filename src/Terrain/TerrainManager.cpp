@@ -29,6 +29,7 @@ namespace Terrain {
 		bool maxElementsReached = false;
 		Vector3 position = { 0.0f, 0.0f, 0.0f };
 		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
+		center = position;
 
 		// Spawning elements from the bottom left corner
 		float width = (settings->numWidth - 1) * settings->spacing;
@@ -117,6 +118,7 @@ namespace Terrain {
 		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
 		this->settings->updateWithThreadPool = std::any_cast<bool>(terrainSettingsFile.getField("update_with_thread_pool").getValue());
 		this->settings->followCamera = std::any_cast<bool>(terrainSettingsFile.getField("follow_camera").getValue());
+		this->settings->distToRelocating = std::any_cast<float>(terrainSettingsFile.getField("dist_to_relocating").getValue());
 		loadNoiseSettings(file.getSubElement("noise_settings"));
 		loadTerrainElements(file.getSubElement("terrain_elements"));
 		Actor::load(file);
@@ -132,6 +134,7 @@ namespace Terrain {
 		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
 		settings.addField(FileAdapter::FileField("update_with_thread_pool", FileAdapter::ValueType::BOOL, this->settings->updateWithThreadPool));
 		settings.addField(FileAdapter::FileField("follow_camera", FileAdapter::ValueType::BOOL, this->settings->followCamera));
+		settings.addField(FileAdapter::FileField("dist_to_relocating", FileAdapter::ValueType::FLOAT, this->settings->distToRelocating));
 	}
 
 	void TerrainManager::saveNoiseSettings(FileAdapter& json) const {
@@ -364,6 +367,7 @@ namespace Terrain {
 
 		Vector3 position = { 0.0f, 0.0f, 0.0f };
 		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
+		center = position;
 
 		// Spawning elements from the bottom left corner
 		float width = (settings->numWidth - 1) * settings->spacing;
@@ -435,6 +439,11 @@ namespace Terrain {
 		if (m_updateModel.load()) {
 			updateModel();
 			m_updateModel.store(false);
+		}
+
+		if (settings->followCamera) {
+			float cameraDistToCenter = Vector2Distance(Vector2{ settings->camera->getPosition().x, settings->camera->getPosition().z }, Vector2{ center.x, center.z });
+			if (cameraDistToCenter > settings->distToRelocating) updateElementPositions();
 		}
 		m_updating.unlock();
 	}

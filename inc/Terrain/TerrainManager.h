@@ -67,6 +67,7 @@ namespace Terrain {
 		std::unordered_set<ManipulableTerrainElement> elements; // The terrain elements
 		std::atomic<bool> m_updateModel{ false };
 		std::mutex m_updating; // Any thread that could cause update() to crash (example: deleting elements from elements) locks this firts preventing updating
+		Vector3 center = { 0.0f, 0.0f, 0.0f };
 
 		Model newModel();
 		void generateNewManipulableTerrains();
