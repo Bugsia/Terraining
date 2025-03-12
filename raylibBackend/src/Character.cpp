@@ -11,6 +11,10 @@ Character::Character(std::string name) : Actor<Vector3>(name) {
 	m_type = CAMERA_CUSTOM;
 }
 
+Character::Character(const FileAdapter& file) : Actor<Vector3>(file.getKey()) {
+	load(file);
+}
+
 Character::Character(std::string name, Vector3 position, Vector3 target, Vector3 up, float fovy, CameraProjection projection, int type) : Actor<Vector3>(name), m_camera({ position, target, up, fovy, type }), m_type(type) {
 	m_name = name;
 	this->m_position = m_camera.position;
@@ -90,6 +94,10 @@ void Character::save(FileAdapter& file) const {
 }
 
 void Character::load(const FileAdapter& file) {
+	m_camera = { 0 };
+	m_camera.up = { 0.0f, 1.0f, 0.0f };
+	m_camera.fovy = 60.0f;
+	m_camera.projection = CAMERA_PERSPECTIVE;
 	Actor::load(file);
 	m_type = any_cast<int>(file.getField("type").getValue());
 	m_sensitivity = any_cast<float>(file.getField("sensitivity").getValue());

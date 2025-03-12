@@ -35,75 +35,8 @@ window_settings loadWindowSettings(const FileAdapter& windowSettings) {
 	return settings;
 }
 
-void updateMeshVertices(Mesh* mesh) {
-	for (int i = 0; i < mesh->vertexCount; i++) {
-		mesh->vertices[i * 3] += 5.0f;
-	}
-	std::this_thread::sleep_for(std::chrono::seconds(2));
-}
-
-void testinMulti() {
-	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-	InitWindow(1280, 720, "Multithreading test");
-	SetTargetFPS(60);
-
-	Mesh mesh = GenMeshPlane(10.0f, 10.0f, 10, 10);
-	UploadMesh(&mesh, false);
-
-	Model model = LoadModelFromMesh(mesh);
-
-	Character character("MainCamera");
-	character.setPosition(Vector3({ -20.0f, 10.0f, 0.0f }));
-	bool cursorActive = true;
-	std::atomic<bool> updateMesh{ false };
-
-	ThreadPool pool(5);
-
-	while (!WindowShouldClose()) {
-		if (IsKeyPressed(KEY_LEFT_ALT)) {
-			if (cursorActive) DisableCursor();
-			else EnableCursor();
-			cursorActive = !cursorActive;
-		}
-
-		if (!cursorActive) character.update(60);
-
-		BeginDrawing();
-
-		ClearBackground(RAYWHITE);
-
-		BeginMode3D(character.getCamera());
-
-		DrawGrid(10, 1.0f);
-		DrawModel(model, { 0.0f, 0.0f, 0.0f }, 1.0f, BLACK);
-
-		EndMode3D();
-
-		DrawFPS(10.0f, 10.0f);
-
-		if (IsKeyPressed(KEY_U)) {
-			updateMeshVertices(&mesh);
-			UpdateMeshBuffer(mesh, 0, mesh.vertices, mesh.vertexCount * 3 * sizeof(float), 0);
-		}
-		if (IsKeyPressed(KEY_I)) {
-			pool.addTask([&mesh]() { updateMeshVertices(&mesh); }, &updateMesh);
-		}
-
-		pool.update(60);
-
-		if (updateMesh.load()) {
-			UpdateMeshBuffer(mesh, 0, mesh.vertices, mesh.vertexCount * 3 * sizeof(float), 0);
-			updateMesh.store(false);
-		}
-
-		EndDrawing();
-	}
-}
-
 int main()
 {
-	// testinMulti();
-
 	JSONAdapter json(SETTINGS_FILE, INDENTATION);
 
 	window_settings settings = loadWindowSettings(json.getSubElement("window_settings"));
@@ -115,14 +48,11 @@ int main()
 
 	ThreadPool pool(5);
 	
-	Character character("MainCamera");
-	character.load(json.getSubElement(character.getName()));
-	character.setPosition(Vector3({ 0.0f, 50.0f, 0.0f }));
+	Character character(json.getSubElement("MainCamera"));
 	bool cursorActive = true;
 
-	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"), &character);
-	// terrainManager.setCamera(&character);
-	terrainManager.initializeModel();
+	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"));
+	terrainManager.setCamera(&character);
 	terrainManager.setThreadPool(&pool);
 
 	GuiManager guiManager = GuiManager(true);
@@ -136,7 +66,6 @@ int main()
 			cursorActive = !cursorActive;
 		}
 		if (IsKeyPressed(KEY_T)) terrainManager.updateElementPositions();
-		if (IsKeyPressed(KEY_T)) TraceLog(LOG_INFO, "T PRESSED");
 		
 		if(!cursorActive) character.update(settings.targetFps);
 

@@ -25,7 +25,7 @@ namespace Terrain {
 	public:
 		TerrainManager(std::string name, terrain_settings terrainSettings);
 		TerrainManager(std::string name, std::string filename);
-		TerrainManager(const FileAdapter& settings, Character* camera);
+		TerrainManager(const FileAdapter& settings);
 
 		void generateDefaultTerrain();
 		void loadTerrainElements(const FileAdapter& elements);
@@ -50,6 +50,8 @@ namespace Terrain {
 		void save() const;
 		void save(std::string filename) const;
 		void save(FileAdapter& file) const;
+
+		void load(const FileAdapter& file);
 
 		// GETTER AND SETTER
 		std::shared_ptr<terrain_settings> refSettings();

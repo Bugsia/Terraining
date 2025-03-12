@@ -9,21 +9,9 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(const FileAdapter& settings, Character* camera) : Actor<Vector3>(settings.getKey()) {
-		m_filename = settings.getFilename();
-		const FileAdapter& terrainSettingsFile = settings.getSubElement("terrain_settings");
-		this->settings = std::make_shared<terrain_settings>();
-		this->settings->radius = std::any_cast<float>(terrainSettingsFile.getField("radius").getValue());
-		this->settings->numWidth = std::any_cast<int>(terrainSettingsFile.getField("num_width").getValue());
-		this->settings->numHeight = std::any_cast<int>(terrainSettingsFile.getField("num_height").getValue());
-		this->settings->maxNumElements = std::any_cast<int>(terrainSettingsFile.getField("max_num_elements").getValue());
-		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
-		this->settings->updateWithThreadPool = std::any_cast<bool>(terrainSettingsFile.getField("update_with_thread_pool").getValue());
-		this->settings->followCamera = std::any_cast<bool>(terrainSettingsFile.getField("follow_camera").getValue());
-		this->settings->camera = camera;
-		loadNoiseSettings(settings.getSubElement("noise_settings"));
-		loadTerrainElements(settings.getSubElement("terrain_elements"));
-		Actor::load(settings);
+	TerrainManager::TerrainManager(const FileAdapter& settings) : Actor<Vector3>(settings.getKey()) {
+		load(settings);
+		initializeModel();
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
@@ -98,6 +86,7 @@ namespace Terrain {
 
 	void TerrainManager::setCamera(Character* camera) {
 		settings->camera = camera;
+		updateElementPositions();
 	}
 
 	void TerrainManager::save() const {
@@ -115,6 +104,22 @@ namespace Terrain {
 		saveTerrainSettings(file);
 		saveNoiseSettings(file);
 		saveTerrainElements(file);
+	}
+
+	void TerrainManager::load(const FileAdapter& file) {
+		m_filename = file.getFilename();
+		const FileAdapter& terrainSettingsFile = file.getSubElement("terrain_settings");
+		this->settings = std::make_shared<terrain_settings>();
+		this->settings->radius = std::any_cast<float>(terrainSettingsFile.getField("radius").getValue());
+		this->settings->numWidth = std::any_cast<int>(terrainSettingsFile.getField("num_width").getValue());
+		this->settings->numHeight = std::any_cast<int>(terrainSettingsFile.getField("num_height").getValue());
+		this->settings->maxNumElements = std::any_cast<int>(terrainSettingsFile.getField("max_num_elements").getValue());
+		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
+		this->settings->updateWithThreadPool = std::any_cast<bool>(terrainSettingsFile.getField("update_with_thread_pool").getValue());
+		this->settings->followCamera = std::any_cast<bool>(terrainSettingsFile.getField("follow_camera").getValue());
+		loadNoiseSettings(file.getSubElement("noise_settings"));
+		loadTerrainElements(file.getSubElement("terrain_elements"));
+		Actor::load(file);
 	}
 
 	void TerrainManager::saveTerrainSettings(FileAdapter& json) const {
