@@ -5,7 +5,9 @@
 #include <vector>
 #include "MeshObject.h"
 #include "Noise.h"
+#include "ThreadPool.h"
 #include "Entity.h"
+#include "Character.h"
 
 #define MAX_MESH_VBO 7
 
@@ -14,6 +16,10 @@ namespace Terrain {
 		// Terrain manager
 		float radius; // Radius of the spawn range of terrain elements
 		unsigned int maxNumElements; // The maximum number of terrain elements that can spawn
+		bool followCamera = false;
+		bool updateWithThreadPool = false;
+		ThreadPool* threadPool = nullptr;
+		Character* camera = nullptr;
 
 		// Terrain element
 		int numWidth; // The number of verticies along the width of the terrain elements
@@ -48,12 +54,15 @@ namespace Terrain {
 		void UnloadLayers();
 		void reloadMeshData();
 		void renewMeshData();
+		void update(int targetFPS);
 
 		// GETTER AND SETTER
 		unsigned int getId() const;
 		PositionIdentifier getPosId() const;
 		Mesh& refMesh();
 		void setModelUploaded(std::shared_ptr<bool> modelUploaded);
+		std::atomic<bool>* getReloadFlag();
+		std::atomic<bool>* getUploadFlag();
 
 		bool operator==(const TerrainElement& other) const {
 			return id == other.id;
@@ -65,6 +74,8 @@ namespace Terrain {
 		std::shared_ptr<terrain_settings> settings; // The settings of the terrain (owner is Terrain struct)
 		// Vector3 m_position = { 0, 0, 0 }; // The position of the bottom left corner (local x and y = 0) of the terrain Element
 		PositionIdentifier posId; // Used to store information about the position of a element in the terrain
+		std::atomic<bool> m_reload{ false };
+		std::atomic<bool> m_upload{ false };
 
 		// Mesh
 		bool dynamicMesh = false; // True if the mesh is dynamic, false otherwise
@@ -76,10 +87,10 @@ namespace Terrain {
 		std::vector<Color*> noiseLayerPixels; // The pixels of the different noise layers
 
 		Vector3 getPositionFromPosId();
-		float* flatTerrainVertices();
-		float* flatTerrainTexcoords();
-		float* flatTerrainNormals();
-		unsigned short* flatTerrainIndices();
+		void flatTerrainVertices();
+		void flatTerrainTexcoords();
+		void flatTerrainNormals();
+		void flatTerrainIndices();
 		template<typename T>
 		void copyVectorToMemory(T*& dst, std::vector<T> src, bool uploaded);
 		void initialiseFlatMesh();

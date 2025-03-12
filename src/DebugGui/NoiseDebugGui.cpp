@@ -1,7 +1,7 @@
 #include "DebugGui/NoiseDebugGui.h"
 
 namespace DebugGui {
-	NoiseDebugGui::NoiseDebugGui(std::string name, Terrain::TerrainManager& terrain) : Gui(name), m_terrain(terrain), m_settings(*terrain.refNoiseSettings()), m_selectedLayerIndex(0) {
+	NoiseDebugGui::NoiseDebugGui(std::string name, Terrain::TerrainManager& terrain, bool* open) : Gui(name), m_terrain(terrain), m_settings(*terrain.refNoiseSettings()), m_selectedLayerIndex(0), m_openPointer(open) {
 		m_noiseLayers = Noise::generateNoiseLayers(std::make_shared<Noise::noise_settings>(m_settings), { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
 		m_sampleImage = LoadTextureFromImage({ m_noiseLayers[m_selectedLayerIndex], SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 });
 	}
@@ -9,7 +9,7 @@ namespace DebugGui {
 	bool NoiseDebugGui::render() {
 		bool reloadSampleImage = false;
 
-		ImGui::Begin(m_name.c_str(), &m_open);
+		ImGui::Begin(m_name.c_str(), m_openPointer);
 		defaultStyle();
 
 		// Set Seed
@@ -55,7 +55,7 @@ namespace DebugGui {
 
 		ImGui::End();
 
-		return m_open;
+		return *m_openPointer;
 	}
 
 	void NoiseDebugGui::NoiseLayersList() {

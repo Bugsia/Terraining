@@ -29,7 +29,7 @@ void ThreadPool::initializeThreadRunners(int numberOfThreads) {
 	}
 }
 
-void ThreadPool::update() {
+void ThreadPool::update(int targetFPS) {
 	while (!m_tasksQueue.empty() && isAnyThreadAvailable()) {
 		for (int i = 0; i < m_numberOfThreads; i++) {
 			if (m_isFree[i].load()) {
@@ -73,7 +73,7 @@ void ThreadPool::ThreadRunner(const std::atomic<bool>* shutdown, const std::func
 		if (shutdown->load()) break;
 		TraceLog(LOG_DEBUG, "ThreadRunner: Running task");
 		if (task) (*task)();
-		(*returnFlag)->store(true);
+		if (*returnFlag) (*returnFlag)->store(true);
 		isFree->store(true);
 	}
 }

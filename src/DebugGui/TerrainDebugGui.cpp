@@ -16,7 +16,7 @@ namespace DebugGui {
 		if (ImGui::SliderFloat("Spacing", &m_settings.spacing, 0.1f, 10.0f)) m_complexChange = true;
 		if (ImGui::Button("Open Noise Settings") && !m_openNoiseGui) {
 			m_openNoiseGui = true;
-			m_guiManager.addGui(std::make_unique<NoiseDebugGui>(NoiseDebugGui("" + m_name + " Noise", m_terrain)));
+			m_guiManager.addGui(std::make_unique<NoiseDebugGui>(NoiseDebugGui("" + m_name + " Noise", m_terrain, &m_openNoiseGui)));
 		}
 
 		ImGui::SeparatorText("Drawing Settings (Instant)");
@@ -24,6 +24,15 @@ namespace DebugGui {
 		if(ImGui::Checkbox("Normals", &m_drawNormals)) m_terrain.setDrawNormals(m_drawNormals);
 		if (ImGui::SliderFloat("Terrain Model Scale", &m_scale, 0.1f, 10.0f)) m_terrain.setScale(m_scale);
 		if (ImGui::ColorEdit4("Tint", (float*)&m_tint)) m_terrain.setTint(m_tint);
+
+		ImGui::SeparatorText("MISC. (Instant)");
+		if (ImGui::Checkbox("Follow Camera", &m_settings.followCamera)) m_settingsChange = true;
+		if (ImGui::Checkbox("Update with ThreadPool", &m_settings.updateWithThreadPool)) m_settingsChange = true;
+
+		if (m_settingsChange) {
+			(*m_terrain.refSettings()) = m_settings;
+			m_settingsChange = false;
+		}
 
 		ImGui::SeparatorText("");
 		if (ImGui::Button("Apply")) {

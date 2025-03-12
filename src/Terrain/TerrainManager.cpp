@@ -5,22 +5,13 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
-	TerrainManager::TerrainManager(std::string name, std::string filename) : TerrainManager(JSONAdapter(filename, 4).getSubElement(name)) {
+	TerrainManager::TerrainManager(std::string name, std::string filename) /* : TerrainManager(JSONAdapter(filename, 4).getSubElement(name)) */ : Actor<Vector3>("LOLZ") {
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
 	TerrainManager::TerrainManager(const FileAdapter& settings) : Actor<Vector3>(settings.getKey()) {
-		m_filename = settings.getFilename();
-		const FileAdapter& terrainSettingsFile = settings.getSubElement("terrain_settings");
-		this->settings = std::make_shared<terrain_settings>();
-		this->settings->radius = std::any_cast<float>(terrainSettingsFile.getField("radius").getValue());
-		this->settings->numWidth = std::any_cast<int>(terrainSettingsFile.getField("num_width").getValue());
-		this->settings->numHeight = std::any_cast<int>(terrainSettingsFile.getField("num_height").getValue());
-		this->settings->maxNumElements = std::any_cast<int>(terrainSettingsFile.getField("max_num_elements").getValue());
-		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
-		loadNoiseSettings(settings.getSubElement("noise_settings"));
-		loadTerrainElements(settings.getSubElement("terrain_elements"));
-		Actor::load(settings);
+		load(settings);
+		initializeModel();
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
 
@@ -35,26 +26,37 @@ namespace Terrain {
 		int projectedNumElements = pow(settings->radius / (std::min(settings->numHeight, settings->numWidth) * settings->spacing) * 2, 2); // The approximate ammount of quadratic elements that would be in a rectange with a side length of the spawning circumfrence
 		elements = std::unordered_set<ManipulableTerrainElement>(projectedNumElements);
 
-		int counter = 0;
 		bool maxElementsReached = false;
-		for (int x = 0; x < round(settings->radius / ((settings->numWidth - 1) * settings->spacing)); x++) {
-			for (int z = 0; z < round(getSpawnHeightAtXPos(x * ((settings->numWidth - 1) * settings->spacing), settings->radius) / ((settings->numHeight - 1) * settings->spacing)); z++) {
-				// Add 4 elements, one for each quadrant
-				for (int i = -1; i <= 1; i += 2) {
-					for (int n = -1; n <= 1; n += 2) {
-						if (elements.size() >= settings->maxNumElements) {
-							maxElementsReached = true;
-							break;
-						}
+		Vector3 position = { 0.0f, 0.0f, 0.0f };
+		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
 
-						initialiseAndAddNewElement(elements, { x, i, z, n });
-					}
-					if (maxElementsReached) break;
+		// Spawning elements from the bottom left corner
+		float width = (settings->numWidth - 1) * settings->spacing;
+		float height = (settings->numHeight - 1) * settings->spacing;
+		int numPerQuadrantX = round(settings->radius / width);
+		int numPerQuadrantZ = round(settings->radius / height);
+		float x = position.x - numPerQuadrantX * width;
+		float z = position.z - numPerQuadrantZ * height;
+		for (int i = -numPerQuadrantX; i < numPerQuadrantX; i++, x += width) {
+			float circleHeight = getSpawnHeightAtXPos(x - position.x + (width / 2), settings->radius);
+			for (int j = -numPerQuadrantZ; j < numPerQuadrantZ; j++, z += height) {
+				if (std::abs(z - position.z + (height / 2)) > circleHeight) continue;
+
+				int i = x < 0 ? -1 : 1;
+				int posX = (x - width * std::min(0, i)) / (width * i);
+				int n = z < 0 ? -1 : 1;
+				int posZ = (z - height * std::min(0, n)) / (height * n);
+
+				initialiseAndAddNewElement(elements, { posX, i, posZ, n });
+				if (elements.size() >= settings->maxNumElements) {
+					maxElementsReached = true;
+					break;
 				}
-				if (maxElementsReached) break;
 			}
+			z = position.z - numPerQuadrantZ * height;
 			if (maxElementsReached) break;
 		}
+		m_updateModel.store(true);
 	}
 
 	void TerrainManager::removeDifference() {
@@ -78,6 +80,15 @@ namespace Terrain {
 		}
 	}
 
+	void TerrainManager::setThreadPool(ThreadPool* threadPool) {
+		settings->threadPool = threadPool;
+	}
+
+	void TerrainManager::setCamera(Character* camera) {
+		settings->camera = camera;
+		updateElementPositions();
+	}
+
 	void TerrainManager::save() const {
 		save(m_filename);
 	}
@@ -95,6 +106,22 @@ namespace Terrain {
 		saveTerrainElements(file);
 	}
 
+	void TerrainManager::load(const FileAdapter& file) {
+		m_filename = file.getFilename();
+		const FileAdapter& terrainSettingsFile = file.getSubElement("terrain_settings");
+		this->settings = std::make_shared<terrain_settings>();
+		this->settings->radius = std::any_cast<float>(terrainSettingsFile.getField("radius").getValue());
+		this->settings->numWidth = std::any_cast<int>(terrainSettingsFile.getField("num_width").getValue());
+		this->settings->numHeight = std::any_cast<int>(terrainSettingsFile.getField("num_height").getValue());
+		this->settings->maxNumElements = std::any_cast<int>(terrainSettingsFile.getField("max_num_elements").getValue());
+		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
+		this->settings->updateWithThreadPool = std::any_cast<bool>(terrainSettingsFile.getField("update_with_thread_pool").getValue());
+		this->settings->followCamera = std::any_cast<bool>(terrainSettingsFile.getField("follow_camera").getValue());
+		loadNoiseSettings(file.getSubElement("noise_settings"));
+		loadTerrainElements(file.getSubElement("terrain_elements"));
+		Actor::load(file);
+	}
+
 	void TerrainManager::saveTerrainSettings(FileAdapter& json) const {
 		FileAdapter& settings = json.getSubElement("terrain_settings");
 		settings.clear();
@@ -103,6 +130,8 @@ namespace Terrain {
 		settings.addField(FileAdapter::FileField("num_height", FileAdapter::ValueType::INT, this->settings->numHeight));
 		settings.addField(FileAdapter::FileField("max_num_elements", FileAdapter::ValueType::INT, static_cast<int>(this->settings->maxNumElements)));
 		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
+		settings.addField(FileAdapter::FileField("update_with_thread_pool", FileAdapter::ValueType::BOOL, this->settings->updateWithThreadPool));
+		settings.addField(FileAdapter::FileField("follow_camera", FileAdapter::ValueType::BOOL, this->settings->followCamera));
 	}
 
 	void TerrainManager::saveNoiseSettings(FileAdapter& json) const {
@@ -148,20 +177,10 @@ namespace Terrain {
 			newElement.setModelUploaded(modelUploaded);
 			newElement.initialiseMesh();
 			newElement.initialiseElementWithNoiseTerrain(noiseSettings);
-			newElement.Upload();
+			newElement.getUploadFlag()->store(true);
 
 			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
 		}
-
-		// ManipulableTerrain newElement(settings, posId);
-		// newElement.setModelUploaded(modelUploaded);
-		// newElement.initialiseMesh();
-		// newElement.initialiseElementWithNoiseTerrain(noiseSettings);
-		// newElement.Upload();
-		// 
-		// TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
-		// 
-		// newElements.emplace(std::move(newElement));
 	}
 
 	float TerrainManager::getSpawnHeightAtXPos(const float x, const float spawnRadius) {
@@ -196,13 +215,19 @@ namespace Terrain {
 
 	void TerrainManager::updateElementsNoise() {
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
-			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
-			element.UnloadLayers();
-			element.updateNoiseLayers();
-			element.randomizeTerrain();
-			element.updateNormals();
-			element.addDifference();
-			element.reloadMeshData();
+			ManipulableTerrainElement* element = const_cast<ManipulableTerrainElement*>(&*it); // Const can be cast away since the hash relevant data is not changed
+			auto updateNoise = [element]() {
+				element->UnloadLayers();
+				element->updateNoiseLayers();
+				element->randomizeTerrain();
+				element->updateNormals();
+				element->addDifference();
+				};
+			if (settings->updateWithThreadPool && settings->threadPool) settings->threadPool->addTask(updateNoise, element->getReloadFlag());
+			else {
+				updateNoise();
+				element->reloadMeshData();
+			}
 		}
 	}
 
@@ -311,9 +336,7 @@ namespace Terrain {
 		
 		// Check for radius and maxNumElements increase (for example when circle has been cutoff, so increase elements if that happened)
 		if (elements.size() < settings->maxNumElements || settings->radius != oldSpawnRadius) {
-			relocateElements();
-		
-			updateModel();
+			updateElementPositions();
 		}
 
 		TraceLog(LOG_DEBUG, "Terrain: Terrain has been updated");
@@ -337,45 +360,56 @@ namespace Terrain {
 	void TerrainManager::relocateElements() {
 		TraceLog(LOG_DEBUG, "Terrain: Relocating elements of terrain");
 
-		elements.clear();
 		std::unordered_set<ManipulableTerrainElement> newElements;
 
+		Vector3 position = { 0.0f, 0.0f, 0.0f };
+		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
+
+		// Spawning elements from the bottom left corner
+		float width = (settings->numWidth - 1) * settings->spacing;
+		float height = (settings->numHeight - 1) * settings->spacing;
+		int numPerQuadrantX = round(settings->radius / width);
+		int numPerQuadrantZ = round(settings->radius / height);
+		float x = position.x - numPerQuadrantX * width;
+		float z = position.z - numPerQuadrantZ * height;
 		bool maxElementsReached = false;
-		for (int x = 0; x < round(settings->radius / ((settings->numWidth - 1) * settings->spacing)); x++) {
-			for (int z = 0; z < round(getSpawnHeightAtXPos(x * ((settings->numWidth - 1) * settings->spacing), settings->radius) / ((settings->numHeight - 1) * settings->spacing)); z++) {
-				// Add 4 elements, one for each quadrant
-				for (int i = -1; i <= 1; i += 2) {
-					for (int n = -1; n <= 1; n += 2) {
-						if (newElements.size() >= settings->maxNumElements) {
-							maxElementsReached = true;
-							break;
-						}
+		for (int i = -numPerQuadrantX; i < numPerQuadrantX; i++, x += width) {
+			float circleHeight = getSpawnHeightAtXPos(x - position.x + (width / 2), settings->radius);
+			for (int j = -numPerQuadrantZ; j < numPerQuadrantZ; j++, z += height) {
+				if (std::abs(z - position.z + (height / 2)) > circleHeight) continue;
 
-						// DOESNT WORK FOR SOME REASONS. LEAVES HOLES IN THE TERRAIN
-						// Check if there is already a terrain in this position
-						// if (elements.size() != 0) {
-						// 	ManipulableTerrain element({ x, i, z, n });
-						// 	auto elementIt = elements.find(element);
-						// 
-						// 	if (elementIt != elements.end()) {
-						// 		newElements.insert((*elementIt));
-						// 		elements.erase(elementIt);
-						// 		continue;
-						// 	}
-						// }
+				int i = x < 0 ? -1 : 1;
+				int posX = (x - width * std::min(0, i)) / (width * i);
+				int n = z < 0 ? -1 : 1;
+				int posZ = (z - height * std::min(0, n)) / (height * n);
 
-						// There is no terrain there, make new one
-						initialiseAndAddNewElement(newElements, { x, i, z, n });
+				// If there is already a element present here, then keep it
+				if (elements.size() > 0) {
+					ManipulableTerrainElement element({ posX, i, posZ, n });
+					auto newElement = elements.extract(element);
+
+					if (!newElement.empty()) {
+						newElements.insert(std::move(newElement));
+						continue;
 					}
-					if (maxElementsReached) break;
 				}
-				if (maxElementsReached) break;
+
+				// There is no element already present, so make a new one
+				initialiseAndAddNewElement(newElements, { posX, i, posZ, n });
+
+				if (newElements.size() >= settings->maxNumElements) {
+					maxElementsReached = true;
+					break;
+				}
 			}
+			z = position.z - numPerQuadrantZ * height;
 			if (maxElementsReached) break;
 		}
 
-		// Set new elements
+		// Set new elements and elements that aren't needed anymore
+		elements.clear();
 		elements = std::move(newElements);
+		m_updateModel.store(true);
 	}
 
 	void TerrainManager::manipulateTerrain(ManipulableTerrainElement::ManipulateDir dir, ManipulableTerrainElement::ManipulateForm form, ManipulableTerrainElement::ManipulateType type, float strength, float radius, Vector3 position) {
@@ -386,10 +420,43 @@ namespace Terrain {
 		}
 	}
 
+	void TerrainManager::update(int targetFPS) {
+		if (!m_updating.try_lock()) return;
+		double start = GetTime();
+		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
+			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it);
+			element.update(targetFPS);
+			double elapsed = GetTime() - start;
+			if (elapsed > 1.0f / targetFPS) {
+				m_updating.unlock();
+				return; // Returning, so that m_updateModel only get checked, once every element has been updated
+			}
+		}
+		if (m_updateModel.load()) {
+			updateModel();
+			m_updateModel.store(false);
+		}
+		m_updating.unlock();
+	}
+
 	void TerrainManager::draw() {
 		// activate();
 		ModelObject::draw(m_position);
 		// deactivate();
+	}
+
+	void TerrainManager::updateElementPositions() {
+		if (settings->updateWithThreadPool && settings->threadPool) {
+			auto relocate = [this]() {
+				m_updating.lock();
+				relocateElements();
+				m_updating.unlock();
+				};
+			settings->threadPool->addTask(relocate, nullptr);
+		}
+		else {
+			relocateElements();
+		}
 	}
 
 	std::shared_ptr<terrain_settings> TerrainManager::refSettings() {

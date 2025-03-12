@@ -44,15 +44,16 @@ int main()
 		SetConfigFlags(flag);
 	}
 	InitWindow(settings.width, settings.height, settings.title.c_str());
-	SetTargetFPS(settings.targetFps);
+	SetTargetFPS(settings.targetFps); 
+
+	ThreadPool pool(5);
+	
+	Character character(json.getSubElement("MainCamera"));
+	bool cursorActive = true;
 
 	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"));
-	terrainManager.initializeModel();
-
-	Character character("MainCamera");
-	character.load(json.getSubElement(character.getName()));
-	character.setPosition(Vector3({ 100.0f, 50.0f, 100.0f }));
-	bool cursorActive = true;
+	terrainManager.setCamera(&character);
+	terrainManager.setThreadPool(&pool);
 
 	GuiManager guiManager = GuiManager(true);
 	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
@@ -64,8 +65,9 @@ int main()
 			else EnableCursor();
 			cursorActive = !cursorActive;
 		}
+		if (IsKeyPressed(KEY_T)) terrainManager.updateElementPositions();
 		
-		if(!cursorActive) character.update();
+		if(!cursorActive) character.update(settings.targetFps);
 
 		BeginDrawing();
 
@@ -83,6 +85,9 @@ int main()
 		guiManager.draw();
 
 		EndDrawing();
+
+		pool.update(settings.targetFps);
+		terrainManager.update(settings.targetFps);
 	}
 
 	terrainManager.save(json.getSubElement(terrainManager.getName()));

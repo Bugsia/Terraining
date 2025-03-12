@@ -11,7 +11,7 @@ public:
 	~ThreadPool();
 	ThreadPool(int numberOfThreads);
 
-	void update();
+	void update(int targetFPS);
 	void shutdown();
 
 	void addTask(std::function<void()> task, std::atomic<bool>* flag);
