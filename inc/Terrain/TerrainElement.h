@@ -16,6 +16,7 @@ namespace Terrain {
 		// Terrain manager
 		float radius; // Radius of the spawn range of terrain elements
 		unsigned int maxNumElements; // The maximum number of terrain elements that can spawn
+		bool followCamera = false;
 		bool updateWithThreadPool = false;
 		ThreadPool* threadPool = nullptr;
 		Character* camera = nullptr;

@@ -19,6 +19,7 @@ namespace Terrain {
 		this->settings->maxNumElements = std::any_cast<int>(terrainSettingsFile.getField("max_num_elements").getValue());
 		this->settings->spacing = std::any_cast<float>(terrainSettingsFile.getField("spacing").getValue());
 		this->settings->updateWithThreadPool = std::any_cast<bool>(terrainSettingsFile.getField("update_with_thread_pool").getValue());
+		this->settings->followCamera = std::any_cast<bool>(terrainSettingsFile.getField("follow_camera").getValue());
 		this->settings->camera = camera;
 		loadNoiseSettings(settings.getSubElement("noise_settings"));
 		loadTerrainElements(settings.getSubElement("terrain_elements"));
@@ -39,7 +40,7 @@ namespace Terrain {
 
 		bool maxElementsReached = false;
 		Vector3 position = { 0.0f, 0.0f, 0.0f };
-		if (settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
+		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
 
 		// Spawning elements from the bottom left corner
 		float width = (settings->numWidth - 1) * settings->spacing;
@@ -124,6 +125,7 @@ namespace Terrain {
 		settings.addField(FileAdapter::FileField("max_num_elements", FileAdapter::ValueType::INT, static_cast<int>(this->settings->maxNumElements)));
 		settings.addField(FileAdapter::FileField("spacing", FileAdapter::ValueType::FLOAT, this->settings->spacing));
 		settings.addField(FileAdapter::FileField("update_with_thread_pool", FileAdapter::ValueType::BOOL, this->settings->updateWithThreadPool));
+		settings.addField(FileAdapter::FileField("follow_camera", FileAdapter::ValueType::BOOL, this->settings->followCamera));
 	}
 
 	void TerrainManager::saveNoiseSettings(FileAdapter& json) const {
@@ -367,7 +369,7 @@ namespace Terrain {
 		std::unordered_set<ManipulableTerrainElement> newElements;
 
 		Vector3 position = { 0.0f, 0.0f, 0.0f };
-		if (settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
+		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
 
 		// Spawning elements from the bottom left corner
 		float width = (settings->numWidth - 1) * settings->spacing;
