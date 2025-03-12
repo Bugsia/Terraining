@@ -66,7 +66,7 @@ void testinMulti() {
 			cursorActive = !cursorActive;
 		}
 
-		if (!cursorActive) character.update();
+		if (!cursorActive) character.update(60);
 
 		BeginDrawing();
 
@@ -89,7 +89,7 @@ void testinMulti() {
 			pool.addTask([&mesh]() { updateMeshVertices(&mesh); }, &updateMesh);
 		}
 
-		pool.update();
+		pool.update(60);
 
 		if (updateMesh.load()) {
 			UpdateMeshBuffer(mesh, 0, mesh.vertices, mesh.vertexCount * 3 * sizeof(float), 0);
@@ -135,9 +135,10 @@ int main()
 			else EnableCursor();
 			cursorActive = !cursorActive;
 		}
-		if (IsKeyPressed(KEY_T)) terrainManager.relocateElements();
+		if (IsKeyPressed(KEY_T)) terrainManager.updateElementPositions();
+		if (IsKeyPressed(KEY_T)) TraceLog(LOG_INFO, "T PRESSED");
 		
-		if(!cursorActive) character.update();
+		if(!cursorActive) character.update(settings.targetFps);
 
 		BeginDrawing();
 
@@ -156,8 +157,8 @@ int main()
 
 		EndDrawing();
 
-		pool.update();
-		terrainManager.update();
+		pool.update(settings.targetFps);
+		terrainManager.update(settings.targetFps);
 	}
 
 	terrainManager.save(json.getSubElement(terrainManager.getName()));

@@ -236,10 +236,14 @@ namespace Terrain {
 		initialiseElementWithNoiseTerrain(noiseSettings);
 	}
 
-	void TerrainElement::update() {
+	void TerrainElement::update(int targetFPS) {
 		if (m_reload.load()) {
 			reloadMeshData();
 			m_reload.store(false);
+		}
+		if (m_upload.load()) {
+			Upload();
+			m_upload.store(false);
 		}
 	}
 
@@ -261,5 +265,9 @@ namespace Terrain {
 
 	std::atomic<bool>* TerrainElement::getReloadFlag() {
 		return &m_reload;
+	}
+
+	std::atomic<bool>* TerrainElement::getUploadFlag() {
+		return &m_upload;
 	}
 }

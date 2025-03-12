@@ -2,5 +2,5 @@
 
 class Updatable {
 public:
-	virtual void update() = 0;
+	virtual void update(int targetFPS) = 0;
 };

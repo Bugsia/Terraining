@@ -54,7 +54,7 @@ namespace Terrain {
 		void UnloadLayers();
 		void reloadMeshData();
 		void renewMeshData();
-		void update();
+		void update(int targetFPS);
 
 		// GETTER AND SETTER
 		unsigned int getId() const;
@@ -62,6 +62,7 @@ namespace Terrain {
 		Mesh& refMesh();
 		void setModelUploaded(std::shared_ptr<bool> modelUploaded);
 		std::atomic<bool>* getReloadFlag();
+		std::atomic<bool>* getUploadFlag();
 
 		bool operator==(const TerrainElement& other) const {
 			return id == other.id;
@@ -74,6 +75,7 @@ namespace Terrain {
 		// Vector3 m_position = { 0, 0, 0 }; // The position of the bottom left corner (local x and y = 0) of the terrain Element
 		PositionIdentifier posId; // Used to store information about the position of a element in the terrain
 		std::atomic<bool> m_reload{ false };
+		std::atomic<bool> m_upload{ false };
 
 		// Mesh
 		bool dynamicMesh = false; // True if the mesh is dynamic, false otherwise

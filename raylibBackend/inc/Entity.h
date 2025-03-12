@@ -16,7 +16,7 @@ public:
 	Entity();
 	Entity(T position);
 
-	virtual void update();
+	virtual void update(int targetFPS);
 	void move(T change);
 
 	T getPosition() const;
@@ -32,7 +32,7 @@ template <baseType T>
 Entity<T>::Entity(T position) : m_position(position) {};
 
 template <baseType T>
-void Entity<T>::update() {};
+void Entity<T>::update(int targetFPS) {};
 
 template <baseType T>
 void Entity<T>::move(T change) {

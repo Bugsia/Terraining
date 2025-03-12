@@ -16,7 +16,7 @@ Character::Character(std::string name, Vector3 position, Vector3 target, Vector3
 	this->m_position = m_camera.position;
 }
 
-void Character::update() {
+void Character::update(int targetFPS) {
 	if (m_type == CAMERA_CUSTOM) handleInput();
 	else UpdateCamera(&m_camera, m_type);
 	this->m_position = m_camera.position;

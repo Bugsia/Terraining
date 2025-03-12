@@ -11,7 +11,7 @@ public:
 	Character(std::string name);
 	Character(std::string name, Vector3 position, Vector3 target, Vector3 up, float fovy, CameraProjection projection, int type);
 
-	void update();
+	void update(int targetFPS);
 	void move(Vector3 change);
 
 	void save(FileAdapter& file) const;

@@ -29,7 +29,7 @@ void ThreadPool::initializeThreadRunners(int numberOfThreads) {
 	}
 }
 
-void ThreadPool::update() {
+void ThreadPool::update(int targetFPS) {
 	while (!m_tasksQueue.empty() && isAnyThreadAvailable()) {
 		for (int i = 0; i < m_numberOfThreads; i++) {
 			if (m_isFree[i].load()) {

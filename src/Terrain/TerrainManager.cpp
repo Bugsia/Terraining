@@ -68,6 +68,7 @@ namespace Terrain {
 			z = position.z - numPerQuadrantZ * height;
 			if (maxElementsReached) break;
 		}
+		m_updateModel.store(true);
 	}
 
 	void TerrainManager::removeDifference() {
@@ -171,7 +172,7 @@ namespace Terrain {
 			newElement.setModelUploaded(modelUploaded);
 			newElement.initialiseMesh();
 			newElement.initialiseElementWithNoiseTerrain(noiseSettings);
-			newElement.Upload();
+			newElement.getUploadFlag()->store(true);
 
 			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
 		}
@@ -330,8 +331,7 @@ namespace Terrain {
 		
 		// Check for radius and maxNumElements increase (for example when circle has been cutoff, so increase elements if that happened)
 		if (elements.size() < settings->maxNumElements || settings->radius != oldSpawnRadius) {
-			relocateElements();
-			updateModel();
+			updateElementPositions();
 		}
 
 		TraceLog(LOG_DEBUG, "Terrain: Terrain has been updated");
@@ -404,6 +404,7 @@ namespace Terrain {
 		// Set new elements and elements that aren't needed anymore
 		elements.clear();
 		elements = std::move(newElements);
+		m_updateModel.store(true);
 	}
 
 	void TerrainManager::manipulateTerrain(ManipulableTerrainElement::ManipulateDir dir, ManipulableTerrainElement::ManipulateForm form, ManipulableTerrainElement::ManipulateType type, float strength, float radius, Vector3 position) {
@@ -414,21 +415,43 @@ namespace Terrain {
 		}
 	}
 
-	void TerrainManager::update() {
+	void TerrainManager::update(int targetFPS) {
+		if (!m_updating.try_lock()) return;
+		double start = GetTime();
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
 			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it);
-			element.update();
+			element.update(targetFPS);
+			double elapsed = GetTime() - start;
+			if (elapsed > 1.0f / targetFPS) {
+				m_updating.unlock();
+				return; // Returning, so that m_updateModel only get checked, once every element has been updated
+			}
 		}
 		if (m_updateModel.load()) {
 			updateModel();
 			m_updateModel.store(false);
 		}
+		m_updating.unlock();
 	}
 
 	void TerrainManager::draw() {
 		// activate();
 		ModelObject::draw(m_position);
 		// deactivate();
+	}
+
+	void TerrainManager::updateElementPositions() {
+		if (settings->updateWithThreadPool && settings->threadPool) {
+			auto relocate = [this]() {
+				m_updating.lock();
+				relocateElements();
+				m_updating.unlock();
+				};
+			settings->threadPool->addTask(relocate, nullptr);
+		}
+		else {
+			relocateElements();
+		}
 	}
 
 	std::shared_ptr<terrain_settings> TerrainManager::refSettings() {
