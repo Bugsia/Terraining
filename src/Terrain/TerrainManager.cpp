@@ -175,16 +175,6 @@ namespace Terrain {
 
 			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
 		}
-
-		// ManipulableTerrain newElement(settings, posId);
-		// newElement.setModelUploaded(modelUploaded);
-		// newElement.initialiseMesh();
-		// newElement.initialiseElementWithNoiseTerrain(noiseSettings);
-		// newElement.Upload();
-		// 
-		// TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
-		// 
-		// newElements.emplace(std::move(newElement));
 	}
 
 	float TerrainManager::getSpawnHeightAtXPos(const float x, const float spawnRadius) {
@@ -341,7 +331,6 @@ namespace Terrain {
 		// Check for radius and maxNumElements increase (for example when circle has been cutoff, so increase elements if that happened)
 		if (elements.size() < settings->maxNumElements || settings->radius != oldSpawnRadius) {
 			relocateElements();
-		
 			updateModel();
 		}
 
@@ -429,6 +418,10 @@ namespace Terrain {
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
 			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it);
 			element.update();
+		}
+		if (m_updateModel.load()) {
+			updateModel();
+			m_updateModel.store(false);
 		}
 	}
 

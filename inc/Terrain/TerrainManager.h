@@ -62,7 +62,7 @@ namespace Terrain {
 
 		std::shared_ptr<bool> modelUploaded = std::make_shared<bool>(false); // True if the model has been uploaded to the GPU, false otherwise
 		std::unordered_set<ManipulableTerrainElement> elements; // The terrain elements
-		std::atomic<bool> m_reloadElements{ false };
+		std::atomic<bool> m_updateModel{ false };
 
 		Model newModel();
 		void generateNewManipulableTerrains();

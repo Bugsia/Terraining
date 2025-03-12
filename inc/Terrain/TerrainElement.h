@@ -85,10 +85,10 @@ namespace Terrain {
 		std::vector<Color*> noiseLayerPixels; // The pixels of the different noise layers
 
 		Vector3 getPositionFromPosId();
-		float* flatTerrainVertices();
-		float* flatTerrainTexcoords();
-		float* flatTerrainNormals();
-		unsigned short* flatTerrainIndices();
+		void flatTerrainVertices();
+		void flatTerrainTexcoords();
+		void flatTerrainNormals();
+		void flatTerrainIndices();
 		template<typename T>
 		void copyVectorToMemory(T*& dst, std::vector<T> src, bool uploaded);
 		void initialiseFlatMesh();

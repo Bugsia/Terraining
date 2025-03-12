@@ -1,4 +1,5 @@
 #include "Terrain/TerrainElement.h"
+#include <chrono>
 
 namespace Terrain {
 	Vector3 TerrainElement::getPositionFromPosId() {
@@ -11,81 +12,59 @@ namespace Terrain {
 		return { xPos, 0., zPos };
 	}
 
-	float* TerrainElement::flatTerrainVertices() {
-		int numVertices = settings->numWidth * settings->numHeight;
-		float* vertices = (float*)RL_MALLOC(numVertices * 3 * sizeof(float));
-
+	void TerrainElement::flatTerrainVertices() {
 		int index = 0;
 		for (int x = 0; x < settings->numWidth; x++) {
 			for (int z = 0; z < settings->numHeight; z++) {
-				vertices[index] = static_cast<float>(x * settings->spacing) + m_position.x;
-				vertices[index + 1] = m_position.y;
-				vertices[index + 2] = static_cast<float>(z * settings->spacing) + m_position.z;
+				m_mesh.vertices[index] = static_cast<float>(x * settings->spacing) + m_position.x;
+				m_mesh.vertices[index + 1] = m_position.y;
+				m_mesh.vertices[index + 2] = static_cast<float>(z * settings->spacing) + m_position.z;
 
 				index += 3;
 			}
 		}
-
-		m_mesh.vertexCount = numVertices;
-		return vertices;
 	}
 
-	float* TerrainElement::flatTerrainTexcoords() {
-		int numTexcoords = settings->numWidth * settings->numHeight * 2;
-		float* texcoords = (float*)RL_MALLOC(numTexcoords * sizeof(float));
-
+	void TerrainElement::flatTerrainTexcoords() {
 		int index = 0;
 		for (int x = 0; x < settings->numWidth; x++) {
 			for (int z = 0; z < settings->numHeight; z++) {
-				texcoords[index] = static_cast<float>(x) / (settings->numWidth - 1);
-				texcoords[index + 1] = static_cast<float>(z) / (settings->numHeight - 1);
+				m_mesh.texcoords[index] = static_cast<float>(x) / (settings->numWidth - 1);
+				m_mesh.texcoords[index + 1] = static_cast<float>(z) / (settings->numHeight - 1);
 
 				index += 2;
 			}
 		}
-
-		return texcoords;
 	}
 
-	float* TerrainElement::flatTerrainNormals() {
-		int numNormals = settings->numWidth * settings->numHeight;
-		float* normals = (float*)RL_MALLOC(numNormals * 3 * sizeof(float));
-
+	void TerrainElement::flatTerrainNormals() {
 		int index = 0;
 		for (int x = 0; x < settings->numWidth; x++) {
 			for (int z = 0; z < settings->numHeight; z++) {
-				normals[index] = 0;
-				normals[index + 1] = 1;
-				normals[index + 2] = 0;
+				m_mesh.normals[index] = 0;
+				m_mesh.normals[index + 1] = 1;
+				m_mesh.normals[index + 2] = 0;
 				index += 3;
 			}
 		}
-
-		return normals;
 	}
 
-	unsigned short* TerrainElement::flatTerrainIndices() {
-		int numIndices = (settings->numWidth - 1) * (settings->numHeight - 1) * 6;
-		unsigned short* indices = (unsigned short*)RL_MALLOC(numIndices * sizeof(unsigned short));
-
+	void TerrainElement::flatTerrainIndices() {
 		int index = 0;
-		int loopIterations = (numIndices / 6) + (settings->numWidth - 1);
+		int loopIterations = ((settings->numWidth - 1) * (settings->numHeight - 1)) + (settings->numWidth - 1);
 		for (int i = 0; i < loopIterations; i++) {
 			if ((i + 1) % settings->numHeight == 0) continue;
 
-			indices[index] = i;
-			indices[index + 1] = i + 1;
-			indices[index + 2] = i + settings->numHeight;
+			m_mesh.indices[index] = i;
+			m_mesh.indices[index + 1] = i + 1;
+			m_mesh.indices[index + 2] = i + settings->numHeight;
 
-			indices[index + 3] = i + 1;
-			indices[index + 4] = i + settings->numHeight + 1;
-			indices[index + 5] = i + settings->numHeight;
+			m_mesh.indices[index + 3] = i + 1;
+			m_mesh.indices[index + 4] = i + settings->numHeight + 1;
+			m_mesh.indices[index + 5] = i + settings->numHeight;
 
 			index += 6;
 		}
-
-		m_mesh.triangleCount = numIndices / 3;
-		return indices;
 	}
 
 	template <typename T>
@@ -96,10 +75,10 @@ namespace Terrain {
 	}
 
 	void TerrainElement::initialiseFlatMesh() {
-		m_mesh.vertices = flatTerrainVertices();
-		m_mesh.normals = flatTerrainNormals();
-		m_mesh.indices = flatTerrainIndices();
-		m_mesh.texcoords = flatTerrainTexcoords();
+		flatTerrainVertices();
+		flatTerrainNormals();
+		flatTerrainIndices();
+		flatTerrainTexcoords();
 	}
 
 	int TerrainElement::getIdFromPosId(PositionIdentifier posId) {
@@ -145,6 +124,12 @@ namespace Terrain {
 
 		m_mesh = { 0 };
 		meshUploaded = false;
+		m_mesh.vertices = (float*)RL_MALLOC(settings->numWidth * settings->numHeight * 3 * sizeof(float));
+		m_mesh.vertexCount = settings->numWidth * settings->numHeight;
+		m_mesh.indices = (unsigned short*)RL_MALLOC((settings->numWidth - 1) * (settings->numHeight - 1) * 6 * sizeof(unsigned short));
+		m_mesh.triangleCount = (settings->numWidth - 1) * (settings->numHeight - 1) * 2;
+		m_mesh.normals = (float*)RL_MALLOC(settings->numWidth * settings->numHeight * 3 * sizeof(float));
+		m_mesh.texcoords = (float*)RL_MALLOC(settings->numWidth * settings->numHeight * 2 * sizeof(float));
 	}
 
 	void TerrainElement::initialiseElementWithFlatTerrain() {
@@ -158,16 +143,22 @@ namespace Terrain {
 	void TerrainElement::initialiseElementWithNoiseTerrain(std::shared_ptr<Noise::noise_settings> noiseSettings) {
 		TraceLog(LOG_DEBUG, "TerrainElement: Filling element %i with noise terrain", id);
 
-		initialiseFlatMesh();
-
 		this->noiseSettings = noiseSettings;
-		updateNoiseLayers();
+		auto initialise = [&]() {
+			initialiseFlatMesh();
+			updateNoiseLayers();
+			randomizeTerrain();
+			updateNormals();
+			updateBoundingBox();
+			};
 
-		randomizeTerrain();
-		updateNormals();
-		updateBoundingBox();
-
-		reloadMeshData();
+		if (settings->updateWithThreadPool && settings->threadPool) {
+			settings->threadPool->addTask(initialise, &m_reload);
+		}
+		else {
+			initialise();
+			m_reload.store(true);
+		}
 	}
 
 	void TerrainElement::Upload() {

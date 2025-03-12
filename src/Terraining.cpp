@@ -111,7 +111,7 @@ int main()
 		SetConfigFlags(flag);
 	}
 	InitWindow(settings.width, settings.height, settings.title.c_str());
-	SetTargetFPS(settings.targetFps);
+	SetTargetFPS(settings.targetFps); 
 
 	ThreadPool pool(5);
 	
@@ -135,6 +135,7 @@ int main()
 			else EnableCursor();
 			cursorActive = !cursorActive;
 		}
+		if (IsKeyPressed(KEY_T)) terrainManager.relocateElements();
 		
 		if(!cursorActive) character.update();
 
