@@ -73,7 +73,7 @@ void ThreadPool::ThreadRunner(const std::atomic<bool>* shutdown, const std::func
 		if (shutdown->load()) break;
 		TraceLog(LOG_DEBUG, "ThreadRunner: Running task");
 		if (task) (*task)();
-		(*returnFlag)->store(true);
+		if (*returnFlag) (*returnFlag)->store(true);
 		isFree->store(true);
 	}
 }
