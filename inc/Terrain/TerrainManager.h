@@ -68,9 +68,9 @@ namespace Terrain {
 		std::atomic<bool> m_updateModel{ false };
 		std::mutex m_updating; // Any thread that could cause update() to crash (example: deleting elements from elements) locks this firts preventing updating
 		Vector3 center = { 0.0f, 0.0f, 0.0f };
+		std::unordered_map<PositionIdentifier, std::shared_ptr<float[]>, PositionIdentifierHash> m_loadedManipulations;
 
 		Model newModel();
-		void generateNewManipulableTerrains();
 		void initialiseAndAddNewElement(std::unordered_set<ManipulableTerrainElement>& newElements, const PositionIdentifier& posId);
 		float getSpawnHeightAtXPos(const float x, const float spawnRadius);
 		void loadElementsIntoModel(); // Sets meshCount of model and loads the meshes of the elements into the model

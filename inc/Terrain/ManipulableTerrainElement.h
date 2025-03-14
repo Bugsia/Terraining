@@ -25,13 +25,13 @@ namespace Terrain {
 		};
 
 		~ManipulableTerrainElement();
-		ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
+		ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId, std::shared_ptr<float[]> heightDifference);
 		ManipulableTerrainElement(PositionIdentifier posId);
 		ManipulableTerrainElement(const TerrainElement& other);
 		ManipulableTerrainElement(const ManipulableTerrainElement& other);
 
 		void manipulateTerrain(ManipulateDir dir, ManipulateForm form, ManipulateType type, float strength, float radius, Vector3 relativePosition);
-		void loadDifference(std::vector<std::any> heightVector);
+		void loadDifference(std::shared_ptr<float[]> heightDifference);
 		void removeDifference();
 		void addDifference();
 		void clearDifference();
@@ -46,7 +46,7 @@ namespace Terrain {
 			int height;
 		};
 
-		float* m_difference = nullptr;
+		std::shared_ptr<float[]> m_difference = nullptr; // ManipulableTerrainElement is not the onwer of this memory. It is a pointer to the memory owned by the TerrainManager, who has it stored in a map
 		bool m_hasDifference = false;
 
 		ValidIndices getValidIndices(float radius, Vector3 position);

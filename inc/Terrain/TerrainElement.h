@@ -33,6 +33,21 @@ namespace Terrain {
 		int i = 1; // -1 if element is in left half, 1 if element is in right half of terrain
 		int z = 0; // The z-Index of the element
 		int n = 1; // -1 if element is in top half, 1 if element is in bottom half of terrain
+
+		PositionIdentifier() = default;
+		PositionIdentifier(int x, int i, int z, int n) : x(x), i(i), z(z), n(n) {}
+		PositionIdentifier(const PositionIdentifier& other) : x(other.x), i(other.i), z(other.z), n(other.n) {}
+
+		bool operator==(const PositionIdentifier& other) const {
+			return x == other.x && i == other.i && z == other.z && n == other.n;
+		}
+	};
+
+	struct PositionIdentifierHash {
+		std::size_t operator()(const PositionIdentifier& pos) const {
+			return std::hash<int>()(pos.x) ^ std::hash<int>()(pos.i) ^
+				std::hash<int>()(pos.z) ^ std::hash<int>()(pos.n);
+		}
 	};
 
 	class TerrainElement : public MeshObject, public Entity<Vector3> {

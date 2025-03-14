@@ -144,21 +144,12 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainElement: Filling element %i with noise terrain", id);
 
 		this->noiseSettings = noiseSettings;
-		auto initialise = [&]() {
-			initialiseFlatMesh();
-			updateNoiseLayers();
-			randomizeTerrain();
-			updateNormals();
-			updateBoundingBox();
-			};
-
-		if (settings->updateWithThreadPool && settings->threadPool) {
-			settings->threadPool->addTask(initialise, &m_reload);
-		}
-		else {
-			initialise();
-			m_reload.store(true);
-		}
+		initialiseFlatMesh();
+		updateNoiseLayers();
+		randomizeTerrain();
+		updateNormals();
+		updateBoundingBox();
+		m_reload.store(true);
 	}
 
 	void TerrainElement::Upload() {

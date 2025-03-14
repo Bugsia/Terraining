@@ -11,6 +11,7 @@ namespace Terrain {
 
 	TerrainManager::TerrainManager(const FileAdapter& settings) : Actor<Vector3>(settings.getKey()) {
 		load(settings);
+		relocateElements();
 		initializeModel();
 		TraceLog(LOG_DEBUG, "TerrainManager: New TerrainManager created");
 	}
@@ -20,44 +21,6 @@ namespace Terrain {
 		model.transform = MatrixIdentity();
 
 		return model;
-	}
-
-	void TerrainManager::generateNewManipulableTerrains() {
-		int projectedNumElements = pow(settings->radius / (std::min(settings->numHeight, settings->numWidth) * settings->spacing) * 2, 2); // The approximate ammount of quadratic elements that would be in a rectange with a side length of the spawning circumfrence
-		elements = std::unordered_set<ManipulableTerrainElement>(projectedNumElements);
-
-		bool maxElementsReached = false;
-		Vector3 position = { 0.0f, 0.0f, 0.0f };
-		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
-		center = position;
-
-		// Spawning elements from the bottom left corner
-		float width = (settings->numWidth - 1) * settings->spacing;
-		float height = (settings->numHeight - 1) * settings->spacing;
-		int numPerQuadrantX = round(settings->radius / width);
-		int numPerQuadrantZ = round(settings->radius / height);
-		float x = position.x - numPerQuadrantX * width;
-		float z = position.z - numPerQuadrantZ * height;
-		for (int i = -numPerQuadrantX; i < numPerQuadrantX; i++, x += width) {
-			float circleHeight = getSpawnHeightAtXPos(x - position.x + (width / 2), settings->radius);
-			for (int j = -numPerQuadrantZ; j < numPerQuadrantZ; j++, z += height) {
-				if (std::abs(z - position.z + (height / 2)) > circleHeight) continue;
-
-				int i = x < 0 ? -1 : 1;
-				int posX = (x - width * std::min(0, i)) / (width * i);
-				int n = z < 0 ? -1 : 1;
-				int posZ = (z - height * std::min(0, n)) / (height * n);
-
-				initialiseAndAddNewElement(elements, { posX, i, posZ, n });
-				if (elements.size() >= settings->maxNumElements) {
-					maxElementsReached = true;
-					break;
-				}
-			}
-			z = position.z - numPerQuadrantZ * height;
-			if (maxElementsReached) break;
-		}
-		m_updateModel.store(true);
 	}
 
 	void TerrainManager::removeDifference() {
@@ -158,15 +121,24 @@ namespace Terrain {
 	}
 
 	void TerrainManager::saveTerrainElements(FileAdapter& file) const {
-		FileAdapter& elements = file.getSubElement("terrain_elements");
-		elements.clear();
-		for (std::unordered_set<ManipulableTerrainElement>::iterator it = this->elements.begin(); it != this->elements.end(); it++) {
-			if (!it->getHasDifference()) continue;
-			PositionIdentifier posId = it->getPosId();
+		FileAdapter& elementsFile = file.getSubElement("terrain_elements");
+		elementsFile.clear();
+		for (auto& [posId, value] : m_loadedManipulations) {
+			if (std::isnan(value[0])) continue; // No difference and markes with NaN because Element doesnt exist anymore
+			bool diffFound = false;
+			for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
+				if (value[i] != 0.0f) {
+					diffFound = true;
+					break;
+				}
+			}
+			if (!diffFound) continue;
+
+			// Now the value contains valid difference so save it
 			std::string key = "x" + std::to_string(posId.x) + "i" + std::to_string(posId.i) + "z" + std::to_string(posId.z) + "n" + std::to_string(posId.n);
-			FileAdapter& curElement = elements.getSubElement(key);
+			FileAdapter& curElement = elementsFile.getSubElement(key);
 			curElement.clear();
-			const float* heightArray = it->getDifference();
+			const float* heightArray = value.get();
 			std::vector<std::any> heightDifference(heightArray, heightArray + (settings->numWidth * settings->numHeight * 3));
 			curElement.addArray(FileAdapter::FileArray("heightDifference", FileAdapter::ValueType::FLOAT, heightDifference));
 		}
@@ -174,15 +146,30 @@ namespace Terrain {
 
 	void TerrainManager::initialiseAndAddNewElement(std::unordered_set<ManipulableTerrainElement>& newElements, const PositionIdentifier& posId) {
 		// Directly emplace a new ManipulableTerrain into the container
-		auto result = newElements.emplace(settings, posId);
+		std::shared_ptr<float[]> newDiff = nullptr;
+		std::unordered_map<PositionIdentifier, std::shared_ptr<float[]>>::iterator it = m_loadedManipulations.find(posId);
+		if (it == m_loadedManipulations.end()) {
+			m_loadedManipulations[posId] = std::shared_ptr<float[]>(new float[settings->numWidth * settings->numHeight * 3], std::default_delete<float[]>());
+			newDiff = m_loadedManipulations[posId];
+		}
+		else if (std::isnan(*(it->second.get()))) {
+			*(it->second.get()) = 0.0f;
+			newDiff = it->second;
+		}
+		auto result = newElements.emplace(settings, posId, newDiff);
 		if (result.second) { // Check if insertion was successful
-			ManipulableTerrainElement& newElement = const_cast<ManipulableTerrainElement&>(*result.first);
-			newElement.setModelUploaded(modelUploaded);
-			newElement.initialiseMesh();
-			newElement.initialiseElementWithNoiseTerrain(noiseSettings);
-			newElement.getUploadFlag()->store(true);
+			ManipulableTerrainElement* newElement = const_cast<ManipulableTerrainElement*>(&*result.first);
+			newElement->setModelUploaded(modelUploaded);
+			newElement->initialiseMesh();
+			auto initialise = [this, newElement, posId, newDiff]() {
+				newElement->initialiseElementWithNoiseTerrain(this->noiseSettings);
+				if (!newDiff) newElement->loadDifference(this->m_loadedManipulations[posId]);
+				};
+			if (settings->updateWithThreadPool && settings->threadPool) settings->threadPool->addTask(initialise, nullptr);
+			else initialise();
+			newElement->getUploadFlag()->store(true);
 
-			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement.getId());
+			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement->getId());
 		}
 	}
 
@@ -244,21 +231,20 @@ namespace Terrain {
 	}
 
 	void TerrainManager::generateDefaultTerrain() {
-		generateNewManipulableTerrains();
+		relocateElements();
 
 		TraceLog(LOG_DEBUG, "Terrain: Default terrain has been generated");
 	}
 
 	void TerrainManager::loadTerrainElements(const FileAdapter& elements) {
-		generateNewManipulableTerrains();
-
 		for (std::string key : elements.getAllSubKeys()) {
 			FileAdapter curElementFile = elements.getSubElement(key);
-			PositionIdentifier posId = getPositionIdentifierFromKey(key);
-			std::unordered_set<ManipulableTerrainElement>::iterator it = this->elements.find(ManipulableTerrainElement(posId));
-			if (it == this->elements.end()) continue;
-			ManipulableTerrainElement& curElement = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
-			curElement.loadDifference(curElementFile.getArray("heightDifference").getValue());
+			std::vector<std::any> difference = curElementFile.getArray("heightDifference").getValue();
+			float* heightDifference = new float[difference.size()];
+			for (int i = 0; i < difference.size(); i++) {
+				heightDifference[i] = std::any_cast<float>(difference[i]);
+			}
+			m_loadedManipulations[getPositionIdentifierFromKey(key)] = std::shared_ptr<float[]>(heightDifference, std::default_delete<float[]>());
 		}
 
 		TraceLog(LOG_DEBUG, "Terrain: Terrain elements have been loaded");
@@ -354,7 +340,7 @@ namespace Terrain {
 			element.UnloadLayers();
 		}
 
-		generateNewManipulableTerrains();
+		relocateElements();
 		initializeModel();
 
 		TraceLog(LOG_DEBUG, "Terrain: Terrain has been renewed");
@@ -368,7 +354,7 @@ namespace Terrain {
 		Vector3 position = { 0.0f, 0.0f, 0.0f };
 		if (settings->followCamera && settings->camera) position = Vector3Subtract(settings->camera->getPosition(), m_position);
 		center = position;
-
+		std::vector<PositionIdentifier> allPosIds;
 		// Spawning elements from the bottom left corner
 		float width = (settings->numWidth - 1) * settings->spacing;
 		float height = (settings->numHeight - 1) * settings->spacing;
@@ -382,14 +368,27 @@ namespace Terrain {
 			for (int j = -numPerQuadrantZ; j < numPerQuadrantZ; j++, z += height) {
 				if (std::abs(z - position.z + (height / 2)) > circleHeight) continue;
 
-				int i = x < 0 ? -1 : 1;
-				int posX = (x - width * std::min(0, i)) / (width * i);
-				int n = z < 0 ? -1 : 1;
-				int posZ = (z - height * std::min(0, n)) / (height * n);
+				PositionIdentifier posId;
+				if (x < 0) {
+					posId.i = -1;
+					posId.x = static_cast<int>(((-x) - width) / width);
+				}
+				else {
+					posId.i = 1;
+					posId.x = static_cast<int>(x / width);
+				}
+				if (z < 0) {
+					posId.n = -1;
+					posId.z = static_cast<int>(((-z) - height) / height);
+				}
+				else {
+					posId.n = 1;
+					posId.z = static_cast<int>(z / height);
+				}
 
 				// If there is already a element present here, then keep it
 				if (elements.size() > 0) {
-					ManipulableTerrainElement element({ posX, i, posZ, n });
+					ManipulableTerrainElement element(posId);
 					auto newElement = elements.extract(element);
 
 					if (!newElement.empty()) {
@@ -399,7 +398,7 @@ namespace Terrain {
 				}
 
 				// There is no element already present, so make a new one
-				initialiseAndAddNewElement(newElements, { posX, i, posZ, n });
+				initialiseAndAddNewElement(newElements, posId);
 
 				if (newElements.size() >= settings->maxNumElements) {
 					maxElementsReached = true;

@@ -2,40 +2,45 @@
 
 namespace Terrain {
 	ManipulableTerrainElement::~ManipulableTerrainElement() {
-		if(m_difference) delete[] m_difference;
+		// If it has no difference then set first value to be NaN to store that information in the map of TerrainManager without it needing to go through every element agian
+		// This way if the element is loaded again it will not be initialised as if it has a difference causing the saving of a bunch of arrays with only 0.0f to disk
+		if (!m_hasDifference && m_difference) {
+			m_difference[0] = std::numeric_limits<float>::quiet_NaN();
+		}
 	}
 
-	ManipulableTerrainElement::ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : TerrainElement(settings, posId) { 
-		initialiseDifference();
+	ManipulableTerrainElement::ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId, std::shared_ptr<float[]> heightDifference) : TerrainElement(settings, posId), m_difference(heightDifference) {
+		// If a m_difference pointer is given here, then there is no preexisiting difference, so initialise it
+		// If there already is a difference that should be respected, give a nullptr here and then call loadDifference() with difference array
+		if (m_difference != nullptr) {
+			initialiseDifference();
+		}
 	}
 
-	ManipulableTerrainElement::ManipulableTerrainElement(PositionIdentifier posId) : TerrainElement(posId) { }
+	ManipulableTerrainElement::ManipulableTerrainElement(PositionIdentifier posId) : TerrainElement(posId) {
+	}
 
 	ManipulableTerrainElement::ManipulableTerrainElement(const TerrainElement& other) : TerrainElement(other) {
-		initialiseDifference();
 	}
 
 	ManipulableTerrainElement::ManipulableTerrainElement(const ManipulableTerrainElement& other) : TerrainElement(other) {
-		m_difference = new float[settings->numWidth * settings->numHeight * 3];
+		m_difference = other.m_difference;
 		for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
-			m_mesh.vertices[i] += other.m_difference[i];
-			m_difference[i] = other.m_difference[i];
+			m_mesh.vertices[i] += m_difference[i];
 		}
 	}
 
 	void ManipulableTerrainElement::initialiseDifference() {
-		m_difference = new float[settings->numWidth * settings->numHeight * 3];
 		for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
 			m_difference[i] = 0.0f;
 		}
 	}
 
-	void ManipulableTerrainElement::loadDifference(std::vector<std::any> heightVector) {
-		if (heightVector.size() > settings->numHeight * settings->numHeight * 3) return;
-		if (m_difference == nullptr) initialiseDifference();
-		
-		for (int i = 0; i < heightVector.size(); i++) {
-			m_difference[i] = std::any_cast<float>(heightVector[i]);
+	void ManipulableTerrainElement::loadDifference(std::shared_ptr<float[]> heightDifference) {
+		if (m_difference) clearDifference();
+
+		m_difference = heightDifference;
+		for (int i = 0; i < settings->numWidth * settings->numHeight * 3; i++) {
 			m_mesh.vertices[i] += m_difference[i];
 		}
 
@@ -78,7 +83,6 @@ namespace Terrain {
 	}
 
 	void ManipulableTerrainElement::clearDifference() {
-		if(m_difference) delete[] m_difference;
 		initialiseDifference();
 		randomizeTerrain();
 		updateNormals();
@@ -177,7 +181,7 @@ namespace Terrain {
 	}
 
 	const float* ManipulableTerrainElement::getDifference() const {
-		return m_difference;
+		return m_difference.get();
 	}
 
 	bool ManipulableTerrainElement::getHasDifference() const {
