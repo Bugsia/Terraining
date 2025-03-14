@@ -68,12 +68,15 @@ void Character::handleInput() {
 
 	// Mouse movement
 	Vector2 mouseDelta = GetMouseDelta();
-	if (mouseDelta.x != 0.0f && mouseDelta.y != 0.0f) updateCameraTarget(mouseDelta);
+	if (mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) updateCameraTarget(mouseDelta);
 }
 
 void Character::updateCameraTarget(Vector2 mouseDelta) {
-	vAngle += -asinf(mouseDelta.y * m_sensitivity);
-	hAngle += asinf(mouseDelta.x * m_sensitivity);
+	float newvAngle = vAngle -asinf(mouseDelta.y * m_sensitivity);
+	float newhAngle = hAngle + asinf(mouseDelta.x * m_sensitivity);
+
+	if (!std::isnan(newvAngle)) vAngle = newvAngle;
+	if (!std::isnan(newhAngle)) hAngle = newhAngle;
 
 	// Update target
 	m_camera.target = Vector3Add(m_camera.position, { cosf(vAngle) * cosf(hAngle), sinf(vAngle), cosf(vAngle) * sinf(hAngle) });
