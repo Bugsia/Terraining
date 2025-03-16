@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <memory>
+#include <atomic>
 #include <vector>
 #include "MeshObject.h"
 #include "Noise.h"

@@ -27,6 +27,7 @@ namespace DebugGui {
 
 		ImGui::SeparatorText("MISC. (Instant)");
 		if (ImGui::Checkbox("Follow Camera", &m_settings.followCamera)) m_settingsChange = true;
+		if (ImGui::SliderFloat("Relocation Distance", &m_settings.distToRelocating, 0.0f, m_settings.radius)) m_settingsChange = true;
 		if (ImGui::Checkbox("Update with ThreadPool", &m_settings.updateWithThreadPool)) m_settingsChange = true;
 
 		if (m_settingsChange) {

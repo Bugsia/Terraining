@@ -15,6 +15,7 @@ public:
 	void shutdown();
 
 	void addTask(std::function<void()> task, std::atomic<bool>* flag);
+	// void addTaskGroup(std::vector<std::function<void()>> taskGroup, std::atomic<bool>* flag);
 
 private:
 	const int m_numberOfThreads;

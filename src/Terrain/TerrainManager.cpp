@@ -140,7 +140,7 @@ namespace Terrain {
 			curElement.clear();
 			const float* heightArray = value.get();
 			std::vector<std::any> heightDifference(heightArray, heightArray + (settings->numWidth * settings->numHeight * 3));
-			curElement.addArray(FileAdapter::FileArray("heightDifference", FileAdapter::ValueType::FLOAT, heightDifference));
+			curElement.addArray(FileAdapter::FileArray("height_difference", FileAdapter::ValueType::FLOAT, heightDifference));
 		}
 	}
 
@@ -161,12 +161,12 @@ namespace Terrain {
 			ManipulableTerrainElement* newElement = const_cast<ManipulableTerrainElement*>(&*result.first);
 			newElement->setModelUploaded(modelUploaded);
 			newElement->initialiseMesh();
-			auto initialise = [this, newElement, posId, newDiff]() {
+			auto initialise = [this, newElement, posId, newDiff]() { // Multithreading here is not possible until we can assure that every sub thread for the elements has completed before unlocking m_lockElements
 				newElement->initialiseElementWithNoiseTerrain(this->noiseSettings);
 				if (!newDiff) newElement->loadDifference(this->m_loadedManipulations[posId]);
 				};
-			if (settings->updateWithThreadPool && settings->threadPool) settings->threadPool->addTask(initialise, nullptr);
-			else initialise();
+			// if (settings->updateWithThreadPool && settings->threadPool) settings->threadPool->addTask(initialise, nullptr);
+			initialise();
 			newElement->getUploadFlag()->store(true);
 
 			TraceLog(LOG_DEBUG, "Terrain: New element has been created", newElement->getId());
@@ -239,7 +239,7 @@ namespace Terrain {
 	void TerrainManager::loadTerrainElements(const FileAdapter& elements) {
 		for (std::string key : elements.getAllSubKeys()) {
 			FileAdapter curElementFile = elements.getSubElement(key);
-			std::vector<std::any> difference = curElementFile.getArray("heightDifference").getValue();
+			std::vector<std::any> difference = curElementFile.getArray("height_difference").getValue();
 			float* heightDifference = new float[difference.size()];
 			for (int i = 0; i < difference.size(); i++) {
 				heightDifference[i] = std::any_cast<float>(difference[i]);
@@ -424,14 +424,14 @@ namespace Terrain {
 	}
 
 	void TerrainManager::update(int targetFPS) {
-		if (!m_updating.try_lock()) return;
+		if (!m_lockElements.try_lock()) return;
 		double start = GetTime();
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
 			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it);
 			element.update(targetFPS);
 			double elapsed = GetTime() - start;
 			if (elapsed > 1.0f / targetFPS) {
-				m_updating.unlock();
+				m_lockElements.unlock();
 				return; // Returning, so that m_updateModel only get checked, once every element has been updated
 			}
 		}
@@ -444,7 +444,7 @@ namespace Terrain {
 			float cameraDistToCenter = Vector2Distance(Vector2{ settings->camera->getPosition().x, settings->camera->getPosition().z }, Vector2{ center.x, center.z });
 			if (cameraDistToCenter > settings->distToRelocating) updateElementPositions();
 		}
-		m_updating.unlock();
+		m_lockElements.unlock();
 	}
 
 	void TerrainManager::draw() {
@@ -456,9 +456,9 @@ namespace Terrain {
 	void TerrainManager::updateElementPositions() {
 		if (settings->updateWithThreadPool && settings->threadPool) {
 			auto relocate = [this]() {
-				m_updating.lock();
+				m_lockElements.lock();
 				relocateElements();
-				m_updating.unlock();
+				m_lockElements.unlock();
 				};
 			settings->threadPool->addTask(relocate, nullptr);
 		}
@@ -477,6 +477,7 @@ namespace Terrain {
 
 	RayCollision TerrainManager::getRayCollisionWithTerrain(Ray ray) {
 		RayCollision hit = { 0 };
+		if (!m_lockElements.try_lock()) return hit;
 
 		for (std::unordered_set<ManipulableTerrainElement>::iterator it = elements.begin(); it != elements.end(); it++) {
 			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it); // Const can be cast away since the hash relevant data is not changed
@@ -490,16 +491,19 @@ namespace Terrain {
 			}
 		}
 
+		m_lockElements.unlock();
 		return hit;
 	}
 
 	RayCollision TerrainManager::getRayCollisionWithTerrain(Ray ray, RayCollision boundingBoxHit) {
-		if (!boundingBoxHit.hit) return getRayCollisionWithTerrain(ray);
 		RayCollision hit = { 0 };
+		if (!m_lockElements.try_lock()) return hit;
+		if (!boundingBoxHit.hit) return getRayCollisionWithTerrain(ray);
 
 		// Look from bounding box hit outwards
 		// TODO: Implement
 
+		m_lockElements.unlock();
 		return getRayCollisionWithTerrain(ray);
 	}
 }

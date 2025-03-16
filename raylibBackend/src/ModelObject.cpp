@@ -1,11 +1,17 @@
 #include "ModelObject.h"
 #include <raymath.h>
 
-ModelObject::ModelObject() : m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {}
+ModelObject::ModelObject() : m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {
+	m_model.transform = MatrixIdentity();
+}
 
-ModelObject::ModelObject(Vector3 position) : m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {}
+ModelObject::ModelObject(Vector3 position) : m_model({ 0 }), m_scale(1.0f), m_tint(BLACK), m_drawWired(false), m_drawNormals(false) {
+	m_model.transform = MatrixIdentity();
+}
 
-ModelObject::ModelObject(Vector3 position, Model model, float scale, Color tint) : m_model(model), m_scale(scale), m_tint(tint), m_drawWired(false), m_drawNormals(false) {}
+ModelObject::ModelObject(Vector3 position, Model model, float scale, Color tint) : m_model(model), m_scale(scale), m_tint(tint), m_drawWired(false), m_drawNormals(false) {
+	m_model.transform = MatrixIdentity();
+}
 
 void ModelObject::draw(Vector3 position) {
 	if (m_drawNormals) drawNormals();

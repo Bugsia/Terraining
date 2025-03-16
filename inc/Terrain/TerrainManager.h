@@ -66,7 +66,7 @@ namespace Terrain {
 		std::shared_ptr<bool> modelUploaded = std::make_shared<bool>(false); // True if the model has been uploaded to the GPU, false otherwise
 		std::unordered_set<ManipulableTerrainElement> elements; // The terrain elements
 		std::atomic<bool> m_updateModel{ false };
-		std::mutex m_updating; // Any thread that could cause update() to crash (example: deleting elements from elements) locks this firts preventing updating
+		std::mutex m_lockElements; // Any function that accesses the elements should lock this mutex. Otherwise oftentimes race condifitions occur, where a thread deletes a element and another tries to access it
 		Vector3 center = { 0.0f, 0.0f, 0.0f };
 		std::unordered_map<PositionIdentifier, std::shared_ptr<float[]>, PositionIdentifierHash> m_loadedManipulations;
 

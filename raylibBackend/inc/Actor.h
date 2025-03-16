@@ -9,7 +9,7 @@ public:
 	Actor(std::string name, T position);
 
 	virtual void save(FileAdapter& file) const;
-	virtual void load(const FileAdapter& file);
+	virtual bool load(const FileAdapter& file);
 };
 
 template <typename T>
@@ -28,13 +28,23 @@ void Actor<T>::save(FileAdapter& file) const {
 }
 
 template <typename T>
-void Actor<T>::load(const FileAdapter& file) {
+bool Actor<T>::load(const FileAdapter& file) {
 	FileAdapter::FileArray posArray = file.getArray("position");
-	if (posArray.getKey() == "") return;
+	if (posArray.getKey() == "") return false;
+	if (posArray.size() != 2 && posArray.size() != 3) return false;
 	else {
-		std::vector<std::any> posVec = posArray.getValue();
-		this->m_position.x = any_cast<float>(posVec[0]);
-		this->m_position.y = any_cast<float>(posVec[1]);
-		if constexpr (std::same_as<T, Vector3>) this->m_position.z = any_cast<float>(posVec[2]);
+		try {
+			std::vector<std::any> posVec = posArray.getValue();
+			this->m_position.x = any_cast<float>(posVec[0]);
+			this->m_position.y = any_cast<float>(posVec[1]);
+			if constexpr (std::same_as<T, Vector3>) this->m_position.z = any_cast<float>(posVec[2]);
+		}
+		catch (const std::bad_any_cast& e) {
+			TraceLog(LOG_WARNING, "Actor: bad_any_cast in load function: %s", e.what());
+			this->m_position.x = 0.0f;
+			this->m_position.y = 0.0f;
+			if constexpr (std::same_as<T, Vector3>) this->m_position.z = 0.0f;
+			return false;
+		}
 	}
 }

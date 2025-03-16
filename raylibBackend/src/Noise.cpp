@@ -50,6 +50,7 @@ namespace Noise {
 		}
 	} // private namespace
 
+	// DEPRECATED
 	noise_settings newNoiseSettings() {
 		noise_settings noiseSettings;
 
@@ -66,13 +67,16 @@ namespace Noise {
 		return { 1.f, 125.f, 0, 0, 2.f, 0.5f, 6, true };
 	}
 
-	void getDefaultNoiseSettings(std::shared_ptr<noise_settings> noiseSettings) {
+	void getDefaultNoiseSettings() {
+		Noise::noise_settings noiseSettings;
+		noiseSettings.seed = static_cast<long>(GetRandomValue(-999999, 999999));
+
 		std::vector<Noise::noise_layer_settings> noiseLayerSettings(3);
 		noiseLayerSettings[0] = { 2.f, 125.f, 0, 0, 2.f, 0.5f, 6, true };
 		noiseLayerSettings[1] = { 3.f, 125.f, 0, 0, 2.f, 0.5f, 6, true };
 		noiseLayerSettings[2] = { 0.3f, 6.f, 0, 0, 2.f, 0.5f, 6, false };
 
-		noiseSettings->noiseLayerSettings = noiseLayerSettings;
+		noiseSettings.noiseLayerSettings = noiseLayerSettings;
 
 		TraceLog(LOG_DEBUG, "Noise: Default noise settings have been set");
 	}
