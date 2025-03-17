@@ -51,7 +51,7 @@ int main()
 	Character character(json.getSubElement("MainCamera"));
 	bool cursorActive = true;
 
-	Terrain::TerrainManager terrainManager(json.getSubElement("Terrain"));
+	Terrain::ManipulableTerrainManager terrainManager("Terrain", json);
 	terrainManager.setCamera(&character);
 	terrainManager.setThreadPool(&pool);
 
@@ -65,7 +65,7 @@ int main()
 			else EnableCursor();
 			cursorActive = !cursorActive;
 		}
-		if (IsKeyPressed(KEY_T)) terrainManager.updateElementPositions();
+		if (IsKeyPressed(KEY_T)) terrainManager.recalculateElementPosition();
 		
 		if(!cursorActive) character.update(settings.targetFps);
 

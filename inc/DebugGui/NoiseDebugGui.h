@@ -14,12 +14,12 @@ namespace DebugGui {
 
 	class NoiseDebugGui : public Gui {
 	public:
-		NoiseDebugGui(std::string name, Terrain::TerrainManager& terrain, bool* open);
+		NoiseDebugGui(std::string name, Terrain::BaseTerrainManager& terrain, bool* open);
 
 		bool render();
 
 	private:
-		Terrain::TerrainManager& m_terrain;
+		Terrain::BaseTerrainManager& m_terrain;
 		std::vector<Color*> m_noiseLayers;
 		Noise::noise_settings m_settings;
 		Texture2D m_sampleImage;

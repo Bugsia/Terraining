@@ -44,24 +44,17 @@ namespace Terrain {
 		}
 	};
 
-	struct PositionIdentifierHash {
-		std::size_t operator()(const PositionIdentifier& pos) const {
-			return std::hash<int>()(pos.x) ^ std::hash<int>()(pos.i) ^
-				std::hash<int>()(pos.z) ^ std::hash<int>()(pos.n);
-		}
-	};
-
 	class TerrainElement : public MeshObject, public Entity<Vector3> {
 	public:
 		virtual ~TerrainElement();
-		TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId);
+		TerrainElement(terrain_settings* settings, PositionIdentifier posId);
 		TerrainElement(PositionIdentifier posId);
 		TerrainElement(const TerrainElement& other);
 
 		int getIdFromPosId(PositionIdentifier posId);
 		void initialiseMesh();
 		void initialiseElementWithFlatTerrain();
-		void initialiseElementWithNoiseTerrain(std::shared_ptr<Noise::noise_settings> noiseSettings);
+		void initialiseElementWithNoiseTerrain(Noise::noise_settings* noiseSettings);
 		void updateNoiseLayers();
 		void randomizeTerrain();
 		void updateNormals();
@@ -77,7 +70,7 @@ namespace Terrain {
 		unsigned int getId() const;
 		PositionIdentifier getPosId() const;
 		Mesh& refMesh();
-		void setModelUploaded(std::shared_ptr<bool> modelUploaded);
+		void setModelUploaded(bool* modelUploaded);
 		std::atomic<bool>* getReloadFlag();
 		std::atomic<bool>* getUploadFlag();
 
@@ -88,7 +81,7 @@ namespace Terrain {
 	protected:
 		// General
 		unsigned int id = 0; // The unique identifier of the terrain element, which is based on its position
-		std::shared_ptr<terrain_settings> settings; // The settings of the terrain (owner is Terrain struct)
+		terrain_settings* settings; // The settings of the terrain (owner is Terrain struct)
 		// Vector3 m_position = { 0, 0, 0 }; // The position of the bottom left corner (local x and y = 0) of the terrain Element
 		PositionIdentifier posId; // Used to store information about the position of a element in the terrain
 		std::atomic<bool> m_reload{ false };
@@ -97,10 +90,10 @@ namespace Terrain {
 		// Mesh
 		bool dynamicMesh = false; // True if the mesh is dynamic, false otherwise
 		bool meshUploaded = false; // True if the mesh has been uploaded to the GPU, false otherwise
-		std::shared_ptr<bool> modelUploaded; // The modelUploaded flag of the terrain (owner is Terrain struct)
+		bool* modelUploaded; // The modelUploaded flag of the terrain (owner is Terrain struct)
 
 		// Noise
-		std::shared_ptr<Noise::noise_settings> noiseSettings; // The noise settings of the terrain
+		Noise::noise_settings* noiseSettings; // The noise settings of the terrain
 		std::vector<Color*> noiseLayerPixels; // The pixels of the different noise layers
 
 		Vector3 getPositionFromPosId();
@@ -111,5 +104,20 @@ namespace Terrain {
 		template<typename T>
 		void copyVectorToMemory(T*& dst, std::vector<T> src, bool uploaded);
 		void initialiseFlatMesh();
+	};
+}
+
+namespace std {
+	template<>
+	struct hash<Terrain::PositionIdentifier> {
+		size_t operator()(const Terrain::PositionIdentifier& pos) const noexcept {
+			size_t h1 = hash<int>{}(pos.x);
+			size_t h2 = hash<int>{}(pos.i);
+			size_t h3 = hash<int>{}(pos.z);
+			size_t h4 = hash<int>{}(pos.n);
+
+			return ((h1 ^ (h2 << 1)) >> 1) ^
+				((h3 ^ (h4 << 1)) >> 1);
+		}
 	};
 }

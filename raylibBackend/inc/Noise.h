@@ -30,6 +30,6 @@ namespace Noise {
 	noise_settings newNoiseSettings();
 	noise_layer_settings newNoiseLayerSettings();
 	void getDefaultNoiseSettings(std::shared_ptr<noise_settings> noiseSettings);
-	std::vector<Color*> generateNoiseLayers(std::shared_ptr<noise_settings> noiseSettings, Vector3 normalizedPos, int numWidth, int numHeight, float spacing, long globalSeed);
+	std::vector<Color*> generateNoiseLayers(const noise_settings* noiseSettings, Vector3 normalizedPos, int numWidth, int numHeight, float spacing, long globalSeed);
 	float noiseHeight(std::vector<Color*>& noiseLayers, std::vector<noise_layer_settings> layerSettings, int indexX, int indexZ, int imageWidth);
 }

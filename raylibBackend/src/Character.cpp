@@ -96,17 +96,31 @@ void Character::save(FileAdapter& file) const {
 	file.getField("vAngle").setValue(FileAdapter::FLOAT, vAngle);
 }
 
-void Character::load(const FileAdapter& file) {
+bool Character::load(const FileAdapter& file) {
 	m_camera = { 0 };
 	m_camera.up = { 0.0f, 1.0f, 0.0f };
 	m_camera.fovy = 60.0f;
 	m_camera.projection = CAMERA_PERSPECTIVE;
-	Actor::load(file);
-	m_type = any_cast<int>(file.getField("type").getValue());
-	m_sensitivity = any_cast<float>(file.getField("sensitivity").getValue());
-	m_speed = any_cast<float>(file.getField("speed").getValue());
-	hAngle = any_cast<float>(file.getField("hAngle").getValue());
-	vAngle = any_cast<float>(file.getField("vAngle").getValue());
+	if (!Actor::load(file)) {
+		TraceLog(LOG_DEBUG, "Character: Failed to load Actor properties");
+		return false;
+	}
+	try {
+		m_type = any_cast<int>(file.getField("type").getValue());
+		m_sensitivity = any_cast<float>(file.getField("sensitivity").getValue());
+		m_speed = any_cast<float>(file.getField("speed").getValue());
+		hAngle = any_cast<float>(file.getField("hAngle").getValue());
+		vAngle = any_cast<float>(file.getField("vAngle").getValue());
+	}
+	catch (std::bad_any_cast& e) {
+		TraceLog(LOG_DEBUG, "Character: bad_any_cast in load: %s", e.what());
+		m_type = CAMERA_CUSTOM;
+		m_speed = 10.0f;
+		m_sensitivity = 0.03f;
+		hAngle = 0.0f;
+		vAngle = 0.0f;
+		return false;
+	}
 
 	// Set camera properties
 	m_camera.position = m_position;

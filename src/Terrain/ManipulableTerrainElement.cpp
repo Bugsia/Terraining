@@ -9,7 +9,7 @@ namespace Terrain {
 		}
 	}
 
-	ManipulableTerrainElement::ManipulableTerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId, std::shared_ptr<float[]> heightDifference) : TerrainElement(settings, posId), m_difference(heightDifference) {
+	ManipulableTerrainElement::ManipulableTerrainElement(terrain_settings* settings, PositionIdentifier posId, float* heightDifference) : TerrainElement(settings, posId), m_difference(heightDifference) {
 		// If a m_difference pointer is given here, then there is no preexisiting difference, so initialise it
 		// If there already is a difference that should be respected, give a nullptr here and then call loadDifference() with difference array
 		if (m_difference != nullptr) {
@@ -36,7 +36,7 @@ namespace Terrain {
 		}
 	}
 
-	void ManipulableTerrainElement::loadDifference(std::shared_ptr<float[]> heightDifference) {
+	void ManipulableTerrainElement::loadDifference(float* heightDifference) {
 		if (m_difference) clearDifference();
 
 		m_difference = heightDifference;
@@ -181,7 +181,7 @@ namespace Terrain {
 	}
 
 	const float* ManipulableTerrainElement::getDifference() const {
-		return m_difference.get();
+		return m_difference;
 	}
 
 	bool ManipulableTerrainElement::getHasDifference() const {

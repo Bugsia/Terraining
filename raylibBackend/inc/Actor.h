@@ -31,10 +31,10 @@ template <typename T>
 bool Actor<T>::load(const FileAdapter& file) {
 	FileAdapter::FileArray posArray = file.getArray("position");
 	if (posArray.getKey() == "") return false;
-	if (posArray.size() != 2 && posArray.size() != 3) return false;
+	std::vector<std::any> posVec = posArray.getValue();
+	if (posVec.size() != 2 && posVec.size() != 3) return false;
 	else {
 		try {
-			std::vector<std::any> posVec = posArray.getValue();
 			this->m_position.x = any_cast<float>(posVec[0]);
 			this->m_position.y = any_cast<float>(posVec[1]);
 			if constexpr (std::same_as<T, Vector3>) this->m_position.z = any_cast<float>(posVec[2]);

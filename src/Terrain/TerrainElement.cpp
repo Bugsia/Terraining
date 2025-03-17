@@ -100,7 +100,7 @@ namespace Terrain {
 		Unload();
 	}
 
-	TerrainElement::TerrainElement(std::shared_ptr<terrain_settings> settings, PositionIdentifier posId) : settings(settings), posId(posId), meshUploaded(false) {
+	TerrainElement::TerrainElement(terrain_settings* settings, PositionIdentifier posId) : settings(settings), posId(posId), meshUploaded(false) {
 		id = getIdFromPosId(posId);
 		m_position = getPositionFromPosId();
 
@@ -140,7 +140,7 @@ namespace Terrain {
 		reloadMeshData();
 	}
 
-	void TerrainElement::initialiseElementWithNoiseTerrain(std::shared_ptr<Noise::noise_settings> noiseSettings) {
+	void TerrainElement::initialiseElementWithNoiseTerrain(Noise::noise_settings* noiseSettings) {
 		TraceLog(LOG_DEBUG, "TerrainElement: Filling element %i with noise terrain", id);
 
 		this->noiseSettings = noiseSettings;
@@ -250,7 +250,7 @@ namespace Terrain {
 		return m_mesh;
 	}
 
-	void TerrainElement::setModelUploaded(std::shared_ptr<bool> modelUploaded) {
+	void TerrainElement::setModelUploaded(bool* modelUploaded) {
 		this->modelUploaded = modelUploaded;
 	}
 

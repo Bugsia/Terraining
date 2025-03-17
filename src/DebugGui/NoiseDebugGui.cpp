@@ -1,8 +1,8 @@
 #include "DebugGui/NoiseDebugGui.h"
 
 namespace DebugGui {
-	NoiseDebugGui::NoiseDebugGui(std::string name, Terrain::TerrainManager& terrain, bool* open) : Gui(name), m_terrain(terrain), m_settings(*terrain.refNoiseSettings()), m_selectedLayerIndex(0), m_openPointer(open) {
-		m_noiseLayers = Noise::generateNoiseLayers(std::make_shared<Noise::noise_settings>(m_settings), { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
+	NoiseDebugGui::NoiseDebugGui(std::string name, Terrain::BaseTerrainManager& terrain, bool* open) : Gui(name), m_terrain(terrain), m_settings(*terrain.getNoiseSettings()), m_selectedLayerIndex(0), m_openPointer(open) {
+		m_noiseLayers = Noise::generateNoiseLayers(&m_settings, { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
 		m_sampleImage = LoadTextureFromImage({ m_noiseLayers[m_selectedLayerIndex], SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 });
 	}
 
@@ -34,22 +34,22 @@ namespace DebugGui {
 		ImGui::SeparatorText("");
 		if (ImGui::Button("Apply")) {
 			// Update terrain
-			(*m_terrain.refNoiseSettings()) = m_settings;
-			m_terrain.updateTerrainNoise();
+			(*m_terrain.getNoiseSettings()) = m_settings;
+			m_terrain.recalculateElementNoise();
 
 			// Update preview images
-			m_noiseLayers = Noise::generateNoiseLayers(std::make_shared<Noise::noise_settings>(m_settings), { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
+			m_noiseLayers = Noise::generateNoiseLayers(&m_settings, { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
 			loadSampleImage(m_sampleImage, m_noiseLayers, m_selectedLayerIndex);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Revert")) {
-			m_settings = *m_terrain.refNoiseSettings();
-			m_noiseLayers = Noise::generateNoiseLayers(std::make_shared<Noise::noise_settings>(m_settings), { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
+			m_settings = *m_terrain.getNoiseSettings();
+			m_noiseLayers = Noise::generateNoiseLayers(&m_settings, { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
 			loadSampleImage(m_sampleImage, m_noiseLayers, m_selectedLayerIndex);
 		}
 
 		if (reloadSampleImage) {
-			std::vector<Color*> layer = Noise::generateNoiseLayers(std::make_shared<Noise::noise_settings>(m_settings), { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
+			std::vector<Color*> layer = Noise::generateNoiseLayers(&m_settings, { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
 			loadSampleImage(m_sampleImage, layer, m_selectedLayerIndex);
 		}
 
@@ -83,7 +83,7 @@ namespace DebugGui {
 			m_settings.noiseLayerSettings.push_back(Noise::newNoiseLayerSettings());
 			m_settings.noiseLayerSettings = m_settings.noiseLayerSettings;
 			m_selectedLayerIndex = m_settings.noiseLayerSettings.size() - 1;
-			m_noiseLayers = Noise::generateNoiseLayers(std::make_shared<Noise::noise_settings>(m_settings), { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
+			m_noiseLayers = Noise::generateNoiseLayers(&m_settings, { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
 			loadSampleImage(m_sampleImage, m_noiseLayers, m_selectedLayerIndex);
 		}
 		ImGui::SameLine();
@@ -91,7 +91,7 @@ namespace DebugGui {
 			m_settings.noiseLayerSettings.erase(m_settings.noiseLayerSettings.begin() + m_selectedLayerIndex);
 			m_settings.noiseLayerSettings = m_settings.noiseLayerSettings;
 			if (m_selectedLayerIndex = m_settings.noiseLayerSettings.size()) m_selectedLayerIndex--;
-			m_noiseLayers = Noise::generateNoiseLayers(std::make_shared<Noise::noise_settings>(m_settings), { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
+			m_noiseLayers = Noise::generateNoiseLayers(&m_settings, { 0, 0, 0 }, SAMPLE_IMAGE_WIDTH, SAMPLE_IMAGE_HEIGHT, 1.0f, m_settings.seed);
 			loadSampleImage(m_sampleImage, m_noiseLayers, m_selectedLayerIndex);
 		}
 	}

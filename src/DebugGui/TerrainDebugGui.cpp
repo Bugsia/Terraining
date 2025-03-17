@@ -1,7 +1,7 @@
 #include "DebugGui/TerrainDebugGui.h"
 
 namespace DebugGui {
-	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_settings(*m_terrain.refSettings()), m_guiManager(guiManager), m_drawWired(m_terrain.getDrawWired()), m_drawNormals(m_terrain.getDrawNormals()), m_scale(m_terrain.getScale()), m_tint(m_terrain.getTint()) {}
+	TerrainDebugGui::TerrainDebugGui(std::string name, Terrain::BaseTerrainManager& terrain, GuiManager& guiManager) : Gui(name), m_terrain(terrain), m_settings(*m_terrain.getTerrainSettings()), m_guiManager(guiManager), m_drawWired(m_terrain.getDrawWired()), m_drawNormals(m_terrain.getDrawNormals()), m_scale(m_terrain.getScale()), m_tint(m_terrain.getTint()) {}
 
 	bool TerrainDebugGui::render() {
 		ImGui::Begin(m_name.c_str(), &m_open);
@@ -31,16 +31,15 @@ namespace DebugGui {
 		if (ImGui::Checkbox("Update with ThreadPool", &m_settings.updateWithThreadPool)) m_settingsChange = true;
 
 		if (m_settingsChange) {
-			(*m_terrain.refSettings()) = m_settings;
+			(*m_terrain.getTerrainSettings()) = m_settings;
 			m_settingsChange = false;
 		}
 
 		ImGui::SeparatorText("");
 		if (ImGui::Button("Apply")) {
-			float oldRadius = m_terrain.refSettings()->radius;
-			(*m_terrain.refSettings()) = m_settings;
-			if (m_complexChange) m_terrain.renewTerrain();
-			else if (m_simpleChange) m_terrain.updateTerrain(oldRadius);
+			(*m_terrain.getTerrainSettings()) = m_settings;
+			if (m_complexChange) m_terrain.reloadTerrain();
+			else if (m_simpleChange) m_terrain.recalculateElementPosition();
 
 			m_simpleChange = false;
 			m_complexChange = false;

@@ -9,12 +9,12 @@
 namespace DebugGui {
 	class TerrainDebugGui : public Gui {
 	public:
-		TerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, GuiManager& guiManager);
+		TerrainDebugGui(std::string name, Terrain::BaseTerrainManager& terrain, GuiManager& guiManager);
 
 		bool render();
 
 	private:
-		Terrain::TerrainManager& m_terrain;
+		Terrain::BaseTerrainManager& m_terrain;
 		GuiManager& m_guiManager;
 		Terrain::terrain_settings m_settings;
 		bool m_openNoiseGui = false;

@@ -8,7 +8,7 @@
 #include "GuiManager.h"
 #include "DebugGui/ManipulableTerrainDebugGui.h"
 #include "DebugGui/TerrainDebugGui.h"
-#include "Terrain/TerrainManager.h"
+#include "Terrain/ManipulableTerrainManager.h"
 #include "rlImGui.h"
 #include "Character.h"
 #include "FileAdapters/JSONAdapter.h"

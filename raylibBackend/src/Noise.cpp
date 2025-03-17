@@ -81,14 +81,14 @@ namespace Noise {
 		TraceLog(LOG_DEBUG, "Noise: Default noise settings have been set");
 	}
 
-	std::vector<Color*> generateNoiseLayers(std::shared_ptr<noise_settings> noiseSettings, Vector3 normalizedPos, int numWidth, int numHeight, float spacing, long globalSeed) {
+	std::vector<Color*> generateNoiseLayers(const noise_settings* noiseSettings, Vector3 normalizedPos, int numWidth, int numHeight, float spacing, long globalSeed) {
 		std::vector<Color*> noiseLayers;
 
 		// for (noise_layer_settings& layerSettings : noiseSettings->noiseLayerSettings) {
 		// 	noiseLayers.push_back(generateNoiseLayerImage(layerSettings, normalizedPos, numWidth, numHeight, spacing, globalSeed));
 		// }
 
-		for (std::vector<noise_layer_settings>::iterator it = noiseSettings->noiseLayerSettings.begin(); it != noiseSettings->noiseLayerSettings.end(); it++) {
+		for (std::vector<noise_layer_settings>::const_iterator it = noiseSettings->noiseLayerSettings.cbegin(); it != noiseSettings->noiseLayerSettings.cend(); it++) {
 			noiseLayers.push_back(generateNoiseLayerImage((*it), normalizedPos, numWidth, numHeight, spacing, globalSeed));
 		}
 

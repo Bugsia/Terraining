@@ -1,7 +1,7 @@
 #include "DebugGui/ManipulableTerrainDebugGui.h"
 
 namespace DebugGui {
-	ManipulableTerrainDebugGui::ManipulableTerrainDebugGui(std::string name, Terrain::TerrainManager& terrain, Camera& camera) : Gui(name), m_terrain(terrain), m_camera(camera) {}
+	ManipulableTerrainDebugGui::ManipulableTerrainDebugGui(std::string name, Terrain::ManipulableTerrainManager& terrain, Camera& camera) : Gui(name), m_terrain(terrain), m_camera(camera) {}
 
 	bool ManipulableTerrainDebugGui::render() {
 		ImGui::Begin(m_name.c_str(), &m_open);
@@ -15,8 +15,6 @@ namespace DebugGui {
 		
 		renderManualManipulation();
 
-		if (ImGui::Button("Remove Difference")) m_terrain.removeDifference();
-		if (ImGui::Button("Add Difference")) m_terrain.addDifference();
 		if (ImGui::Button("Clear Difference")) m_terrain.clearDifference();
 
 		ImGui::End();
@@ -79,15 +77,12 @@ namespace DebugGui {
 			return;
 		}
 		m_mouseRay = GetMouseRay(GetMousePosition(), m_camera);
-		RayCollision collision = GetRayCollisionBox(m_mouseRay, m_terrain.getBoundingBox());
-		if (collision.hit) {
-			RayCollision terrainCollsion = m_terrain.getRayCollisionWithTerrain(m_mouseRay, collision);
-			if (terrainCollsion.hit) {
-				m_mouseCollision = terrainCollsion;
-				m_manipulationPosition = m_mouseCollision.point;
-			}
-			m_mouseCollision.hit = terrainCollsion.hit; // If no hit has been made update this in the gui but retain other data of last succesful hit
+		RayCollision terrainCollsion = m_terrain.getRayCollisionWithTerrain(m_mouseRay);
+		if (terrainCollsion.hit) {
+			m_mouseCollision = terrainCollsion;
+			m_manipulationPosition = m_mouseCollision.point;
 		}
+		m_mouseCollision.hit = terrainCollsion.hit; // If no hit has been made update this in the gui but retain other data of last succesful hit
 	}
 
 	void ManipulableTerrainDebugGui::renderManualManipulation() {
