@@ -1,6 +1,12 @@
 #include "Terrain/ManipulableTerrainManager.h"
 
 namespace Terrain {
+	ManipulableTerrainManager::~ManipulableTerrainManager() {
+		for (std::unordered_map<PositionIdentifier, float*>::iterator it = m_manipulations.begin(); it != m_manipulations.end(); it++) {
+			delete[] it->second;
+		}
+	}
+
 	ManipulableTerrainManager::ManipulableTerrainManager(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings) : TemplateTerrainManager(name) {
 		m_terrainSettings = terrainSettings;
 		m_noiseSettings = noiseSettings;

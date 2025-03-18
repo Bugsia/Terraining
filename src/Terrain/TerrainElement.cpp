@@ -81,7 +81,7 @@ namespace Terrain {
 		flatTerrainTexcoords();
 	}
 
-	Vector3 TerrainElement::getVectorFromIndex(int index) {
+	Vector3 TerrainElement::getVertexFromIndex(int index) {
 		return { m_mesh.vertices[index * 3], m_mesh.vertices[index * 3 + 1], m_mesh.vertices[index * 3 + 2] };
 	}
 
@@ -210,11 +210,11 @@ namespace Terrain {
 		// Reset normals to 0
 		std::memset(m_mesh.normals, 0, m_mesh.vertexCount * 3 * sizeof(float));
 
-		// Calculate normals
+		// Calculate normals of internal triangles
 		for (int i = 0; i < m_mesh.triangleCount; i++) {
-			Vector3 a = getVectorFromIndex(m_mesh.indices[i * 3]);
-			Vector3 b = getVectorFromIndex(m_mesh.indices[i * 3 + 1]);
-			Vector3 c = getVectorFromIndex(m_mesh.indices[i * 3 + 2]);
+			Vector3 a = getVertexFromIndex(m_mesh.indices[i * 3]);
+			Vector3 b = getVertexFromIndex(m_mesh.indices[i * 3 + 1]);
+			Vector3 c = getVertexFromIndex(m_mesh.indices[i * 3 + 2]);
 
 			Vector3 normal = Vector3CrossProduct(Vector3Subtract(b, a), Vector3Subtract(c, a));
 
@@ -222,6 +222,9 @@ namespace Terrain {
 			addNormalToVertex(normal, m_mesh.indices[i * 3 + 1]);
 			addNormalToVertex(normal, m_mesh.indices[i * 3 + 2]);
 		}
+
+		// Calculate effect of adjacent triangles
+		
 
 		// Normalize normals
 		for (int i = 0; i < m_mesh.vertexCount; i++) {

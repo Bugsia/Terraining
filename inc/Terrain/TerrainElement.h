@@ -82,7 +82,6 @@ namespace Terrain {
 		// General
 		unsigned int id = 0; // The unique identifier of the terrain element, which is based on its position
 		terrain_settings* settings; // The settings of the terrain (owner is Terrain struct)
-		// Vector3 m_position = { 0, 0, 0 }; // The position of the bottom left corner (local x and y = 0) of the terrain Element
 		PositionIdentifier posId; // Used to store information about the position of a element in the terrain
 		std::atomic<bool> m_reload{ false };
 		std::atomic<bool> m_upload{ false };
@@ -104,7 +103,7 @@ namespace Terrain {
 		template<typename T>
 		void copyVectorToMemory(T*& dst, std::vector<T> src, bool uploaded);
 		void initialiseFlatMesh();
-		Vector3 getVectorFromIndex(int index);
+		Vector3 getVertexFromIndex(int index);
 		void addNormalToVertex(Vector3 normal, int index);
 	};
 }

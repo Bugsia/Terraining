@@ -34,6 +34,7 @@ namespace Terrain {
 	*/
 	class BaseTerrainManager : public ModelObject, public Actor<Vector3>, public Drawable {
 	public:
+		virtual ~BaseTerrainManager() = default;
 		BaseTerrainManager(std::string name) : Actor<Vector3>(name) {}
 
 		virtual void draw() = 0;

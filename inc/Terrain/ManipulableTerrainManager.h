@@ -6,6 +6,7 @@
 namespace Terrain {
 	class ManipulableTerrainManager : public TemplateTerrainManager<ManipulableTerrainManager, ManipulableTerrainElement> {
 	public:
+		~ManipulableTerrainManager();
 		ManipulableTerrainManager(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings);
 		ManipulableTerrainManager(std::string name, const FileAdapter& settings);
 
