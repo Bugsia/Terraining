@@ -1,28 +1,29 @@
 #include "Terrain/ManipulableTerrainManager.h"
 
 namespace Terrain {
-	ManipulableTerrainManager::ManipulableTerrainManager(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings) : TemplateTerrainManager(name, terrainSettings, noiseSettings) {
+	ManipulableTerrainManager::ManipulableTerrainManager(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings) : TemplateTerrainManager(name) {
+		m_terrainSettings = terrainSettings;
+		m_noiseSettings = noiseSettings;
+	
+		initializeTerrain();
+
+		TraceLog(LOG_DEBUG, "TerrainManager: Constructed");
 	}
 
-	ManipulableTerrainManager::ManipulableTerrainManager(std::string name, const FileAdapter& settings) : TemplateTerrainManager(name, settings) {
-		if (loadManipulations(settings)) {
-			for (const ManipulableTerrainElement& constElement : m_elements) {
-				ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(constElement);
-				element.addDifference();
-			}
-		}
+	ManipulableTerrainManager::ManipulableTerrainManager(std::string name, const FileAdapter& settings) : TemplateTerrainManager(name) {
+		m_filename = settings.getFilename();
+		load(settings);
+		initializeTerrain();
+
+		TraceLog(LOG_DEBUG, "TerrainManager: Constructed from file");
 	}
 
 	/**
 	* @params position In global space
 	*/
 	void ManipulableTerrainManager::manipulateTerrain(ManipulableTerrainElement::ManipulateDir dir, ManipulableTerrainElement::ManipulateForm form, ManipulableTerrainElement::ManipulateType type, float strength, float radius, Vector3 position) {
-		std::vector<PositionIdentifier> posIds = getPositionIdentifiersInRadius(position, radius + std::max(m_terrainSettings.numWidth, m_terrainSettings.numHeight) * m_terrainSettings.spacing);
-
-		for (PositionIdentifier posId : posIds) {
-			std::unordered_set<ManipulableTerrainElement>::iterator it = m_elements.find(ManipulableTerrainElement(posId));
-			if (it == m_elements.end()) continue;
-			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it);
+		for (const ManipulableTerrainElement& constElement : m_elements) {
+			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(constElement);
 			element.manipulateTerrain(dir, form, type, strength, radius, Vector3Subtract(position, element.getPosition()));
 		}
 	}
@@ -34,8 +35,16 @@ namespace Terrain {
 		}
 	}
 
+	void ManipulableTerrainManager::save(FileAdapter& file) const {
+		saveManipulations(file.getSubElement(m_name));
+		TemplateTerrainManager::save(file);
+	}
+
+	bool ManipulableTerrainManager::load(const FileAdapter& file) {
+		return TemplateTerrainManager::load(file) && loadManipulations(file.getSubElement(m_name));
+	}
+
 	void ManipulableTerrainManager::initialiseAndAddNewElement(std::unordered_set<ManipulableTerrainElement>& newElements, const PositionIdentifier& posId) {
-		TraceLog(LOG_INFO, "MANIPULABLE GETS CALLED!!!! HAHAHA");
 		float* newDiff = nullptr;
 		std::unordered_map<PositionIdentifier, float*>::iterator it = m_manipulations.find(posId);
 		if (it == m_manipulations.end()) { // It doesnt exist yet, so make a new one
@@ -87,6 +96,11 @@ namespace Terrain {
 			return false;
 		}
 
+		for (std::unordered_set<ManipulableTerrainElement>::iterator it = m_elements.begin(); it != m_elements.end(); it++) {
+			ManipulableTerrainElement& element = const_cast<ManipulableTerrainElement&>(*it);
+			element.addDifference();
+		}
+
 		TraceLog(LOG_DEBUG, "TerrainManager: Manipulations have been loaded from file");
 		return true;
 	}
@@ -106,7 +120,7 @@ namespace Terrain {
 			}
 			if (!diffFound) continue;
 
-			std::string key = getKeyFromPositionIdentifier(PositionIdentifier(1,2,3,4));
+			std::string key = getKeyFromPositionIdentifier(posId);
 			FileAdapter& curManipulation = manipulations.getSubElement(key);
 			curManipulation.clear();
 			std::vector<std::any> manipulationsVector(value, value + (m_terrainSettings.numWidth * m_terrainSettings.numHeight * 3));

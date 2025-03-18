@@ -88,7 +88,7 @@ namespace Terrain {
 		template <typename T>
 		concept ElementTypes = std::same_as<T, TerrainElement> || std::same_as<T, ManipulableTerrainElement>;
 
-		template <ElementTypes T>
+		template <typename Derived, ElementTypes T>
 		class TemplateTerrainManager : public BaseTerrainManager {
 		public:
 			virtual ~TemplateTerrainManager() = default;
@@ -105,8 +105,8 @@ namespace Terrain {
 			RayCollision getRayCollisionWithTerrain(Ray ray);
 
 			// Saving and loading
-			void save(FileAdapter& file) const;
-			bool load(const FileAdapter& file);
+			virtual void save(FileAdapter& file) const;
+			virtual bool load(const FileAdapter& file);
 
 			// Getter and Setter
 			void setThreadPool(ThreadPool* threadPool);
@@ -125,13 +125,14 @@ namespace Terrain {
 			std::mutex m_lockElements;
 			Vector3 m_center = { 0.0f, 0.0f, 0.0f };
 
+			TemplateTerrainManager(std::string name);
 
 			// Initilization
 			void initializeTerrain();
 			void initializeNoise();
 			void initializeModel();
 
-			void initialiseAndAddNewElement(std::unordered_set<T>& newElements, const PositionIdentifier& posId);
+			virtual void initialiseAndAddNewElement(std::unordered_set<T>& newElements, const PositionIdentifier& posId) = 0;
 
 			// Settings loading and saving (as an argument give base level settings)
 			bool loadNoiseSettings(const FileAdapter& settings);
@@ -146,22 +147,22 @@ namespace Terrain {
 			void loadElementsIntoModel();
 			void initializeModelMaterials();
 			void updateCenter();
-			virtual void reloadElement(T* element);
+			virtual void reloadElement(T* element) = 0;
 
 			float getSpawnHeightAtXPos(float x, float spawnRadius) const;
 			PositionIdentifier getPositionIdentifierFromPosition(Vector3 pos) const;
 			std::vector<PositionIdentifier> getPositionIdentifiersInRadius(Vector3 pos, float radius) const;
 		};
 
-		template <ElementTypes T>
-		TemplateTerrainManager<T>::TemplateTerrainManager<T>(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings) : BaseTerrainManager(name), m_terrainSettings(terrainSettings), m_noiseSettings(noiseSettings) {
+		template <typename Derived, ElementTypes T>
+		TemplateTerrainManager<Derived, T>::TemplateTerrainManager<Derived, T>(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings) : BaseTerrainManager(name), m_terrainSettings(terrainSettings), m_noiseSettings(noiseSettings) {
 			initializeTerrain();
 
 			TraceLog(LOG_DEBUG, "TerrainManager: Constructed");
 		}
 
-		template <ElementTypes T>
-		TemplateTerrainManager<T>::TemplateTerrainManager<T>(std::string name, const FileAdapter& settings) : BaseTerrainManager(name) {
+		template <typename Derived, ElementTypes T>
+		TemplateTerrainManager<Derived, T>::TemplateTerrainManager<Derived, T>(std::string name, const FileAdapter& settings) : BaseTerrainManager(name) {
 			m_filename = settings.getFilename();
 			load(settings);
 			initializeTerrain();
@@ -169,8 +170,8 @@ namespace Terrain {
 			TraceLog(LOG_DEBUG, "TerrainManager: Constructed from file");
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::draw() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::draw() {
 			ModelObject::draw(m_position);
 		}
 
@@ -178,8 +179,8 @@ namespace Terrain {
 		* The elements are only updated if m_lockElements can be locked. Otherwise it does nothing.
 		* A maximum of 75 percent of the whole framtime is used to update the elements. Is checked after a single element update call, so it may overstep slightly.
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::update(int targetFPS) {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::update(int targetFPS) {
 			// Update Elements
 			if (!m_lockElements.try_lock()) return;
 			double start = GetTime();
@@ -213,8 +214,8 @@ namespace Terrain {
 		* It should not be run in a seperate thread (if multithreading is enabled all the work is done in a seperate thread anyway)
 		* A called function tries to acquire m_lockElements. Function or started Thread will be blocked until lock can be acquired
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::recalculateElementPosition() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::recalculateElementPosition() {
 			auto function = [this]() {
 				relocateElements();
 				};
@@ -236,13 +237,13 @@ namespace Terrain {
 		* It should not be run in a seperate thread (if multithreading is enabled all the work is done in a seperate thread anyway)
 		* Tried to acquire m_lockElements. Function or started Thread will be blocked until lock can be acquired
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::recalculateElementNoise() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::recalculateElementNoise() {
 			auto function = [this]() {
 				m_lockElements.lock();
 				for (typename std::unordered_set<T>::iterator it = m_elements.begin(); it != m_elements.end(); it++) {
 					T* element = const_cast<T*>(&*it); // Const can be cast away since the hash relevant data is not changed
-					this->reloadElement(element);
+					reloadElement(element);
 				}
 				m_lockElements.unlock();
 				};
@@ -261,14 +262,14 @@ namespace Terrain {
 		* It removes all terrainElements and then creates them again.
 		* Applies changes, that a element wont apply without creating them again, such as spacing.
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::reloadTerrain() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::reloadTerrain() {
 			m_elements.clear();
 			recalculateElementPosition();
 		}
 
-		template <ElementTypes T>
-		RayCollision TemplateTerrainManager<T>::getRayCollisionWithTerrain(Ray ray) {
+		template <typename Derived, ElementTypes T>
+		RayCollision TemplateTerrainManager<Derived, T>::getRayCollisionWithTerrain(Ray ray) {
 			RayCollision hit = { 0 };
 			ray.position = Vector3Subtract(ray.position, m_position);
 			if (!GetRayCollisionBox(ray, getBoundingBox()).hit) return hit;
@@ -293,8 +294,8 @@ namespace Terrain {
 		/**
 		* @params file Should be the base level. The function will append the terrain as a sub element.
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::save(FileAdapter& file) const {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::save(FileAdapter& file) const {
 			FileAdapter terrain = file.getSubElement(m_name);
 			Actor::save(terrain);
 			saveTerrainSettings(terrain);
@@ -307,8 +308,8 @@ namespace Terrain {
 		* @params file File should have a sub element with the name of the TerrainManager
 		* @return True if all required fields were present, false otherwise
 		*/
-		template <ElementTypes T>
-		bool TemplateTerrainManager<T>::load(const FileAdapter& file) {
+		template <typename Derived, ElementTypes T>
+		bool TemplateTerrainManager<Derived, T>::load(const FileAdapter& file) {
 			bool success = true;
 
 			FileAdapter terrain = file.getSubElement(m_name);
@@ -321,33 +322,40 @@ namespace Terrain {
 			return success;
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::setThreadPool(ThreadPool* threadPool) {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::setThreadPool(ThreadPool* threadPool) {
 			m_terrainSettings.threadPool = threadPool;
 
 			TraceLog(LOG_DEBUG, "TerrainManager: ThreadPool set");
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::setCamera(Character* camera) {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::setCamera(Character* camera) {
 			m_terrainSettings.camera = camera;
 			if (m_terrainSettings.followCamera && camera) recalculateElementPosition();
 
 			TraceLog(LOG_DEBUG, "TerrainManager: Camera set");
 		}
 
-		template <ElementTypes T>
-		terrain_settings* TemplateTerrainManager<T>::getTerrainSettings() {
+		template <typename Derived, ElementTypes T>
+		terrain_settings* TemplateTerrainManager<Derived, T>::getTerrainSettings() {
 			return &m_terrainSettings;
 		}
 
-		template <ElementTypes T>
-		Noise::noise_settings* TemplateTerrainManager<T>::getNoiseSettings() {
+		template <typename Derived, ElementTypes T>
+		Noise::noise_settings* TemplateTerrainManager<Derived, T>::getNoiseSettings() {
 			return &m_noiseSettings;
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::initializeTerrain() {
+		/**
+		* This constructor does not initialize the Terrain. It is for derived classes, that need to initialize their own variables before Terrain creation.
+		* Thus it is protected and should not be called to fully initialize the TerrainManager.
+		*/
+		template <typename Derived, ElementTypes T>
+		TemplateTerrainManager<Derived, T>::TemplateTerrainManager<Derived, T>(std::string name) : BaseTerrainManager(name) { }
+
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::initializeTerrain() {
 			initializeModel();
 			recalculateElementPosition();
 
@@ -357,15 +365,15 @@ namespace Terrain {
 		/**
 		* Sets the noiseSettings to the default values
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::initializeNoise() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::initializeNoise() {
 			m_noiseSettings = Noise::getDefaultNoiseSettings();
 
 			TraceLog(LOG_DEBUG, "TerrainManager: Noise initialized");
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::initializeModel() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::initializeModel() {
 			loadElementsIntoModel();
 			initializeModelMaterials();
 			updateBoundingBox();
@@ -375,35 +383,13 @@ namespace Terrain {
 			TraceLog(LOG_DEBUG, "TerrainManager: Model initialized");
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::initialiseAndAddNewElement(std::unordered_set<T>& newElements, const PositionIdentifier& posId) {
-			std::pair<std::unordered_set<T>::iterator, bool> result;
-			if constexpr (std::same_as<T, TerrainElement>) result = newElements.emplace(&m_terrainSettings, posId);
-			else if constexpr (std::same_as<T, ManipulableTerrainElement>) {
-				TraceLog(LOG_WARNING, "TerrainManager: ManipulableTerrainElement created from BaseTerrainManager");
-				result = newElements.emplace(&m_terrainSettings, posId, nullptr);
-			}
-			if (result.second) { // Check if insertion was successful
-				T* newElement = const_cast<T*>(&*result.first);
-				newElement->setModelUploaded(&modelUploaded);
-				newElement->initialiseMesh();
-				newElement->initialiseElementWithNoiseTerrain(&m_noiseSettings);
-				newElement->getUploadFlag()->store(true);
-
-				TraceLog(LOG_DEBUG, "TerrainManager: New element has been created", newElement->getId());
-			}
-			else {
-				TraceLog(LOG_WARNING, "TerrainManager: New Element could not be emplaced into elements vector. Either it exists already or an error occured on construction");
-			}
-		}
-
 		/**
 		* Will maybe be moved to Noise namespace in the future
 		*
 		* @params settings Should be the base level. The function will search for the noise Settings as a sub element.
 		*/
-		template <ElementTypes T>
-		bool TemplateTerrainManager<T>::loadNoiseSettings(const FileAdapter& settings) {
+		template <typename Derived, ElementTypes T>
+		bool TemplateTerrainManager<Derived, T>::loadNoiseSettings(const FileAdapter& settings) {
 			const FileAdapter& noise = settings.getSubElement(std::string(JsonKeys::noiseSettings));
 			if (noise.getKey() == "") {
 				TraceLog(LOG_WARNING, "TerrainManager: Noise settings not found in file %s", settings.getFilename());
@@ -443,8 +429,8 @@ namespace Terrain {
 		/**
 		* @params settings Should be the base level. The function will search for the terrain Settings as a sub element.
 		*/
-		template <ElementTypes T>
-		bool TemplateTerrainManager<T>::loadTerrainSettings(const FileAdapter& settings) {
+		template <typename Derived, ElementTypes T>
+		bool TemplateTerrainManager<Derived, T>::loadTerrainSettings(const FileAdapter& settings) {
 			const FileAdapter& terrain = settings.getSubElement(std::string(JsonKeys::terrainSettings));
 			if (terrain.getKey() == "") {
 				TraceLog(LOG_WARNING, "TerrainManager: Terrain settings not found in file %s", settings.getFilename());
@@ -474,8 +460,8 @@ namespace Terrain {
 		/**
 		* @params file Should be the base level. The function will add the noise Settings as a sub element.
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::saveNoiseSettings(FileAdapter& file) const {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::saveNoiseSettings(FileAdapter& file) const {
 			FileAdapter& noise = file.getSubElement(std::string(JsonKeys::noiseSettings));
 			noise.addField(FileAdapter::FileField("seed", FileAdapter::STRING, m_noiseSettings.seed));
 
@@ -498,8 +484,8 @@ namespace Terrain {
 		/**
 		* @params file Should be the base level. The function will add the terrain Settings as a sub element.
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::saveTerrainSettings(FileAdapter& file) const {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::saveTerrainSettings(FileAdapter& file) const {
 			FileAdapter& terrain = file.getSubElement(std::string(JsonKeys::terrainSettings));
 			terrain.addField(FileAdapter::FileField(std::string(JsonKeys::radius), FileAdapter::FLOAT, m_terrainSettings.radius));
 			terrain.addField(FileAdapter::FileField(std::string(JsonKeys::numWidth), FileAdapter::INT, m_terrainSettings.numWidth));
@@ -518,8 +504,8 @@ namespace Terrain {
 		* Can be called in a seperate thread.
 		* It will block until it can acquire a lock on m_lockElements
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::relocateElements() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::relocateElements() {
 			std::unordered_set<T> newElements;
 
 			updateCenter();
@@ -537,7 +523,7 @@ namespace Terrain {
 					}
 				}
 				// There is no element already present, so make a new one
-				this->initialiseAndAddNewElement(newElements, posId);
+				initialiseAndAddNewElement(newElements, posId);
 
 				if (newElements.size() > m_terrainSettings.maxNumElements) break;
 			}
@@ -555,8 +541,8 @@ namespace Terrain {
 		* It builds up the model from scratch and thus adds new elements and removes old ones.
 		* Should not be called from a seperate thread
 		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::updateModel() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::updateModel() {
 			RL_FREE(m_model.meshes);
 			RL_FREE(m_model.materials);
 			RL_FREE(m_model.meshMaterial);
@@ -565,8 +551,8 @@ namespace Terrain {
 			updateBoundingBox();
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::loadElementsIntoModel() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::loadElementsIntoModel() {
 			m_model.meshCount = m_elements.size();
 			m_model.meshes = (Mesh*)RL_CALLOC(m_model.meshCount, sizeof(Mesh));
 
@@ -578,8 +564,8 @@ namespace Terrain {
 			}
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::initializeModelMaterials() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::initializeModelMaterials() {
 			// Initializing default material
 			m_model.materialCount = 1;
 			m_model.materials = (Material*)RL_CALLOC(m_model.materialCount, sizeof(Material));
@@ -593,8 +579,8 @@ namespace Terrain {
 			}
 		}
 
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::updateCenter() {
+		template <typename Derived, ElementTypes T>
+		void TemplateTerrainManager<Derived, T>::updateCenter() {
 			if (!m_terrainSettings.followCamera || !m_terrainSettings.camera) {
 				m_center = { 0.0f, 0.0f, 0.0f };
 				return;
@@ -604,28 +590,16 @@ namespace Terrain {
 		}
 
 		/**
-		* It removes and then recalculates the noise and height manipulations of the given element.
-		*/
-		template <ElementTypes T>
-		void TemplateTerrainManager<T>::reloadElement(T* element) {
-			element->UnloadLayers();
-			element->updateNoiseLayers();
-			element->randomizeTerrain();
-			element->updateNormals();
-			element->getReloadFlag()->store(true);
-		}
-
-		/**
 		* @params x The x position relative to the center
 		* @return The height of the spawn radius at a given x position
 		*/
-		template <ElementTypes T>
-		float TemplateTerrainManager<T>::getSpawnHeightAtXPos(float x, float spawnRadius) const {
+		template <typename Derived, ElementTypes T>
+		float TemplateTerrainManager<Derived, T>::getSpawnHeightAtXPos(float x, float spawnRadius) const {
 			return std::max(0., sqrt(pow(spawnRadius, 2) - pow(x, 2)));
 		}
 
-		template <ElementTypes T>
-		PositionIdentifier TemplateTerrainManager<T>::getPositionIdentifierFromPosition(Vector3 pos) const {
+		template <typename Derived, ElementTypes T>
+		PositionIdentifier TemplateTerrainManager<Derived, T>::getPositionIdentifierFromPosition(Vector3 pos) const {
 			PositionIdentifier posId;
 			float width = (m_terrainSettings.numWidth - 1) * m_terrainSettings.spacing;
 			float height = (m_terrainSettings.numHeight - 1) * m_terrainSettings.spacing;
@@ -651,10 +625,10 @@ namespace Terrain {
 		/**
 		* @params pos Should be relative to the center of the terrain
 		*/
-		template <ElementTypes T>
-		std::vector<PositionIdentifier> TemplateTerrainManager<T>::getPositionIdentifiersInRadius(Vector3 pos, float radius) const {
+		template <typename Derived, ElementTypes T>
+		std::vector<PositionIdentifier> TemplateTerrainManager<Derived, T>::getPositionIdentifiersInRadius(Vector3 pos, float radius) const {
 			std::vector<PositionIdentifier> posIds;
-
+			
 			float width = (m_terrainSettings.numWidth - 1) * m_terrainSettings.spacing;
 			float height = (m_terrainSettings.numHeight - 1) * m_terrainSettings.spacing;
 			int numPerQuadrantX = round(radius / width);
@@ -663,21 +637,25 @@ namespace Terrain {
 			float z = pos.z - numPerQuadrantZ * height;
 			bool maxElementsReached = false;
 			for (int i = 0; i < numPerQuadrantX * 2; i++, x += width) {
-				float circleHeight = getSpawnHeightAtXPos(x + (width / 2), m_terrainSettings.radius);
+				float circleHeight = getSpawnHeightAtXPos(x - pos.x + (width / 2), m_terrainSettings.radius);
 				for (int j = 0; j < numPerQuadrantZ * 2; j++, z += height) {
-					if (std::abs(z + (height / 2)) > circleHeight) continue;
+					if (std::abs(z - pos.z + (height / 2)) > circleHeight) continue;
 
 					posIds.push_back(getPositionIdentifierFromPosition({ x, 0.0f, z }));
 				}
-				z = m_position.z - numPerQuadrantZ * height;
+				z = pos.z - numPerQuadrantZ * height;
 			}
 
 			return posIds;
 		}
 	}
 	
-	class TerrainManager : public TemplateTerrainManager<TerrainElement> {
-			TerrainManager(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings);
-			TerrainManager(std::string name, const FileAdapter& settings);
+	class TerrainManager : public TemplateTerrainManager<TerrainManager, TerrainElement> {
+		TerrainManager(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings);
+		TerrainManager(std::string name, const FileAdapter& settings);
+
+	private:
+		void initialiseAndAddNewElement(std::unordered_set<TerrainElement>& newElements, const PositionIdentifier& posId) override;
+		void reloadElement(TerrainElement* element) override;
 	};
 }

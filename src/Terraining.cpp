@@ -90,7 +90,7 @@ int main()
 		terrainManager.update(settings.targetFps);
 	}
 
-	terrainManager.save(json.getSubElement(terrainManager.getName()));
+	terrainManager.save(json);
 	character.save(json.getSubElement(character.getName()));
 	json.save();
 	
