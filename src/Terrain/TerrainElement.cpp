@@ -81,6 +81,16 @@ namespace Terrain {
 		flatTerrainTexcoords();
 	}
 
+	Vector3 TerrainElement::getVectorFromIndex(int index) {
+		return { m_mesh.vertices[index * 3], m_mesh.vertices[index * 3 + 1], m_mesh.vertices[index * 3 + 2] };
+	}
+
+	void TerrainElement::addNormalToVertex(Vector3 normal, int index) {
+		m_mesh.normals[index * 3] += normal.x;
+		m_mesh.normals[index * 3 + 1] += normal.y;
+		m_mesh.normals[index * 3 + 2] += normal.z;
+	}
+
 	int TerrainElement::getIdFromPosId(PositionIdentifier posId) {
 		// Since x and z in posId are only in top right quadrant this calculates actual x and z index
 		int absXIndex = (posId.x * posId.i) + (std::min(0, posId.i));
@@ -197,7 +207,32 @@ namespace Terrain {
 	}
 
 	void TerrainElement::updateNormals() {
-		// TODO: IMPLEMENT
+		// Reset normals to 0
+		std::memset(m_mesh.normals, 0, m_mesh.vertexCount * 3 * sizeof(float));
+
+		// Calculate normals
+		for (int i = 0; i < m_mesh.triangleCount; i++) {
+			Vector3 a = getVectorFromIndex(m_mesh.indices[i * 3]);
+			Vector3 b = getVectorFromIndex(m_mesh.indices[i * 3 + 1]);
+			Vector3 c = getVectorFromIndex(m_mesh.indices[i * 3 + 2]);
+
+			Vector3 normal = Vector3CrossProduct(Vector3Subtract(b, a), Vector3Subtract(c, a));
+
+			addNormalToVertex(normal, m_mesh.indices[i * 3]);
+			addNormalToVertex(normal, m_mesh.indices[i * 3 + 1]);
+			addNormalToVertex(normal, m_mesh.indices[i * 3 + 2]);
+		}
+
+		// Normalize normals
+		for (int i = 0; i < m_mesh.vertexCount; i++) {
+			Vector3 normal = { m_mesh.normals[i * 3], m_mesh.normals[i * 3 + 1], m_mesh.normals[i * 3 + 2] };
+			
+			normal = Vector3Normalize(normal);
+
+			m_mesh.normals[i * 3] = normal.x;
+			m_mesh.normals[i * 3 + 1] = normal.y;
+			m_mesh.normals[i * 3 + 2] = normal.z;
+		}
 	}
 
 	void TerrainElement::reloadMeshData() {

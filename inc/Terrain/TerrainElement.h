@@ -104,6 +104,8 @@ namespace Terrain {
 		template<typename T>
 		void copyVectorToMemory(T*& dst, std::vector<T> src, bool uploaded);
 		void initialiseFlatMesh();
+		Vector3 getVectorFromIndex(int index);
+		void addNormalToVertex(Vector3 normal, int index);
 	};
 }
 
