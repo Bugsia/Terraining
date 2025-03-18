@@ -91,7 +91,7 @@ int main()
 	}
 
 	terrainManager.save(json);
-	character.save(json.getSubElement(character.getName()));
+	character.save(json);
 	json.save();
 	
 	return 0;

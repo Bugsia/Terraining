@@ -88,12 +88,13 @@ void Character::move(Vector3 change) {
 }
 
 void Character::save(FileAdapter& file) const {
-	Actor::save(file);
-	file.getField("type").setValue(FileAdapter::INT, m_type);
-	file.getField("sensitivity").setValue(FileAdapter::FLOAT, m_sensitivity);
-	file.getField("speed").setValue(FileAdapter::FLOAT, m_speed);
-	file.getField("hAngle").setValue(FileAdapter::FLOAT, hAngle);
-	file.getField("vAngle").setValue(FileAdapter::FLOAT, vAngle);
+	FileAdapter& characterFile = file.getSubElement(m_name);
+	Actor::save(characterFile);
+	characterFile.getField("type").setValue(FileAdapter::INT, m_type);
+	characterFile.getField("sensitivity").setValue(FileAdapter::FLOAT, m_sensitivity);
+	characterFile.getField("speed").setValue(FileAdapter::FLOAT, m_speed);
+	characterFile.getField("hAngle").setValue(FileAdapter::FLOAT, hAngle);
+	characterFile.getField("vAngle").setValue(FileAdapter::FLOAT, vAngle);
 }
 
 bool Character::load(const FileAdapter& file) {
