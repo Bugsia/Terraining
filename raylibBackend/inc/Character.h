@@ -6,6 +6,16 @@
 #include "FileAdapters/JSONAdapter.h"
 #include "Actor.h"
 
+namespace {
+	namespace JsonKeys {
+		constexpr std::string_view type = "type";
+		constexpr std::string_view sensitivity = "sensitivity";
+		constexpr std::string_view speed = "speed";
+		constexpr std::string_view hAngle = "hAngle";
+		constexpr std::string_view vAngle = "vAngle";
+	}
+}
+
 class Character : public Actor<Vector3> {
 public:
 	Character(std::string name);

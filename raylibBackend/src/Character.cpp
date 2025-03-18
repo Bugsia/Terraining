@@ -90,11 +90,11 @@ void Character::move(Vector3 change) {
 void Character::save(FileAdapter& file) const {
 	FileAdapter& characterFile = file.getSubElement(m_name);
 	Actor::save(characterFile);
-	characterFile.getField("type").setValue(FileAdapter::INT, m_type);
-	characterFile.getField("sensitivity").setValue(FileAdapter::FLOAT, m_sensitivity);
-	characterFile.getField("speed").setValue(FileAdapter::FLOAT, m_speed);
-	characterFile.getField("hAngle").setValue(FileAdapter::FLOAT, hAngle);
-	characterFile.getField("vAngle").setValue(FileAdapter::FLOAT, vAngle);
+	characterFile.getField(std::string(JsonKeys::type)).setValue(FileAdapter::INT, m_type);
+	characterFile.getField(std::string(JsonKeys::sensitivity)).setValue(FileAdapter::FLOAT, m_sensitivity);
+	characterFile.getField(std::string(JsonKeys::speed)).setValue(FileAdapter::FLOAT, m_speed);
+	characterFile.getField(std::string(JsonKeys::hAngle)).setValue(FileAdapter::FLOAT, hAngle);
+	characterFile.getField(std::string(JsonKeys::vAngle)).setValue(FileAdapter::FLOAT, vAngle);
 }
 
 bool Character::load(const FileAdapter& file) {
@@ -107,11 +107,11 @@ bool Character::load(const FileAdapter& file) {
 		return false;
 	}
 	try {
-		m_type = any_cast<int>(file.getField("type").getValue());
-		m_sensitivity = any_cast<float>(file.getField("sensitivity").getValue());
-		m_speed = any_cast<float>(file.getField("speed").getValue());
-		hAngle = any_cast<float>(file.getField("hAngle").getValue());
-		vAngle = any_cast<float>(file.getField("vAngle").getValue());
+		m_type = any_cast<int>(file.getField(std::string(JsonKeys::type)).getValue());
+		m_sensitivity = any_cast<float>(file.getField(std::string(JsonKeys::sensitivity)).getValue());
+		m_speed = any_cast<float>(file.getField(std::string(JsonKeys::speed)).getValue());
+		hAngle = any_cast<float>(file.getField(std::string(JsonKeys::hAngle)).getValue());
+		vAngle = any_cast<float>(file.getField(std::string(JsonKeys::vAngle)).getValue());
 	}
 	catch (std::bad_any_cast& e) {
 		TraceLog(LOG_DEBUG, "Character: bad_any_cast in load: %s", e.what());
