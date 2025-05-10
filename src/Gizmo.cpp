@@ -5,6 +5,8 @@ Gizmo::Gizmo(Vector3* objPosition) : Gizmo(objPosition, "data/models/arrowX.obj"
 }
 
 Gizmo::Gizmo(Vector3* objPosition, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath) : m_objPosition(objPosition) {
+	m_position = *objPosition;
+	
 	// Load arrow mesh
 	Mesh arrowX = getMeshFromModel(LoadModel(arrowXPath.c_str()), 0);
 	Mesh arrowY = getMeshFromModel(LoadModel(arrowYPath.c_str()), 0);
