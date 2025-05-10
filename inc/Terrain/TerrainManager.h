@@ -532,6 +532,37 @@ namespace Terrain {
 			// Set new elements and elements that aren't needed anymore
 			m_elements.clear();
 			m_elements = std::move(newElements);
+
+			// Set neighbours on newElements
+			for (const T& constElement : m_elements) {
+				T& newElement = const_cast<T&>(constElement);
+
+				std::array<TerrainElement*, 8> neighbours;
+				int counter = 0;
+				for (int x = -1; x <= 1; x++) {
+					for (int z = -1; z <= 1; z++) {
+						if (x == 0 && z == 0) continue;
+
+						Vector3 pos = newElement.getPosition();
+						float width = (m_terrainSettings.numWidth - 1) * m_terrainSettings.spacing;
+						float height = (m_terrainSettings.numHeight - 1) * m_terrainSettings.spacing;
+						PositionIdentifier neighbourPosId = getPositionIdentifierFromPosition({ pos.x + x * width, 0.0f, pos.z + z * height });
+						T findElement = T(neighbourPosId);
+						typename std::unordered_set<T>::const_iterator mit = m_elements.find(findElement);
+						if (mit == m_elements.cend()) {
+							neighbours[counter] = nullptr;
+						}
+						else {
+							neighbours[counter] = static_cast<TerrainElement*>(const_cast<T*>(&*mit));
+						}
+
+						counter++;
+					}
+				}
+				newElement.setNeighbours(neighbours);
+				newElement.updateNormals();
+			}
+
 			m_lockElements.unlock();
 			m_updateModel.store(true);
 

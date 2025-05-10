@@ -81,8 +81,8 @@ namespace Terrain {
 		flatTerrainTexcoords();
 	}
 
-	Vector3 TerrainElement::getVertexFromIndex(int index) {
-		return { m_mesh.vertices[index * 3], m_mesh.vertices[index * 3 + 1], m_mesh.vertices[index * 3 + 2] };
+	Vector3 TerrainElement::getVertexFromIndex(int index, float* vertices) {
+		return { vertices[index * 3], vertices[index * 3 + 1], vertices[index * 3 + 2] };
 	}
 
 	void TerrainElement::addNormalToVertex(Vector3 normal, int index) {
@@ -90,6 +90,213 @@ namespace Terrain {
 		m_mesh.normals[index * 3 + 1] += normal.y;
 		m_mesh.normals[index * 3 + 2] += normal.z;
 	}
+
+	//float* TerrainElement::getExtendedVertices(const std::array<TerrainElement*, 8> neighbours) {
+	//	// Create extended vertex array with one extra row/column on each side
+	//	int extendedWidth = settings->numWidth + 2;
+	//	int extendedHeight = settings->numHeight + 2;
+	//	float* vertices = new float[extendedWidth * extendedHeight * 3];
+
+	//	// Initialize to zero
+	//	std::memset(vertices, 0, extendedWidth * extendedHeight * 3 * sizeof(float));
+
+	//	// Top left corner (i = 0)
+	//	if (neighbours[0]) {
+	//		int srcIdx = ((settings->numWidth - 1) * settings->numHeight - 2) * 3;
+	//		int dstIdx = 0;
+	//		for (int i = 0; i < 3; i++) {
+	//			vertices[dstIdx + i] = neighbours[0]->m_mesh.vertices[srcIdx + i];
+	//		}
+	//	}
+
+	//	// Top edge (i = 1)
+	//	if (neighbours[1]) {
+	//		for (int x = 0; x < settings->numWidth; x++) {
+	//			int srcIdx = ((x + 1) * settings->numHeight - 2) * 3;
+	//			int dstIdx = ((x + 1) * extendedHeight) * 3;
+	//			for (int i = 0; i < 3; i++) {
+	//				vertices[dstIdx + i] = neighbours[1]->m_mesh.vertices[srcIdx + i];
+	//			}
+	//		}
+	//	}
+
+	//	// Top right corner (i = 2)
+	//	if (neighbours[2]) {
+	//		int srcIdx = (2 * settings->numHeight - 2) * 3;
+	//		int dstIdx = ((settings->numWidth + 1) * extendedHeight) * 3;
+	//		for (int i = 0; i < 3; i++) {
+	//			vertices[dstIdx + i] = neighbours[2]->m_mesh.vertices[srcIdx + i];
+	//		}
+	//	}
+
+	//	// Left edge (i = 3)
+	//	if (neighbours[3]) {
+	//		for (int z = 0; z < settings->numHeight; z++) {
+	//			int srcIdx = ((settings->numWidth - 2) * settings->numHeight + z) * 3;
+	//			int dstIdx = (z + 1) * 3;
+	//			for (int i = 0; i < 3; i++) {
+	//				vertices[dstIdx + i] = neighbours[3]->m_mesh.vertices[srcIdx + i];
+	//			}
+	//		}
+	//	}
+
+	//	// Center (this)
+	//	for (int x = 0; x < settings->numWidth; x++) {
+	//		for (int z = 0; z < settings->numHeight; z++) {
+	//			int srcIdx = (x * settings->numHeight + z) * 3;
+	//			int dstIdx = ((x + 1) * extendedHeight + (z + 1)) * 3;
+	//			for (int i = 0; i < 3; i++) {
+	//				vertices[dstIdx + i] = m_mesh.vertices[srcIdx + i];
+	//			}
+	//		}
+	//	}
+
+	//	// Right edge (i = 4)
+	//	if (neighbours[4]) {
+	//		for (int z = 0; z < settings->numHeight; z++) {
+	//			int srcIdx = (settings->numHeight + z) * 3;
+	//			int dstIdx = ((settings->numWidth + 1) * extendedHeight + z + 1) * 3;
+	//			for (int i = 0; i < 3; i++) {
+	//				vertices[dstIdx + i] = neighbours[4]->m_mesh.vertices[srcIdx + i];
+	//			}
+	//		}
+	//	}
+
+	//	// Bottom left corner (i = 5)
+	//	if (neighbours[5]) {
+	//		int srcIdx = (((settings->numWidth - 2) * settings->numHeight) + 1) * 3;
+	//		int dstIdx = (extendedHeight - 1) * 3;
+	//		for (int i = 0; i < 3; i++) {
+	//			vertices[dstIdx + i] = neighbours[5]->m_mesh.vertices[srcIdx + i];
+	//		}
+	//	}
+
+	//	// Bottom edge (i = 6)
+	//	if (neighbours[6]) {
+	//		for (int x = 0; x < settings->numWidth; x++) {
+	//			int srcIdx = (x * settings->numHeight + 1) * 3;
+	//			int dstIdx = ((x + 2) * extendedHeight - 1) * 3;
+	//			for (int i = 0; i < 3; i++) {
+	//				vertices[dstIdx + i] = neighbours[6]->m_mesh.vertices[srcIdx + i];
+	//			}
+	//		}
+	//	}
+
+	//	// Bottom right corner (i = 7)
+	//	if (neighbours[7]) {
+	//		int srcIdx = settings->numHeight + 1;
+	//		int dstIdx = (extendedWidth * extendedHeight - 1) * 3;
+	//		for (int i = 0; i < 3; i++) {
+	//			vertices[dstIdx + i] = neighbours[7]->m_mesh.vertices[srcIdx + i];
+	//		}
+	//	}
+
+	//	return vertices;
+	//}
+
+	float* TerrainElement::getExtendedVertices(const std::array<TerrainElement*, 8> neighbours) {
+		int extendedWidth = settings->numWidth + 2;
+		int extendedHeight = settings->numHeight + 2;
+		size_t bufferSize = extendedWidth * extendedHeight * 3;
+		float* vertices = new float[bufferSize];
+	
+		// Initialize to zero
+		std::memset(vertices, 0, bufferSize * sizeof(float));
+	
+		// Top left corner (i = 0)
+		if (neighbours[0]) {
+			int srcIdx = ((settings->numWidth - 2) * settings->numHeight + (settings->numHeight - 2)) * 3;
+			int dstIdx = 0;
+			for (int i = 0; i < 3; i++) {
+				vertices[dstIdx + i] = neighbours[0]->m_mesh.vertices[srcIdx + i];
+			}
+		}
+
+		// Left edge (i = 1)
+		if (neighbours[1]) {
+			for (int z = 0; z < settings->numHeight; z++) {
+				int srcIdx = ((settings->numWidth - 2) * settings->numHeight + z) * 3;
+				int dstIdx = (z + 1) * 3;
+				for (int i = 0; i < 3; i++) {
+					vertices[dstIdx + i] = neighbours[1]->m_mesh.vertices[srcIdx + i];
+				}
+			}
+		}
+
+		// Bottom left corner (i = 2)
+		if (neighbours[2]) {
+			int srcIdx = ((settings->numWidth - 2) * settings->numHeight + 1) * 3;
+			int dstIdx = (extendedHeight - 1) * 3;
+			for (int i = 0; i < 3; i++) {
+				vertices[dstIdx + i] = neighbours[2]->m_mesh.vertices[srcIdx + i];
+			}
+		}
+
+		// Top edge (i = 3)
+		if (neighbours[3]) {
+			for (int x = 0; x < settings->numWidth; x++) {
+				int srcIdx = (x * settings->numHeight + settings->numHeight - 2) * 3;
+				int dstIdx = ((x + 1) * extendedHeight) * 3;
+				for (int i = 0; i < 3; i++) {
+					vertices[dstIdx + i] = neighbours[3]->m_mesh.vertices[srcIdx + i];
+				}
+			}
+		}
+
+		// Center (this)
+		for (int x = 0; x < settings->numWidth; x++) {
+			for (int z = 0; z < settings->numHeight; z++) {
+				int srcIdx = (x * settings->numHeight + z) * 3;
+				int dstIdx = ((x + 1) * extendedHeight + (z + 1)) * 3;
+				for (int i = 0; i < 3; i++) {
+					vertices[dstIdx + i] = m_mesh.vertices[srcIdx + i];
+				}
+			}
+		}
+
+		// Bottom edge (i = 4)
+		if (neighbours[4]) {
+			for (int x = 0; x < settings->numWidth; x++) {
+				int srcIdx = (x * settings->numHeight + 1) * 3;
+				int dstIdx = ((x + 1) * extendedHeight + extendedHeight - 1) * 3;
+				for (int i = 0; i < 3; i++) {
+					vertices[dstIdx + i] = neighbours[4]->m_mesh.vertices[srcIdx + i];
+				}
+			}
+		}
+	
+		// Top right corner (i = 5)
+		if (neighbours[5]) {
+			int srcIdx = (settings->numHeight + settings->numHeight - 2) * 3;
+			int dstIdx = ((settings->numWidth + 1) * extendedHeight) * 3;
+			for (int i = 0; i < 3; i++) {
+				vertices[dstIdx + i] = neighbours[5]->m_mesh.vertices[srcIdx + i];
+			}
+		}
+	
+		// Right edge (i = 6)
+		if (neighbours[6]) {
+			for (int z = 0; z < settings->numHeight; z++) {
+				int srcIdx = (settings->numHeight + z) * 3;
+				int dstIdx = ((settings->numWidth + 1) * extendedHeight + (z + 1)) * 3;
+				for (int i = 0; i < 3; i++) {
+					vertices[dstIdx + i] = neighbours[6]->m_mesh.vertices[srcIdx + i];
+				}
+			}
+		}
+
+		// Bottom right corner (i = 7)
+		if (neighbours[7]) {
+			int srcIdx = (settings->numHeight + 1) * 3;
+			int dstIdx = (extendedWidth * extendedHeight - 1) * 3;
+			for (int i = 0; i < 3; i++) {
+				vertices[dstIdx + i] = neighbours[7]->m_mesh.vertices[srcIdx + i];
+			}
+		}
+	
+		return vertices;
+	}
+
 
 	int TerrainElement::getIdFromPosId(PositionIdentifier posId) {
 		// Since x and z in posId are only in top right quadrant this calculates actual x and z index
@@ -117,7 +324,8 @@ namespace Terrain {
 		TraceLog(LOG_DEBUG, "TerrainElement: New element %i has been created", id);
 	}
 
-	TerrainElement::TerrainElement(PositionIdentifier posId) : posId(posId), id(getIdFromPosId(posId)) {
+	TerrainElement::TerrainElement(PositionIdentifier posId) : posId(posId) {
+		id = getIdFromPosId(posId);
 		TraceLog(LOG_DEBUG, "TerrainElement: New search element %i has been created", id);
 	}
 
@@ -210,32 +418,34 @@ namespace Terrain {
 		// Reset normals to 0
 		std::memset(m_mesh.normals, 0, m_mesh.vertexCount * 3 * sizeof(float));
 
-		// Calculate normals of internal triangles
-		for (int i = 0; i < m_mesh.triangleCount; i++) {
-			Vector3 a = getVertexFromIndex(m_mesh.indices[i * 3]);
-			Vector3 b = getVertexFromIndex(m_mesh.indices[i * 3 + 1]);
-			Vector3 c = getVertexFromIndex(m_mesh.indices[i * 3 + 2]);
+		float* vertices = getExtendedVertices(m_neighbours);
 
-			Vector3 normal = Vector3CrossProduct(Vector3Subtract(b, a), Vector3Subtract(c, a));
+		// Looping through every vertex and then calculating the normal of it (it might be better to look at every triangle but there are more triangle than those in m_mesh.indices, since we are looking at the vertices one out aswell)
+		for (int x = 0; x < settings->numWidth; x++) {
+			for (int z = 0; z < settings->numHeight; z++) {
+				int index = x * settings->numHeight + z;
+				int extendedIndex = (x + 1) * (settings->numHeight + 2) + (z + 1);
 
-			addNormalToVertex(normal, m_mesh.indices[i * 3]);
-			addNormalToVertex(normal, m_mesh.indices[i * 3 + 1]);
-			addNormalToVertex(normal, m_mesh.indices[i * 3 + 2]);
+				// Vertices
+				Vector3 a = getVertexFromIndex(extendedIndex, vertices);
+				Vector3 b = getVertexFromIndex(extendedIndex - 1, vertices); // Above
+				Vector3 c = getVertexFromIndex(extendedIndex + 1, vertices); // Below
+				Vector3 d = getVertexFromIndex(extendedIndex - (settings->numHeight + 2), vertices); // Left
+				Vector3 e = getVertexFromIndex(extendedIndex + (settings->numHeight + 2), vertices); // Right
+
+				// Normals
+				Vector3 normal1 = Vector3CrossProduct(Vector3Subtract(b, a), Vector3Subtract(d, a));
+				Vector3 normal2 = Vector3CrossProduct(Vector3Subtract(d, a), Vector3Subtract(c, a));
+				Vector3 normal3 = Vector3CrossProduct(Vector3Subtract(c, a), Vector3Subtract(e, a));
+				Vector3 normal4 = Vector3CrossProduct(Vector3Subtract(e, a), Vector3Subtract(b, a));
+
+				// Add and normalize
+				Vector3 normal = Vector3Normalize(normal1 + normal2 + normal3 + normal4);
+				addNormalToVertex(normal, index);
+			}
 		}
 
-		// Calculate effect of adjacent triangles
-		
-
-		// Normalize normals
-		for (int i = 0; i < m_mesh.vertexCount; i++) {
-			Vector3 normal = { m_mesh.normals[i * 3], m_mesh.normals[i * 3 + 1], m_mesh.normals[i * 3 + 2] };
-			
-			normal = Vector3Normalize(normal);
-
-			m_mesh.normals[i * 3] = normal.x;
-			m_mesh.normals[i * 3 + 1] = normal.y;
-			m_mesh.normals[i * 3 + 2] = normal.z;
-		}
+		delete[] vertices;
 	}
 
 	void TerrainElement::reloadMeshData() {
@@ -298,5 +508,9 @@ namespace Terrain {
 
 	std::atomic<bool>* TerrainElement::getUploadFlag() {
 		return &m_upload;
+	}
+
+	void TerrainElement::setNeighbours(std::array<TerrainElement*, 8> neighbours) {
+		m_neighbours = neighbours;
 	}
 }

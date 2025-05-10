@@ -20,7 +20,12 @@ void ModelObject::draw(Vector3 position) {
 }
 
 void ModelObject::useShader(std::string vertexShader, std::string fragmentShader, int materialId) {
-	m_model.materials[materialId].shader = LoadShader(vertexShader.c_str(), fragmentShader.c_str());
+	const char* vs = vertexShader == "" ? NULL : vertexShader.c_str();
+	const char* fs = fragmentShader == "" ? NULL : fragmentShader.c_str();
+
+	Shader shader = LoadShader(vs, fs);
+	TraceLog(LOG_DEBUG, "Shader loaded with id: %i", shader.id);
+	m_model.materials[materialId].shader = shader;
 }
 
 void ModelObject::removeShader(int materialId) {

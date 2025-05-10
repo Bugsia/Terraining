@@ -5,7 +5,19 @@ cmake_minimum_required (VERSION 3.8)
 
 set(DATA_SOURCE_DIR ${CMAKE_SOURCE_DIR}/data)
 set(DATA_DEST_DIR ${CMAKE_BINARY_DIR}/)
-file(COPY ${DATA_SOURCE_DIR} DESTINATION ${DATA_DEST_DIR})
+message(STATUS "Copying data from ${DATA_SOURCE_DIR} to ${DATA_DEST_DIR}")
+
+# Custom command to copy the data folder
+add_custom_command(
+    OUTPUT ${DATA_DEST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DATA_SOURCE_DIR} ${DATA_DEST_DIR}
+    DEPENDS ${DATA_SOURCE_DIR}
+    COMMENT "Copying data from ${DATA_SOURCE_DIR} to ${DATA_DEST_DIR}"
+)
+
+# Custom target to trigger the custom command
+add_custom_target(copy_data ALL DEPENDS ${DATA_DEST_DIR})
+
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -53,6 +65,9 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT T
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Terraining PROPERTY CXX_STANDARD 20)
 endif()
+
+# Ensure the data is copied before building the executable
+add_dependencies(Terraining copy_data)
 
 # TODO: Add tests and install targets if needed.
 # Collect all precompiled libraries in the lib directory

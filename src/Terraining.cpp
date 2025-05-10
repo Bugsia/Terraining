@@ -55,6 +55,8 @@ int main()
 	terrainManager.setCamera(&character);
 	terrainManager.setThreadPool(&pool);
 
+	terrainManager.useShader("", "data/shaders/default.frag", 0);
+
 	GuiManager guiManager = GuiManager(true);
 	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
 	guiManager.addGui(std::make_unique<DebugGui::ManipulableTerrainDebugGui>("Manipulable Terrain", terrainManager, character.getCamera()));

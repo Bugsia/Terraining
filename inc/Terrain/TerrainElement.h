@@ -4,6 +4,7 @@
 #include <memory>
 #include <atomic>
 #include <vector>
+#include <array>
 #include "MeshObject.h"
 #include "Noise.h"
 #include "ThreadPool.h"
@@ -73,6 +74,7 @@ namespace Terrain {
 		void setModelUploaded(bool* modelUploaded);
 		std::atomic<bool>* getReloadFlag();
 		std::atomic<bool>* getUploadFlag();
+		void setNeighbours(const std::array<TerrainElement*, 8> neighbours);
 
 		bool operator==(const TerrainElement& other) const {
 			return id == other.id;
@@ -85,6 +87,7 @@ namespace Terrain {
 		PositionIdentifier posId; // Used to store information about the position of a element in the terrain
 		std::atomic<bool> m_reload{ false };
 		std::atomic<bool> m_upload{ false };
+		std::array<TerrainElement*, 8> m_neighbours = std::array<TerrainElement*, 8>{ nullptr };
 
 		// Mesh
 		bool dynamicMesh = false; // True if the mesh is dynamic, false otherwise
@@ -103,8 +106,9 @@ namespace Terrain {
 		template<typename T>
 		void copyVectorToMemory(T*& dst, std::vector<T> src, bool uploaded);
 		void initialiseFlatMesh();
-		Vector3 getVertexFromIndex(int index);
+		Vector3 getVertexFromIndex(int index, float* vertices);
 		void addNormalToVertex(Vector3 normal, int index);
+		float* getExtendedVertices(const std::array<TerrainElement*, 8> neighbours);
 	};
 }
 
