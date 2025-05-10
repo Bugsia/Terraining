@@ -81,7 +81,8 @@ int main() {
 
 		DrawGrid(100, 10.0f);
 		terrainManager.draw();
-		spline.draw(character.getCamera());
+		spline.draw(settings.targetFps, character.getCamera());
+		spline.checkCollision(GetMouseRay(GetMousePosition(), character.getCamera()));
 
 		EndMode3D();
 

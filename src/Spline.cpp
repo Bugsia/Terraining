@@ -4,7 +4,7 @@
 Spline::Spline(std::vector<Vector3> points) : m_points(points) {
 }
 
-void Spline::draw(Camera& camera) {
+void Spline::draw(int targetFPS, Camera& camera) {
 	Vector3 dir = Vector3Subtract(camera.target, camera.position);
 	Vector3 right = Vector3Normalize(Vector3CrossProduct(camera.up, dir));
 	Vector3 top = Vector3Normalize(Vector3CrossProduct(right, dir)); // TODO: Calculation of top is not perfect. When looking in a line with the spline the lines is with its thin side to the camera
@@ -17,15 +17,40 @@ void Spline::draw(Camera& camera) {
 		drawSegment(p0, p1, p2, p3, top);
 
 		// Draw Sphere on control point
-		DrawSphere(p0, thickness * 5.0f, RED);
+		DrawSphere(p0, thickness * sphereMultiplier, RED);
 	}
 	// Draw Sphere on last control point
-	DrawSphere(m_points[m_points.size() - 1], thickness * 5.0f, RED);
+	DrawSphere(m_points[m_points.size() - 1], thickness * sphereMultiplier, RED);
+
+	// Draw active points
+	for (ActivePoint& point : m_activePoints) {
+		point.gizmo.update(targetFPS, camera);
+		point.gizmo.draw();
+	}
 }
 
 void Spline::checkCollision(Ray mouseRay) {
+	// Check collision with gizmo
+	for (ActivePoint& point : m_activePoints) {
+		point.gizmo.checkCollision(mouseRay);
+	}
+
 	// Check collision with control points
-	
+	if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) return; // Only check collision when mouse is pressed
+	for (int i = 0, toggle = 0; i < m_points.size(); ) {
+		Vector3 point = m_points[i];
+		RayCollision col = GetRayCollisionSphere(mouseRay, point, thickness * sphereMultiplier);
+		if (col.hit) {
+			std::vector<ActivePoint>::iterator it = std::find(m_activePoints.begin(), m_activePoints.end(), ActivePoint(i, Gizmo(&m_points[i])));
+			if (it == m_activePoints.end()) {
+				m_activePoints.emplace_back(ActivePoint(i, Gizmo(&m_points[i])));
+			}
+			else m_activePoints.erase(it);
+		}
+
+		i += toggle ? 1 : 3;
+		toggle == !toggle;
+	}
 }
 
 void Spline::addSegment(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3) {
