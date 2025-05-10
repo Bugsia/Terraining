@@ -37,6 +37,11 @@ protected:
 	bool m_drawWired;
 	bool m_drawNormals;
 
+	void setMeshCount(int meshCount);
+	void setMaterialCount(int materialCount);
+	void setMesh(int meshId, Mesh& mesh);
+	void setMaterial(int meshId, int materialId);
+	void initializeMaterials();
 	void updateBoundingBox();
 
 private:
