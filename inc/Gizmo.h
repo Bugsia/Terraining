@@ -7,14 +7,18 @@
 
 class Gizmo : Entity<Vector3>, Drawable, ModelObject, MouseCollider {
 public:
-	Gizmo(std::string arrowXPath, std::string arrowYPath, std::string arrowZPath);
+	Gizmo(float& objPosition);
+	Gizmo(float& objPosition, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath);
 
 	void draw();
-	void update(int targetFPS);
+	void update(int targetFPS, const Camera& camera);
 	void checkCollision(Ray mouseRay);
 
 private:
+	float& m_objPosition;
 	char m_hit = 0; // 0 = no hit, 1 = x hit, 2 = y hit, 3 = z hit
+	RayCollision m_mouseCollision = { 0 };
+	RayCollision m_prevMouseCollision = { 0 };
 
 	Mesh getMeshFromModel(Model model, int meshId);
 };

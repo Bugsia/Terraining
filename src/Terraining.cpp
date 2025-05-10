@@ -155,7 +155,7 @@ int main()
 		terrainManager.draw();
 		gizmo.draw();
 		gizmo.checkCollision(GetScreenToWorldRay(GetMousePosition(), character.getCamera()));
-		gizmo.update(settings.targetFps);
+		gizmo.update(settings.targetFps, character.getCamera());
 
 		EndMode3D();
 
