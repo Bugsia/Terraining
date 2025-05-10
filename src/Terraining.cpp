@@ -3,7 +3,7 @@
 
 #include "Terraining.h"
 #include "ThreadPool.h"
-#include "Gizmo.h"
+#include "Spline.h"
 #include <chrono>
 #include <thread>
 
@@ -36,79 +36,7 @@ window_settings loadWindowSettings(const FileAdapter& windowSettings) {
 	return settings;
 }
 
-int notmain()
-{
-	// Initialize window
-	const int screenWidth = 800;
-	const int screenHeight = 450;
-	InitWindow(screenWidth, screenHeight, "Raylib Custom Shader Example");
-	SetTargetFPS(60);
-
-	// Define camera
-	Camera3D camera = { 0 };
-	camera.position = Vector3({ 5.0f, 5.0f, 5.0f });
-	camera.target = Vector3({ 0.0f, 0.0f, 0.0f });
-	camera.up = Vector3({ 0.0f, 1.0f, 0.0f });
-	camera.fovy = 45.0f;
-	camera.projection = CAMERA_PERSPECTIVE;
-
-	// Load model and texture
-	Model model = LoadModelFromMesh(GenMeshCube(1.0f, 1.0f, 1.0f));
-	// Texture2D texture = LoadTexture("data/texture.png");  // Make sure this file exists
-
-	// Load custom shader
-	// Shader shader = LoadShader("data/shaders/gizmo.vs", "data/shaders/gizmo.fs");
-
-	// Get shader uniform locations
-	// int diffuseMapLoc = GetShaderLocation(shader, "texture0");
-	// int colDiffuseLoc = GetShaderLocation(shader, "colDiffuse");
-
-	// Set shader uniform values
-	// SetShaderValue(shader, diffuseMapLoc, 0, SHADER_UNIFORM_INT);  // 0 corresponds to texture unit 0
-	// Color diffuseColor = RED;
-	// Vector4 colorNormalized = {
-	// 	(float)diffuseColor.r,
-	// 	(float)diffuseColor.g,
-	// 	(float)diffuseColor.b,
-	// 	(float)diffuseColor.a
-	// };
-	// SetShaderValue(shader, colDiffuseLoc, &colorNormalized, SHADER_UNIFORM_VEC4);
-
-	// Assign texture and shader to model material
-	// model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
-	model.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
-	// model.materials[0].shader = shader;
-
-	// Main game loop
-	while (!WindowShouldClose()) {
-		// Update camera
-		UpdateCamera(&camera, CAMERA_ORBITAL);
-
-		// Draw
-		BeginDrawing();
-		ClearBackground(RAYWHITE);
-
-		BeginMode3D(camera);
-		DrawModel(model, Vector3Zero(), 1.0f, WHITE);
-		DrawGrid(10, 1.0f);
-		EndMode3D();
-
-		DrawFPS(10, 10);
-		DrawText("Cube with custom shader and diffuse map", 10, 40, 20, BLACK);
-		EndDrawing();
-	}
-
-	// Cleanup
-	UnloadModel(model);
-	// UnloadTexture(texture);
-	// UnloadShader(shader);
-	CloseWindow();
-
-	return 0;
-}
-
-int main()
-{
+int main() {
 	JSONAdapter json(SETTINGS_FILE, INDENTATION);
 
 	window_settings settings = loadWindowSettings(json.getSubElement("window_settings"));
@@ -133,7 +61,7 @@ int main()
 	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
 	guiManager.addGui(std::make_unique<DebugGui::ManipulableTerrainDebugGui>("Manipulable Terrain", terrainManager, character.getCamera()));
 
-	Gizmo gizmo("data/models/arrowX.obj", "data/models/arrowY.obj", "data/models/arrowZ.obj");
+	Spline spline({ { 0.0f, 0.0f, 0.0f }, { 10.0f, 1.0f, -10.0f }, { 2.0f, 2.0f, 2.0f }, { 3.0f, 3.0f, 3.0f } });
 
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {
@@ -153,9 +81,7 @@ int main()
 
 		DrawGrid(100, 10.0f);
 		terrainManager.draw();
-		gizmo.draw();
-		gizmo.checkCollision(GetScreenToWorldRay(GetMousePosition(), character.getCamera()));
-		gizmo.update(settings.targetFps, character.getCamera());
+		spline.draw(character.getCamera());
 
 		EndMode3D();
 
