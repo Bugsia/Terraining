@@ -7,8 +7,8 @@
 
 class Gizmo : Entity<Vector3>, Drawable, ModelObject, MouseCollider {
 public:
-	Gizmo(Vector3* objPosition);
-	Gizmo(Vector3* objPosition, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath);
+	Gizmo(Vector3* objPosition, float scale);
+	Gizmo(Vector3* objPosition, float scale, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath);
 
 	void draw();
 	void update(int targetFPS, const Camera& camera);

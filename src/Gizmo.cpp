@@ -1,12 +1,13 @@
 #include "Gizmo.h"
 #include <raymath.h>
 
-Gizmo::Gizmo(Vector3* objPosition) : Gizmo(objPosition, "data/models/arrowX.obj", "data/models/arrowY.obj", "data/models/arrowZ.obj") {
+Gizmo::Gizmo(Vector3* objPosition, float scale) : Gizmo(objPosition, scale, "data/models/arrowXNormalized.obj", "data/models/arrowYNormalized.obj", "data/models/arrowZNormalized.obj") {
 }
 
-Gizmo::Gizmo(Vector3* objPosition, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath) : m_objPosition(objPosition) {
-	m_position = *objPosition;
-	
+Gizmo::Gizmo(Vector3* objPosition, float scale, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath) : m_objPosition(objPosition) {
+	m_position = objPosition ? *objPosition : Vector3Zero();
+	m_scale = scale;
+
 	// Load arrow mesh
 	Mesh arrowX = getMeshFromModel(LoadModel(arrowXPath.c_str()), 0);
 	Mesh arrowY = getMeshFromModel(LoadModel(arrowYPath.c_str()), 0);
@@ -66,15 +67,15 @@ void Gizmo::update(int targetFPS, const Camera& camera) {
 		switch (m_hit) {
 		case 1:
 			m_position.x += distance;
-			m_objPosition->x += distance;
+			if (m_objPosition) m_objPosition->x += distance;
 			break;
 		case 2:
 			m_position.y += distance;
-			m_objPosition->y += distance;
+			if (m_objPosition) m_objPosition->y += distance;
 			break;
 		case 3:
 			m_position.z += distance;
-			m_objPosition->z += distance;
+			if (m_objPosition) m_objPosition->z += distance;
 			break;
 		}
 	}
