@@ -9,7 +9,7 @@ void Spline::draw(int targetFPS, Camera& camera) {
 	Vector3 right = Vector3Normalize(Vector3CrossProduct(camera.up, dir));
 	Vector3 top = Vector3Normalize(Vector3CrossProduct(right, dir)); // TODO: Calculation of top is not perfect. When looking in a line with the spline the lines is with its thin side to the camera
 
-	for (int i = 0; i < m_points.size(); i += 4) {
+	for (int i = 0; i < m_points.size() - 1; i += 3) {
 		Vector3 p0 = m_points[i];
 		Vector3 p1 = m_points[i + 1];
 		Vector3 p2 = m_points[i + 2];
@@ -17,23 +17,23 @@ void Spline::draw(int targetFPS, Camera& camera) {
 		drawSegment(p0, p1, p2, p3, top);
 
 		// Draw Sphere on control point
-		DrawSphere(p0, m_thickness * m_sphereMultiplier, RED);
+		if (!m_hideSpheres) DrawSphere(p0, m_thickness * m_sphereMultiplier, RED);
 	}
 	// Draw Sphere on last control point
-	DrawSphere(m_points[m_points.size() - 1], m_thickness * m_sphereMultiplier, RED);
+	if (!m_hideSpheres) DrawSphere(m_points[m_points.size() - 1], m_thickness * m_sphereMultiplier, RED);
 
 	// Draw active points
 	for (ActivePoint& point : m_activePoints) {
 		// Draw sphers of control points and lines to them
 		if (point.index > 0) {
 			drawLine(m_points[point.index - 1], m_points[point.index], top);
-			DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier, RED);
+			if(!m_hideSpheres) DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier / 2, RED);
 			point.gizmo1.update(targetFPS, camera);
 			point.gizmo1.draw();
 		}
 		if (point.index < m_points.size() - 1) {
 			drawLine(m_points[point.index], m_points[point.index + 1], top);
-			DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier, RED);
+			if (!m_hideSpheres) DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier / 2, RED);
 			point.gizmo2.update(targetFPS, camera);
 			point.gizmo2.draw();
 		}
@@ -57,14 +57,23 @@ void Spline::checkCollision(Ray mouseRay) {
 		Vector3 point = m_points[i];
 		RayCollision col = GetRayCollisionSphere(mouseRay, point, m_thickness * m_sphereMultiplier);
 		if (col.hit) {
-			Vector3* control1 = (i > 0) ? &m_points[i - 1] : nullptr;
-			Vector3* control2 = (i < m_points.size() - 1) ? &m_points[i + 1] : nullptr;
-			ActivePoint activePoint(i, Gizmo(m_thickness * m_gizmoScale, { &m_points[i], control1, control2 }), Gizmo(m_thickness * m_gizmoScale, { control1 }), Gizmo(m_thickness * m_gizmoScale, { control2 }));
-			std::vector<ActivePoint>::iterator it = std::find(m_activePoints.begin(), m_activePoints.end(), activePoint);
-			if (it == m_activePoints.end()) {
-				m_activePoints.push_back(std::move(activePoint));
+			if (i == m_points.size() - 1 && IsKeyDown(KEY_LEFT_CONTROL)) {
+				Vector3 p = m_points[i];
+				addSegment(p + Vector3({ 1.0f, 0.0f, -1.0f }), p + Vector3({ 3.0f, 0.0f, 1.0f }), p + Vector3({ 4.0f, 0.0f, 0.0f }));
 			}
-			else m_activePoints.erase(it);
+			else if (IsKeyDown(KEY_LEFT_SHIFT)) {
+				m_hideSpheres = !m_hideSpheres;
+			}
+			else {
+				Vector3* control1 = (i > 0) ? &m_points[i - 1] : nullptr;
+				Vector3* control2 = (i < m_points.size() - 1) ? &m_points[i + 1] : nullptr;
+				ActivePoint activePoint(i, Gizmo(m_thickness * m_gizmoScale, { &m_points[i], control1, control2 }), Gizmo(m_thickness * m_gizmoScale, { control1 }), Gizmo(m_thickness * m_gizmoScale, { control2 }));
+				std::vector<ActivePoint>::iterator it = std::find(m_activePoints.begin(), m_activePoints.end(), activePoint);
+				if (it == m_activePoints.end()) {
+					m_activePoints.push_back(std::move(activePoint));
+				}
+				else m_activePoints.erase(it);
+			}
 		}
 
 		i += toggle ? 1 : 3;
@@ -93,22 +102,22 @@ void Spline::drawSegment(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, Vector3
 	pointsB[index++] = prevPoint + thicknessVector;
 	pointsA[index] = prevPoint + thicknessVector;
 	pointsB[index++] = prevPoint - thicknessVector;
-	for (float t = m_resolution; t <= 1.0f; t += m_resolution) {
+	int numIterations = 1 / m_resolution; // Number of points in the segment
+	for (int i = 1; i <= numIterations; i++) {
+		float t = m_resolution * i;
 		float u = 1.0f - t;
 		Vector3 point = Vector3Scale(p0, pow(u, 3)) + Vector3Scale(p1, 3 * pow(u, 2) * t) + Vector3Scale(p2, 3 * u * pow(t, 2)) + Vector3Scale(p3, pow(t, 3));
-	
-		int factor = 1;
 
-		pointsA[index] = point - Vector3Scale(thicknessVector, factor);
-		pointsB[index++] = point + Vector3Scale(thicknessVector, factor);
-		pointsA[index] = point + Vector3Scale(thicknessVector, factor);
-		pointsB[index++] = point - Vector3Scale(thicknessVector, factor);
+		pointsA[index] = point - thicknessVector;
+		pointsB[index++] = point + thicknessVector;
+		pointsA[index] = point + thicknessVector;
+		pointsB[index++] = point - thicknessVector;
 		
 		prevPoint = point;
 	}
-	
-	DrawTriangleStrip3D(pointsA, 2 / m_resolution, BLUE);
-	DrawTriangleStrip3D(pointsB, 2 / m_resolution, BLUE);
+
+	DrawTriangleStrip3D(pointsA, 2 / m_resolution + 2, BLUE);
+	DrawTriangleStrip3D(pointsB, 2 / m_resolution + 2, BLUE);
 }
 
 void Spline::drawLine(Vector3 p0, Vector3 p1, Vector3 top) {
