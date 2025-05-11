@@ -1,13 +1,17 @@
 #include "Gizmo.h"
 #include <raymath.h>
 
-Gizmo::Gizmo(Vector3* objPosition, float scale) : Gizmo(objPosition, scale, "data/models/arrowXNormalized.obj", "data/models/arrowYNormalized.obj", "data/models/arrowZNormalized.obj") {
+/*
+* The first objPosition is also used as the gizmo position
+*/
+Gizmo::Gizmo(float scale, std::vector<Vector3*> objPositions) : Gizmo(scale, "data/models/arrowXNormalized.obj", "data/models/arrowYNormalized.obj", "data/models/arrowZNormalized.obj", objPositions) {
 }
 
-Gizmo::Gizmo(Vector3* objPosition, float scale, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath) : m_objPosition(objPosition) {
-	m_position = objPosition ? *objPosition : Vector3Zero();
+Gizmo::Gizmo(float scale, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath, std::vector<Vector3*> objPositions) : m_objPositions(objPositions) {
+	if (m_objPositions.size() > 0 && m_objPositions[0]) m_position = *m_objPositions[0];
+	else m_position = Vector3Zero();
 	m_scale = scale;
-
+	 
 	// Load arrow mesh
 	Mesh arrowX = getMeshFromModel(LoadModel(arrowXPath.c_str()), 0);
 	Mesh arrowY = getMeshFromModel(LoadModel(arrowYPath.c_str()), 0);
@@ -36,6 +40,7 @@ void Gizmo::draw() {
 }
 
 void Gizmo::update(int targetFPS, const Camera& camera) {
+	if (m_objPositions[0]) m_position = *m_objPositions[0]; // In case the position is changed by something else the gizmo will follow
 	if (m_hit) {
 		// get unit vector in direction of the hit arrow
 		Vector3 unitHitDirection = Vector3Zero();
@@ -62,22 +67,8 @@ void Gizmo::update(int targetFPS, const Camera& camera) {
 		int sign = factor < 0 ? -1 : 1; // Correct for direction
 		float screenDistance = Vector2Length(proj) * sign;
 		float distance = screenDistance / Vector2Length(dirArrow);
-		// TraceLog(LOG_INFO, "Distance: %f", distance);
-
-		switch (m_hit) {
-		case 1:
-			m_position.x += distance;
-			if (m_objPosition) m_objPosition->x += distance;
-			break;
-		case 2:
-			m_position.y += distance;
-			if (m_objPosition) m_objPosition->y += distance;
-			break;
-		case 3:
-			m_position.z += distance;
-			if (m_objPosition) m_objPosition->z += distance;
-			break;
-		}
+		Vector3 difference = Vector3Scale(unitHitDirection, distance);
+		addToPositions(difference);
 	}
 }
 
@@ -112,4 +103,11 @@ Mesh Gizmo::getMeshFromModel(Model model, int meshId) {
 		return Mesh();
 	}
 	return model.meshes[meshId];
+}
+
+void Gizmo::addToPositions(Vector3 difference) {
+	m_position = Vector3Add(m_position, difference);
+	for (Vector3* objPos : m_objPositions) {
+		if(objPos) *objPos = Vector3Add(*objPos, difference);
+	}
 }
