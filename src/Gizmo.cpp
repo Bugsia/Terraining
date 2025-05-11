@@ -78,6 +78,7 @@ void Gizmo::checkCollision(Ray mouseRay) {
 	}
 
 	mouseRay.position = Vector3Subtract(mouseRay.position, m_position);
+	mouseRay.position = Vector3Scale(mouseRay.position, 1.0f / m_scale);
 	RayCollision collision = GetRayCollisionBox(mouseRay, m_boundingBox);
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && collision.hit) {
 		// Check which arrow was hit
