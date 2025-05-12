@@ -5,20 +5,36 @@ Spline::Spline(std::vector<Vector3> points) : m_points(points) {
 }
 
 void Spline::draw(int targetFPS, Camera& camera) {
-	Vector3 dir = Vector3Subtract(camera.target, camera.position);
-	Vector3 right = Vector3Normalize(Vector3CrossProduct(camera.up, dir));
-	Vector3 top = Vector3Normalize(Vector3CrossProduct(right, dir)); // TODO: Calculation of top is not perfect. When looking in a line with the spline the lines is with its thin side to the camera
+	int numPoints = static_cast<int>(m_points.size() / 3) * (2 / m_resolution) + 2;
+	Vector3* points[2];
+	points[0] = (Vector3*)RL_CALLOC(numPoints, sizeof(Vector3));
+	points[1] = (Vector3*)RL_CALLOC(numPoints, sizeof(Vector3));
 
+	// Fill initial value
+	Vector3 thickness = Vector3Scale(Vector3Normalize(Vector3CrossProduct(Vector3Subtract(m_points[1], m_points[0]), Vector3Subtract(camera.position, m_points[0]))), m_thickness / 2);
+	points[0][0] = m_points[0] - thickness;
+	points[0][1] = m_points[0] + thickness;
+	points[1][0] = m_points[0] + thickness;
+	points[1][1] = m_points[0] - thickness;
+
+	int index = 2;
 	for (int i = 0; i < m_points.size() - 1; i += 3) {
 		Vector3 p0 = m_points[i];
 		Vector3 p1 = m_points[i + 1];
 		Vector3 p2 = m_points[i + 2];
 		Vector3 p3 = m_points[i + 3];
-		drawSegment(p0, p1, p2, p3, top);
+		// drawSegment(p0, p1, p2, p3, camera.position);
+		calculateSegmentTriangles(points, index, p0, p1, p2, p3, camera.position);
 
 		// Draw Sphere on control point
 		if (!m_hideSpheres) DrawSphere(p0, m_thickness * m_sphereMultiplier, RED);
 	}
+	DrawTriangleStrip3D(points[0], numPoints, BLUE);
+	DrawTriangleStrip3D(points[1], numPoints, BLUE);
+
+	RL_FREE(points[0]);
+	RL_FREE(points[1]);
+
 	// Draw Sphere on last control point
 	if (!m_hideSpheres) DrawSphere(m_points[m_points.size() - 1], m_thickness * m_sphereMultiplier, RED);
 
@@ -26,13 +42,13 @@ void Spline::draw(int targetFPS, Camera& camera) {
 	for (ActivePoint& point : m_activePoints) {
 		// Draw sphers of control points and lines to them
 		if (point.index > 0) {
-			drawLine(m_points[point.index - 1], m_points[point.index], top);
+			drawLine(m_points[point.index - 1], m_points[point.index], camera.position);
 			if(!m_hideSpheres) DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier / 2, RED);
 			point.gizmo1.update(targetFPS, camera);
 			point.gizmo1.draw();
 		}
 		if (point.index < m_points.size() - 1) {
-			drawLine(m_points[point.index], m_points[point.index + 1], top);
+			drawLine(m_points[point.index], m_points[point.index + 1], camera.position);
 			if (!m_hideSpheres) DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier / 2, RED);
 			point.gizmo2.update(targetFPS, camera);
 			point.gizmo2.draw();
@@ -90,42 +106,38 @@ void Spline::addSegment(Vector3 p1, Vector3 p2, Vector3 p3) {
 	m_points.push_back(p3);
 }
 
-void Spline::drawSegment(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, Vector3 top) {
-	// Draw the spline segment using line strips
+/*
+* points[] needs to be already filled with the first two points of the segment
+* index is the index of the first free point in points[]
+*/
+void Spline::calculateSegmentTriangles(Vector3* points[2], int &index, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, Vector3 camPos) {
 	Vector3 prevPoint = p0;
-	Vector3* pointsA = (Vector3*)RL_CALLOC(2 / m_resolution + 2, sizeof(Vector3)); // pointsA and pointsB are the same, but with different orientations
-	Vector3* pointsB = (Vector3*)RL_CALLOC(2 / m_resolution + 2, sizeof(Vector3));
-	Vector3 thicknessVector = Vector3Scale(top, m_thickness / 2);
 
-	int index = 0;
-	pointsA[index] = prevPoint - thicknessVector;
-	pointsB[index++] = prevPoint + thicknessVector;
-	pointsA[index] = prevPoint + thicknessVector;
-	pointsB[index++] = prevPoint - thicknessVector;
-	int numIterations = 1 / m_resolution; // Number of points in the segment
+	int numIterations = 1 / m_resolution;
 	for (int i = 1; i <= numIterations; i++) {
 		float t = m_resolution * i;
-		float u = 1.0f - t;
-		Vector3 point = Vector3Scale(p0, pow(u, 3)) + Vector3Scale(p1, 3 * pow(u, 2) * t) + Vector3Scale(p2, 3 * u * pow(t, 2)) + Vector3Scale(p3, pow(t, 3));
+		Vector3 point = evaluate(p0, p1, p2, p3, t);
 
-		pointsA[index] = point - thicknessVector;
-		pointsB[index++] = point + thicknessVector;
-		pointsA[index] = point + thicknessVector;
-		pointsB[index++] = point - thicknessVector;
-		
+		Vector3 dir = Vector3Subtract(point, prevPoint);
+		Vector3 camDir = Vector3Subtract(camPos, point);
+		Vector3 thicknessDir = Vector3CrossProduct(dir, camDir);
+		Vector3 thicknessVector = Vector3Scale(Vector3Normalize(thicknessDir), m_thickness / 2);
+
+		points[0][index] = point - thicknessVector;
+		points[1][index++] = point + thicknessVector;
+		points[0][index] = point + thicknessVector;
+		points[1][index++] = point - thicknessVector;
+
 		prevPoint = point;
 	}
-
-	DrawTriangleStrip3D(pointsA, 2 / m_resolution + 2, BLUE);
-	DrawTriangleStrip3D(pointsB, 2 / m_resolution + 2, BLUE);
 }
 
-void Spline::drawLine(Vector3 p0, Vector3 p1, Vector3 top) {
+void Spline::drawLine(Vector3 p0, Vector3 p1, Vector3 camPos) {
 	// Draw the spline segment using line strips
 	Vector3 prevPoint = p0;
 	Vector3* pointsA = (Vector3*)RL_CALLOC(2 / m_resolution + 2, sizeof(Vector3)); // pointsA and pointsB are the same, but with different orientations
 	Vector3* pointsB = (Vector3*)RL_CALLOC(2 / m_resolution + 2, sizeof(Vector3));
-	Vector3 thicknessVector = Vector3Scale(top, m_thickness / 2);
+	Vector3 thicknessVector = Vector3Scale(Vector3UnitY, m_thickness / 2);
 
 	int index = 0;
 	pointsA[index] = prevPoint - thicknessVector;
@@ -135,16 +147,24 @@ void Spline::drawLine(Vector3 p0, Vector3 p1, Vector3 top) {
 	for (float t = m_resolution; t <= 1.0f; t += m_resolution) {
 		Vector3 point = Vector3Lerp(p0, p1, t);
 
-		int factor = 1;
+		Vector3 dir = Vector3Subtract(point, prevPoint);
+		Vector3 camDir = Vector3Subtract(camPos, point);
+		Vector3 thick = Vector3CrossProduct(dir, camDir);
+		thicknessVector = Vector3Scale(Vector3Normalize(thick), m_thickness / 2);
 
-		pointsA[index] = point - Vector3Scale(thicknessVector, factor);
-		pointsB[index++] = point + Vector3Scale(thicknessVector, factor);
-		pointsA[index] = point + Vector3Scale(thicknessVector, factor);
-		pointsB[index++] = point - Vector3Scale(thicknessVector, factor);
+		pointsA[index] = point - thicknessVector;
+		pointsB[index++] = point + thicknessVector;
+		pointsA[index] = point + thicknessVector;
+		pointsB[index++] = point - thicknessVector;
 
 		prevPoint = point;
 	}
 
 	DrawTriangleStrip3D(pointsA, 2 / m_resolution, GREEN);
 	DrawTriangleStrip3D(pointsB, 2 / m_resolution, GREEN);
+}
+
+Vector3 Spline::evaluate(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
+	float u = 1.0f - t;
+	return Vector3Scale(p0, pow(u, 3)) + Vector3Scale(p1, 3 * pow(u, 2) * t) + Vector3Scale(p2, 3 * u * pow(t, 2)) + Vector3Scale(p3, pow(t, 3));
 }
