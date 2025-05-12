@@ -39,7 +39,7 @@ void Gizmo::draw() {
 	ModelObject::draw(m_position);
 }
 
-void Gizmo::update(int targetFPS, const Camera& camera) {
+Vector3 Gizmo::update(int targetFPS, const Camera& camera) {
 	if (m_objPositions[0]) m_position = *m_objPositions[0]; // In case the position is changed by something else the gizmo will follow
 	if (m_hit) {
 		// get unit vector in direction of the hit arrow
@@ -69,7 +69,11 @@ void Gizmo::update(int targetFPS, const Camera& camera) {
 		float distance = screenDistance / Vector2Length(dirArrow);
 		Vector3 difference = Vector3Scale(unitHitDirection, distance);
 		addToPositions(difference);
+		
+		return difference;
 	}
+	
+	return Vector3Zero();
 }
 
 void Gizmo::checkCollision(Ray mouseRay) {
