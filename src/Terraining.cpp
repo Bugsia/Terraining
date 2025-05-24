@@ -36,6 +36,8 @@ window_settings loadWindowSettings(const FileAdapter& windowSettings) {
 	return settings;
 }
 
+void handleMouseCollisions(Camera& camera, std::vector<MouseCollider*> objects);
+
 int main() {
 	JSONAdapter json(SETTINGS_FILE, INDENTATION);
 
@@ -63,6 +65,9 @@ int main() {
 
 	Spline spline({ { 0.0f, 0.0f, 0.0f }, { 10.0f, 1.0f, -10.0f }, { 2.0f, 2.0f, 2.0f }, { 3.0f, 3.0f, 3.0f } });
 
+	std::vector<MouseCollider*> mouseColliders;
+	mouseColliders.push_back(&spline);
+
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {
 			if (cursorActive) DisableCursor();
@@ -82,7 +87,6 @@ int main() {
 		DrawGrid(100, 10.0f);
 		terrainManager.draw();
 		spline.draw(settings.targetFps, character.getCamera());
-		spline.checkCollision(GetMouseRay(GetMousePosition(), character.getCamera()));
 
 		EndMode3D();
 
@@ -94,6 +98,8 @@ int main() {
 
 		pool.update(settings.targetFps);
 		terrainManager.update(settings.targetFps);
+
+		handleMouseCollisions(character.getCamera(), mouseColliders);
 	}
 
 	terrainManager.save(json);
@@ -101,4 +107,21 @@ int main() {
 	json.save();
 	
 	return 0;
+}
+
+void handleMouseCollisions(Camera& camera, std::vector<MouseCollider*> objects) {
+	MouseCollider::mouseCollision closestCollision = { 0.0f, nullptr };
+
+	for (MouseCollider* object : objects) {
+		MouseCollider::mouseCollision collision = object->checkCollision(GetMouseRay(GetMousePosition(), camera));
+		if (collision.distance != 0.0f && (collision.distance < closestCollision.distance || closestCollision.distance == 0.0f)) {
+			if (closestCollision.hit) *closestCollision.hit = false;
+			closestCollision = collision;
+		}
+		else if (collision.hit) *collision.hit = false;
+	}
+
+	if (closestCollision.hit && closestCollision.distance != 0.0f) {
+		*closestCollision.hit = true;
+	}
 }

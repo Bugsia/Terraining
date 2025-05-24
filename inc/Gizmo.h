@@ -14,11 +14,11 @@ public:
 	void draw();
 	void move(Vector3 change);
 	Vector3 update(int targetFPS, const Camera& camera);
-	void checkCollision(Ray mouseRay);
+	MouseCollider::mouseCollision checkCollision(Ray mouseRay);
 
 private:
 	std::vector<Vector3*> m_objPositions;
-	char m_hit = 0; // 0 = no hit, 1 = x hit, 2 = y hit, 3 = z hit
+	char m_dirHit = 0; // 0 = no hit, 1 = x hit, 2 = y hit, 3 = z hit
 	RayCollision m_mouseCollision = { 0 };
 	RayCollision m_prevMouseCollision = { 0 };
 

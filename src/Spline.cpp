@@ -67,16 +67,38 @@ void Spline::draw(int targetFPS, Camera& camera) {
 	}
 }
 
-void Spline::checkCollision(Ray mouseRay) {
+MouseCollider::mouseCollision Spline::checkCollision(Ray mouseRay) {
 	// Check collision with gizmo
+	MouseCollider::mouseCollision closestCollision = { 0.0f, nullptr };
+	MouseCollider::mouseCollision collisions[3];
 	for (ActivePoint& point : m_activePoints) {
-		point.gizmo0.checkCollision(mouseRay);
-		point.gizmo1.checkCollision(mouseRay);
-		point.gizmo2.checkCollision(mouseRay);
+		collisions[0] = point.gizmo0.checkCollision(mouseRay);
+		collisions[1] = point.gizmo1.checkCollision(mouseRay);
+		collisions[2] = point.gizmo2.checkCollision(mouseRay);
+
+		for (int i = 0; i < 3; i++) {
+			if (collisions[i].distance == -1.0f) {
+				closestCollision = collisions[i];
+				break;
+			}
+		}
+
+		if (closestCollision.distance != -1.0f) {
+			for (int i = 0; i < 3; i++) {
+				if (collisions[i].distance != 0.0f && (collisions[i].distance < closestCollision.distance || closestCollision.distance == 0.0f)) {
+					closestCollision = collisions[i];
+				}
+			}
+		}
+
+		for (int i = 0; i < 3; i++) {
+			if (collisions[i].hit && collisions[i].distance != closestCollision.distance) *collisions[i].hit = false;
+		}
 	}
 
+	// TODO: Maybe avoid doing stuff before knowing if mouseHandler gives the hit to this object
 	// Check collision with control points
-	if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) return; // Only check collision when mouse is pressed
+	if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) return closestCollision;
 	for (int i = 0, toggle = 0; i < m_points.size(); ) {
 		Vector3 point = m_points[i];
 		RayCollision col = GetRayCollisionSphere(mouseRay, point, m_thickness * m_sphereMultiplier);
@@ -105,7 +127,7 @@ void Spline::checkCollision(Ray mouseRay) {
 	}
 
 	// Check collision with control points
-	if (!IsKeyDown(KEY_LEFT_CONTROL)) return;
+	if (!IsKeyDown(KEY_LEFT_CONTROL)) return closestCollision;
 	for (ActivePoint activePoint : m_activePoints) {
 		if (activePoint.index > 0) {
 			Vector3 point = m_points[activePoint.index - 1];
@@ -118,6 +140,8 @@ void Spline::checkCollision(Ray mouseRay) {
 			if (col.hit) m_symmetrical = !m_symmetrical;
 		}
 	}
+
+	return closestCollision;
 }
 
 /*

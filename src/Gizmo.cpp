@@ -45,10 +45,10 @@ void Gizmo::move(Vector3 change) {
 
 Vector3 Gizmo::update(int targetFPS, const Camera& camera) {
 	if (m_objPositions[0]) m_position = *m_objPositions[0]; // In case the position is changed by something else the gizmo will follow
-	if (m_hit) {
+	if (m_hit && m_dirHit) {
 		// get unit vector in direction of the hit arrow
 		Vector3 unitHitDirection = Vector3Zero();
-		switch (m_hit) {
+		switch (m_dirHit) {
 		case 1:
 			unitHitDirection = Vector3({ 1.0f, 0.0f, 0.0f });
 			break;
@@ -80,9 +80,9 @@ Vector3 Gizmo::update(int targetFPS, const Camera& camera) {
 	return Vector3Zero();
 }
 
-void Gizmo::checkCollision(Ray mouseRay) {
-	if (m_hit && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-		return; // Dont lose hit while dragging
+MouseCollider::mouseCollision Gizmo::checkCollision(Ray mouseRay) {
+	if (m_hit && m_dirHit && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+		return { -1.0f, &m_hit }; // Dont lose hit while dragging
 	}
 
 	mouseRay.position = Vector3Subtract(mouseRay.position, m_position);
@@ -93,17 +93,19 @@ void Gizmo::checkCollision(Ray mouseRay) {
 		for (int i = 0; i < m_model.meshCount; i++) {
 			collision = GetRayCollisionMesh(mouseRay, m_model.meshes[i], m_model.transform);
 			if (collision.hit) {
-				m_hit = i + 1;
+				m_dirHit = i + 1;
 				if (!m_mouseCollision.hit) m_prevMouseCollision = collision;
 				else m_prevMouseCollision = m_mouseCollision;
 				m_mouseCollision = collision;
-				return;
+				return { collision.distance, &m_hit };
 			}
 		}
 	}
 
 	m_mouseCollision.hit = false;
-	m_hit = 0;
+	m_dirHit = 0;
+	m_hit = false;
+	return { 0.0f, nullptr };
 }
 
 Mesh Gizmo::getMeshFromModel(Model model, int meshId) {
