@@ -1,6 +1,7 @@
 #pragma once
+#include <raylib.h>
 
 class Drawable {
 public:
-	virtual void draw() = 0;
+	virtual void draw(Camera& camera) = 0;
 };

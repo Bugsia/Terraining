@@ -37,7 +37,7 @@ namespace Terrain {
 		virtual ~BaseTerrainManager() = default;
 		BaseTerrainManager(std::string name) : Actor<Vector3>(name) {}
 
-		virtual void draw() = 0;
+		virtual void draw(Camera& camera) = 0;
 		virtual void update(int targetFPS) = 0;
 		virtual void recalculateElementPosition() = 0;
 		virtual void recalculateElementNoise() = 0;
@@ -96,7 +96,7 @@ namespace Terrain {
 			TemplateTerrainManager(std::string name, terrain_settings terrainSettings, Noise::noise_settings noiseSettings);
 			TemplateTerrainManager(std::string name, const FileAdapter& settings);
 
-			void draw();
+			void draw(Camera& camera);
 			void update(int targetFPS);
 			void recalculateElementPosition();
 			void recalculateElementNoise();
@@ -172,7 +172,7 @@ namespace Terrain {
 		}
 
 		template <typename Derived, ElementTypes T>
-		void TemplateTerrainManager<Derived, T>::draw() {
+		void TemplateTerrainManager<Derived, T>::draw(Camera& camera) {
 			ModelObject::draw(m_position);
 		}
 

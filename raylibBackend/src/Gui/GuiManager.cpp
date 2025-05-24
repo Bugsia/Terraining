@@ -8,7 +8,7 @@ GuiManager::~GuiManager() {
 	rlImGuiShutdown();
 }
 
-void GuiManager::draw() {
+void GuiManager::draw(Camera& camera) {
 	rlImGuiBegin();
 
 	for (int i = 0; i < m_gui.size(); i++) {

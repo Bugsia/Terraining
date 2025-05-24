@@ -82,13 +82,13 @@ int main() {
 		BeginMode3D(character.getCamera());
 
 		DrawGrid(100, 10.0f);
-		terrainManager.draw();
+		terrainManager.draw(character.getCamera());
 
 		EndMode3D();
 
 		DrawFPS(10.0f, 10.0f);
 
-		guiManager.draw();
+		guiManager.draw(character.getCamera());
 
 		EndDrawing();
 

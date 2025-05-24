@@ -11,8 +11,7 @@ class Spline : Entity<Vector3>, Drawable, public MouseCollider {
 public:
 	Spline(std::vector<Vector3> points);
 
-	void draw(int targetFPS, Camera& camera);
-	void draw() {}
+	void draw(Camera& camera);
 	MouseCollider::mouseCollision checkCollision(Ray mouseRay);
 
 	void addSegment(Vector3 p1, Vector3 p2, Vector3 p3);

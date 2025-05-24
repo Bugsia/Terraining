@@ -35,7 +35,7 @@ Gizmo::Gizmo(float scale, std::string arrowXPath, std::string arrowYPath, std::s
 	updateBoundingBox();
 }
 
-void Gizmo::draw() {
+void Gizmo::draw(Camera& camera) {
 	ModelObject::draw(m_position);
 }
 

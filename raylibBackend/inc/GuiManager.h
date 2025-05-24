@@ -11,7 +11,7 @@ public:
 	GuiManager(bool darkMode);
 	~GuiManager();
 
-	void draw();
+	void draw(Camera& camera);
 	void addGui(std::unique_ptr<Gui> gui);
 
 private:

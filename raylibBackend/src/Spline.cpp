@@ -4,7 +4,7 @@
 Spline::Spline(std::vector<Vector3> points) : m_points(points) {
 }
 
-void Spline::draw(int targetFPS, Camera& camera) {
+void Spline::draw(Camera& camera) {
 	int numPoints = static_cast<int>(m_points.size() / 3) * (2 / m_resolution) + 2;
 	Vector3* points[2];
 	points[0] = (Vector3*)RL_CALLOC(numPoints, sizeof(Vector3));
@@ -44,8 +44,8 @@ void Spline::draw(int targetFPS, Camera& camera) {
 		if (point.index > 0) {
 			drawLine(m_points[point.index - 1], m_points[point.index], camera.position);
 			if(!m_hideSpheres) DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
-			Vector3 diff = point.gizmo1.update(targetFPS, camera);
-			point.gizmo1.draw();
+			Vector3 diff = point.gizmo1.update(0, camera);
+			point.gizmo1.draw(camera);
 
 			if (m_symmetrical && point.index < m_points.size() - 1) {
 				point.gizmo2.move(Vector3Scale(diff, -1));
@@ -54,16 +54,16 @@ void Spline::draw(int targetFPS, Camera& camera) {
 		if (point.index < m_points.size() - 1) {
 			drawLine(m_points[point.index], m_points[point.index + 1], camera.position);
 			if (!m_hideSpheres) DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
-			Vector3 diff = point.gizmo2.update(targetFPS, camera);
-			point.gizmo2.draw();
+			Vector3 diff = point.gizmo2.update(0, camera);
+			point.gizmo2.draw(camera);
 
 			if (m_symmetrical && point.index > 0) {
 				point.gizmo1.move(Vector3Scale(diff, -1));
 			}
 		}
 	
-		point.gizmo0.update(targetFPS, camera);
-		point.gizmo0.draw();
+		point.gizmo0.update(0, camera);
+		point.gizmo0.draw(camera);
 	}
 }
 
