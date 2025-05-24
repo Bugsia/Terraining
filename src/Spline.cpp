@@ -43,15 +43,23 @@ void Spline::draw(int targetFPS, Camera& camera) {
 		// Draw sphers of control points and lines to them
 		if (point.index > 0) {
 			drawLine(m_points[point.index - 1], m_points[point.index], camera.position);
-			if(!m_hideSpheres) DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier / 2, RED);
-			point.gizmo1.update(targetFPS, camera);
+			if(!m_hideSpheres) DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
+			Vector3 diff = point.gizmo1.update(targetFPS, camera);
 			point.gizmo1.draw();
+
+			if (m_symmetrical && point.index < m_points.size() - 1) {
+				point.gizmo2.move(Vector3Scale(diff, -1));
+			}
 		}
 		if (point.index < m_points.size() - 1) {
 			drawLine(m_points[point.index], m_points[point.index + 1], camera.position);
-			if (!m_hideSpheres) DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier / 2, RED);
-			point.gizmo2.update(targetFPS, camera);
+			if (!m_hideSpheres) DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
+			Vector3 diff = point.gizmo2.update(targetFPS, camera);
 			point.gizmo2.draw();
+
+			if (m_symmetrical && point.index > 0) {
+				point.gizmo1.move(Vector3Scale(diff, -1));
+			}
 		}
 	
 		point.gizmo0.update(targetFPS, camera);
@@ -95,6 +103,21 @@ void Spline::checkCollision(Ray mouseRay) {
 		i += toggle ? 1 : 3;
 		toggle == !toggle;
 	}
+
+	// Check collision with control points
+	if (!IsKeyDown(KEY_LEFT_CONTROL)) return;
+	for (ActivePoint activePoint : m_activePoints) {
+		if (activePoint.index > 0) {
+			Vector3 point = m_points[activePoint.index - 1];
+			RayCollision col = GetRayCollisionSphere(mouseRay, point, m_thickness * m_sphereMultiplier);
+			if (col.hit) m_symmetrical = !m_symmetrical;
+		}
+		if (activePoint.index < m_points.size() - 1) {
+			Vector3 point = m_points[activePoint.index + 1];
+			RayCollision col = GetRayCollisionSphere(mouseRay, point, m_thickness * m_sphereMultiplier);
+			if (col.hit) m_symmetrical = !m_symmetrical;
+		}
+	}
 }
 
 /*
@@ -135,9 +158,15 @@ void Spline::calculateSegmentTriangles(Vector3* points[2], int &index, Vector3 p
 void Spline::drawLine(Vector3 p0, Vector3 p1, Vector3 camPos) {
 	// Draw the spline segment using line strips
 	Vector3 prevPoint = p0;
+	Vector3 point = Vector3Lerp(p0, p1, m_resolution);
 	Vector3* pointsA = (Vector3*)RL_CALLOC(2 / m_resolution + 2, sizeof(Vector3)); // pointsA and pointsB are the same, but with different orientations
 	Vector3* pointsB = (Vector3*)RL_CALLOC(2 / m_resolution + 2, sizeof(Vector3));
-	Vector3 thicknessVector = Vector3Scale(Vector3UnitY, m_thickness / 2);
+	
+	Vector3 dir = Vector3Subtract(point, prevPoint);
+	Vector3 camDir = Vector3Subtract(camPos, point);
+	Vector3 thick = Vector3CrossProduct(dir, camDir);
+	Vector3 thicknessVector = Vector3Scale(Vector3Normalize(thick), m_thickness / 2);
+
 
 	int index = 0;
 	pointsA[index] = prevPoint - thicknessVector;
@@ -145,7 +174,7 @@ void Spline::drawLine(Vector3 p0, Vector3 p1, Vector3 camPos) {
 	pointsA[index] = prevPoint + thicknessVector;
 	pointsB[index++] = prevPoint - thicknessVector;
 	for (float t = m_resolution; t <= 1.0f; t += m_resolution) {
-		Vector3 point = Vector3Lerp(p0, p1, t);
+		point = Vector3Lerp(p0, p1, t);
 
 		Vector3 dir = Vector3Subtract(point, prevPoint);
 		Vector3 camDir = Vector3Subtract(camPos, point);

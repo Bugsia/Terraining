@@ -39,6 +39,10 @@ void Gizmo::draw() {
 	ModelObject::draw(m_position);
 }
 
+void Gizmo::move(Vector3 change) {
+	addToPositions(change);
+}
+
 Vector3 Gizmo::update(int targetFPS, const Camera& camera) {
 	if (m_objPositions[0]) m_position = *m_objPositions[0]; // In case the position is changed by something else the gizmo will follow
 	if (m_hit) {

@@ -38,6 +38,7 @@ private:
 	float m_sphereMultiplier = 2.0f; // The size of the sphere on the control points (thckness * sphereMultiplier)
 	float m_gizmoScale = 10.0f; // The scale of the gizmo relative to the thickness
 	bool m_hideSpheres = false;
+	bool m_symmetrical = true;
 
 	void calculateSegmentTriangles(Vector3* points[2], int &index, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, Vector3 camPos);
 	void drawLine(Vector3 po, Vector3 p1, Vector3 camPos);

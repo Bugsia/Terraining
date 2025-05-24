@@ -6,12 +6,13 @@
 #include "Drawable.h"
 #include "MouseCollider.h"
 
-class Gizmo : public Entity<Vector3>, Drawable, ModelObject, MouseCollider {
+class Gizmo : public Entity<Vector3>, Drawable, public ModelObject, MouseCollider {
 public:
 	Gizmo(float scale, std::vector<Vector3*> objPositions);
 	Gizmo(float scale, std::string arrowXPath, std::string arrowYPath, std::string arrowZPath, std::vector<Vector3*> objPositions);
 
 	void draw();
+	void move(Vector3 change);
 	Vector3 update(int targetFPS, const Camera& camera);
 	void checkCollision(Ray mouseRay);
 
