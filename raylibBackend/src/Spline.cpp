@@ -2,6 +2,11 @@
 #include <raymath.h>
 
 Spline::Spline(std::vector<Vector3> points) : m_points(points) {
+	if (m_points.size() == 0) {
+		TraceLog(LOG_WARNING, "Spline: Not enough points to create a spline. Falling back to default start.");
+		m_points = { { 0.0f, 0.0f, 0.0f } };
+		return;
+	}
 }
 
 void Spline::draw(Camera& camera) {
@@ -11,23 +16,28 @@ void Spline::draw(Camera& camera) {
 	points[1] = (Vector3*)RL_CALLOC(numPoints, sizeof(Vector3));
 
 	// Fill initial value
-	Vector3 thickness = Vector3Scale(Vector3Normalize(Vector3CrossProduct(Vector3Subtract(m_points[1], m_points[0]), Vector3Subtract(camera.position, m_points[0]))), m_thickness / 2);
-	points[0][0] = m_points[0] - thickness;
-	points[0][1] = m_points[0] + thickness;
-	points[1][0] = m_points[0] + thickness;
-	points[1][1] = m_points[0] - thickness;
+	Vector3 thickness = Vector3UnitY;
+	if (m_points.size() > 1) {
+		Vector3 thickness = Vector3Scale(Vector3Normalize(Vector3CrossProduct(Vector3Subtract(m_points[1], m_points[0]), Vector3Subtract(camera.position, m_points[0]))), m_thickness / 2);
+		points[0][0] = m_points[0] - thickness;
+		points[0][1] = m_points[0] + thickness;
+		points[1][0] = m_points[0] + thickness;
+		points[1][1] = m_points[0] - thickness;
+	}
 
 	int index = 2;
 	for (int i = 0; i < m_points.size() - 1; i += 3) {
-		Vector3 p0 = m_points[i];
-		Vector3 p1 = m_points[i + 1];
-		Vector3 p2 = m_points[i + 2];
-		Vector3 p3 = m_points[i + 3];
-		// drawSegment(p0, p1, p2, p3, camera.position);
-		calculateSegmentTriangles(points, index, p0, p1, p2, p3, camera.position);
+		if (m_points.size() > 1) {
+			Vector3 p0 = m_points[i];
+			Vector3 p1 = m_points[i + 1];
+			Vector3 p2 = m_points[i + 2];
+			Vector3 p3 = m_points[i + 3];
+			// drawSegment(p0, p1, p2, p3, camera.position);
+			calculateSegmentTriangles(points, index, p0, p1, p2, p3, camera.position);
+		}
 
 		// Draw Sphere on control point
-		if (!m_hideSpheres) DrawSphere(p0, m_thickness * m_sphereMultiplier, RED);
+		if (!m_hideSpheres) DrawSphere(m_points[i], m_thickness * m_sphereMultiplier, RED);
 	}
 	DrawTriangleStrip3D(points[0], numPoints, BLUE);
 	DrawTriangleStrip3D(points[1], numPoints, BLUE);
@@ -43,7 +53,7 @@ void Spline::draw(Camera& camera) {
 		// Draw sphers of control points and lines to them
 		if (point.index > 0) {
 			drawLine(m_points[point.index - 1], m_points[point.index], camera.position);
-			if(!m_hideSpheres) DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
+			DrawSphere(m_points[point.index - 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
 			Vector3 diff = point.gizmo1.update(0, camera);
 			point.gizmo1.draw(camera);
 
@@ -53,7 +63,7 @@ void Spline::draw(Camera& camera) {
 		}
 		if (point.index < m_points.size() - 1) {
 			drawLine(m_points[point.index], m_points[point.index + 1], camera.position);
-			if (!m_hideSpheres) DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
+			DrawSphere(m_points[point.index + 1], m_thickness * m_sphereMultiplier / 2, m_symmetrical ? GREEN : RED);
 			Vector3 diff = point.gizmo2.update(0, camera);
 			point.gizmo2.draw(camera);
 

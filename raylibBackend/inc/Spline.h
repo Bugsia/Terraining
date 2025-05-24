@@ -37,7 +37,7 @@ private:
 	std::vector<ActivePoint> m_activePoints;
 	float m_resolution = 0.01f; // The step between evaluations of the spline
 	float m_thickness = 0.5f; // The thickness of the spline
-	float m_sphereMultiplier = 2.0f; // The size of the sphere on the control points (thckness * sphereMultiplier)
+	float m_sphereMultiplier = 1.0f; // The size of the sphere on the control points (thckness * sphereMultiplier)
 	float m_gizmoScale = 5.0f; // The scale of the gizmo relative to the thickness
 	bool m_hideSpheres = false;
 	bool m_symmetrical = true;
