@@ -63,10 +63,7 @@ int main() {
 	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
 	guiManager.addGui(std::make_unique<DebugGui::ManipulableTerrainDebugGui>("Manipulable Terrain", terrainManager, character.getCamera()));
 
-	Spline spline({ { 0.0f, 0.0f, 0.0f }, { 10.0f, 1.0f, -10.0f }, { 2.0f, 2.0f, 2.0f }, { 3.0f, 3.0f, 3.0f } });
-
 	std::vector<MouseCollider*> mouseColliders;
-	mouseColliders.push_back(&spline);
 
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {
@@ -86,7 +83,6 @@ int main() {
 
 		DrawGrid(100, 10.0f);
 		terrainManager.draw();
-		spline.draw(settings.targetFps, character.getCamera());
 
 		EndMode3D();
 
