@@ -17,6 +17,9 @@ public:
 
 	void addSegment(Vector3 p1, Vector3 p2, Vector3 p3);
 
+	Vector3 evaluate(float loc); // Loc from 0.0f to 1.0f * numSegments
+	Vector3 evaluateNorm(float loc); // Loc from 0.0f to 1.0f
+
 private:
 	struct ActivePoint {
 		int index = 0;
@@ -36,11 +39,11 @@ private:
 	float m_resolution = 0.01f; // The step between evaluations of the spline
 	float m_thickness = 0.5f; // The thickness of the spline
 	float m_sphereMultiplier = 2.0f; // The size of the sphere on the control points (thckness * sphereMultiplier)
-	float m_gizmoScale = 10.0f; // The scale of the gizmo relative to the thickness
+	float m_gizmoScale = 5.0f; // The scale of the gizmo relative to the thickness
 	bool m_hideSpheres = false;
 	bool m_symmetrical = true;
 
 	void calculateSegmentTriangles(Vector3* points[2], int &index, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, Vector3 camPos);
 	void drawLine(Vector3 po, Vector3 p1, Vector3 camPos);
-	Vector3 evaluate(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t);
+	Vector3 evaluatePoints(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t);
 };

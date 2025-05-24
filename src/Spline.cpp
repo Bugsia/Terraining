@@ -153,6 +153,15 @@ void Spline::addSegment(Vector3 p1, Vector3 p2, Vector3 p3) {
 	m_points.push_back(p3);
 }
 
+Vector3 Spline::evaluate(float loc) {
+	int offset = static_cast<int>(loc) * 3;
+	return evaluatePoints(m_points[offset], m_points[offset + 1], m_points[offset + 2], m_points[offset + 3], loc - static_cast<int>(loc));
+}
+
+Vector3 Spline::evaluateNorm(float loc) {
+	return evaluate(loc * static_cast<int>(m_points.size() / 3));
+}
+
 /*
 * points[] needs to be already filled with the first two points of the segment
 * index is the index of the first free point in points[]
@@ -163,7 +172,7 @@ void Spline::calculateSegmentTriangles(Vector3* points[2], int &index, Vector3 p
 	int numIterations = 1 / m_resolution;
 	for (int i = 1; i <= numIterations; i++) {
 		float t = m_resolution * i;
-		Vector3 point = evaluate(p0, p1, p2, p3, t);
+		Vector3 point = evaluatePoints(p0, p1, p2, p3, t);
 
 		Vector3 dir = Vector3Subtract(point, prevPoint);
 		Vector3 camDir = Vector3Subtract(camPos, point);
@@ -217,7 +226,7 @@ void Spline::drawLine(Vector3 p0, Vector3 p1, Vector3 camPos) {
 	DrawTriangleStrip3D(pointsB, 2 / m_resolution, GREEN);
 }
 
-Vector3 Spline::evaluate(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
+Vector3 Spline::evaluatePoints(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t) {
 	float u = 1.0f - t;
 	return Vector3Scale(p0, pow(u, 3)) + Vector3Scale(p1, 3 * pow(u, 2) * t) + Vector3Scale(p2, 3 * u * pow(t, 2)) + Vector3Scale(p3, pow(t, 3));
 }
