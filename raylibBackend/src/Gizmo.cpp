@@ -12,7 +12,7 @@ Gizmo::Gizmo(float scale, std::string arrowXPath, std::string arrowYPath, std::s
 	else m_position = Vector3Zero();
 	m_scale = scale;
 	 
-	// Load arrow mesh
+	// Load arrow mesh (TODO: Only load model once for all gizmos)
 	Mesh arrowX = getMeshFromModel(LoadModel(arrowXPath.c_str()), 0);
 	Mesh arrowY = getMeshFromModel(LoadModel(arrowYPath.c_str()), 0);
 	Mesh arrowZ = getMeshFromModel(LoadModel(arrowZPath.c_str()), 0);
