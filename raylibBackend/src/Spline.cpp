@@ -172,6 +172,10 @@ Vector3 Spline::evaluateNorm(float loc) {
 	return evaluate(loc * static_cast<int>(m_points.size() / 3));
 }
 
+int Spline::getNumSegments() const {
+	return static_cast<int>(m_points.size() / 3);
+}
+
 /*
 * points[] needs to be already filled with the first two points of the segment
 * index is the index of the first free point in points[]

@@ -19,6 +19,8 @@ public:
 	Vector3 evaluate(float loc); // Loc from 0.0f to 1.0f * numSegments
 	Vector3 evaluateNorm(float loc); // Loc from 0.0f to 1.0f
 
+	int getNumSegments() const;
+
 private:
 	struct ActivePoint {
 		int index = 0;
