@@ -13,6 +13,8 @@ namespace Terrain {
 		void manipulateTerrain(ManipulableTerrainElement::ManipulateDir dir, ManipulableTerrainElement::ManipulateForm form, ManipulableTerrainElement::ManipulateType type, float strength, float radius, Vector3 position);
 		void clearDifference();
 
+		float getHeight(Vector3 position) const;
+
 		void save(FileAdapter& file) const override;
 		bool load(const FileAdapter& file) override;
 

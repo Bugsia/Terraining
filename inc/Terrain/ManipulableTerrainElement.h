@@ -21,7 +21,8 @@ namespace Terrain {
 		enum ManipulateType {
 			RAISE,
 			LOWER,
-			FLATTEN
+			FLATTEN,
+			LEVEL
 		};
 
 		~ManipulableTerrainElement();
@@ -36,6 +37,7 @@ namespace Terrain {
 		void addDifference();
 		void clearDifference();
 
+		float getHeight(Vector3 position) const;
 		const float* getDifference() const;
 		bool getHasDifference() const;
 

@@ -173,6 +173,7 @@ namespace Terrain {
 
 		template <typename Derived, ElementTypes T>
 		void TemplateTerrainManager<Derived, T>::draw(Camera& camera) {
+			setTint(BLACK);
 			ModelObject::draw(m_position);
 		}
 

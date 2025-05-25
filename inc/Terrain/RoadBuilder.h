@@ -4,17 +4,23 @@
 #include "Drawable.h"
 #include "Entity.h"
 #include "Gui.h"
+#include "MouseCollider.h"
+#include "Terrain/ManipulableTerrainManager.h"
 
-class RoadBuilder : public Drawable, public Entity<Vector3>, public Gui {
+class RoadBuilder : public Drawable, public Entity<Vector3>, public Gui, public MouseCollider {
 public:
-	RoadBuilder(Vector3 position);
+	RoadBuilder(Vector3 position, Terrain::ManipulableTerrainManager& terrain);
 
 	void draw(Camera& camera) override;
 	void update(int targetFPS) override;
 	bool render() override;
+	MouseCollider::mouseCollision checkCollision(Ray mouseRay) override;
 
 private:
-	Spline spline;
+	Terrain::ManipulableTerrainManager& m_terrain;
+	Spline m_spline;
 
 	bool m_showSpline = false;
+
+	void makeRoad();
 };

@@ -165,11 +165,12 @@ void Spline::addSegment(Vector3 p1, Vector3 p2, Vector3 p3) {
 
 Vector3 Spline::evaluate(float loc) {
 	int offset = static_cast<int>(loc) * 3;
+	if (loc != 0.0f && loc * 3 == offset) offset -= 3; // if loc is 1.0 for example sample using the 0th segment to avoid out of bound on last segment
 	return evaluatePoints(m_points[offset], m_points[offset + 1], m_points[offset + 2], m_points[offset + 3], loc - static_cast<int>(loc));
 }
 
 Vector3 Spline::evaluateNorm(float loc) {
-	return evaluate(loc * static_cast<int>(m_points.size() / 3));
+	return evaluate(loc * getNumSegments());
 }
 
 int Spline::getNumSegments() const {

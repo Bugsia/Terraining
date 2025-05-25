@@ -90,6 +90,15 @@ namespace Terrain {
 		m_hasDifference = false;
 	}
 
+	// position is in manager space and assumes that position is inside of the terrain element
+	float ManipulableTerrainElement::getHeight(Vector3 position) const {
+		Vector3 localPosition = position - m_position;
+
+		int x = static_cast<int>(localPosition.x / settings->spacing);
+		int z = static_cast<int>(localPosition.z / settings->spacing);
+		return m_mesh.vertices[(x * settings->numHeight + z) * 3 + 1];
+	}
+
 	ManipulableTerrainElement::ValidIndices ManipulableTerrainElement::getValidIndices(float radius, Vector3 position) {
 		// round position down to the nearest multiple of spacing
 		float x = static_cast<int>((position.x - radius) / settings->spacing) * settings->spacing;
@@ -176,7 +185,13 @@ namespace Terrain {
 		case ManipulateType::FLATTEN:
 			m_difference[manipulationIndex] += strengthFactor * (strength - m_mesh.vertices[manipulationIndex]);
 			m_mesh.vertices[manipulationIndex] += strengthFactor * (strength - m_mesh.vertices[manipulationIndex]);
-		break;
+			break;
+		case ManipulateType::LEVEL:
+			if (strengthFactor > 0.0f) {
+				m_difference[manipulationIndex] += strength - m_mesh.vertices[manipulationIndex];
+				m_mesh.vertices[manipulationIndex] = strength;
+			}
+			break;
 		}
 	}
 

@@ -60,7 +60,7 @@ int main() {
 
 	terrainManager.useShader("", "data/shaders/default.frag", 0);
 
-	RoadBuilder roadBuilder({ 0.0f, 0.0f, 0.0f });
+	RoadBuilder roadBuilder({ 0.0f, 0.0f, 0.0f }, terrainManager);
 
 	GuiManager guiManager = GuiManager(true);
 
@@ -70,8 +70,10 @@ int main() {
 	
 	guiManager.addGui(&terrainDebug);
 	guiManager.addGui(&manipulableTerrainDebug);
+	guiManager.addGui(&roadBuilder);
 
 	std::vector<MouseCollider*> mouseColliders;
+	mouseColliders.push_back(&roadBuilder);
 
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {
@@ -91,6 +93,7 @@ int main() {
 
 		DrawGrid(100, 10.0f);
 		terrainManager.draw(character.getCamera());
+		roadBuilder.draw(character.getCamera());
 
 		EndMode3D();
 

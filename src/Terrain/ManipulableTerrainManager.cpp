@@ -41,6 +41,18 @@ namespace Terrain {
 		}
 	}
 
+	float ManipulableTerrainManager::getHeight(Vector3 position) const {
+		PositionIdentifier posId = getPositionIdentifierFromPosition(position);
+		std::unordered_set<ManipulableTerrainElement>::const_iterator it = m_elements.find(posId);
+		
+		if (it == m_elements.cend()) {
+			TraceLog(LOG_WARNING, "TerrainManager: No manipulation found for position %f, %f, %f", position.x, position.y, position.z);
+			return std::numeric_limits<float>::quiet_NaN();
+		}
+
+		return it->getHeight(position - m_position);
+	}
+
 	void ManipulableTerrainManager::save(FileAdapter& file) const {
 		saveManipulations(file.getSubElement(m_name));
 		TemplateTerrainManager::save(file);
