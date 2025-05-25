@@ -12,10 +12,10 @@ public:
 	~GuiManager();
 
 	void draw(Camera& camera);
-	void addGui(std::unique_ptr<Gui> gui);
+	void addGui(Gui* gui);
 
 private:
-	std::vector<std::unique_ptr<Gui>> m_gui;
+	std::vector<Gui*> m_gui;
 
 	void defaultStyle();
 };

@@ -17,6 +17,7 @@ namespace DebugGui {
 		Terrain::BaseTerrainManager& m_terrain;
 		GuiManager& m_guiManager;
 		Terrain::terrain_settings m_settings;
+		NoiseDebugGui m_noiseDebugGui;
 		bool m_openNoiseGui = false;
 		bool m_settingsChange = false;
 		bool m_simpleChange = false;

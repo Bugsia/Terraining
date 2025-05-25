@@ -4,6 +4,7 @@
 #include "Terraining.h"
 #include "ThreadPool.h"
 #include "Spline.h"
+#include "Terrain/RoadBuilder.h"
 #include <chrono>
 #include <thread>
 
@@ -59,14 +60,18 @@ int main() {
 
 	terrainManager.useShader("", "data/shaders/default.frag", 0);
 
-	GuiManager guiManager = GuiManager(true);
-	guiManager.addGui(std::make_unique<DebugGui::TerrainDebugGui>("Terrain", terrainManager, guiManager));
-	guiManager.addGui(std::make_unique<DebugGui::ManipulableTerrainDebugGui>("Manipulable Terrain", terrainManager, character.getCamera()));
+	RoadBuilder roadBuilder({ 0.0f, 0.0f, 0.0f });
 
-	Spline spline({ {0.0f, 0.0f, 0.0f } });
+	GuiManager guiManager = GuiManager(true);
+
+	// Debug GUIs
+	DebugGui::TerrainDebugGui terrainDebug("Terrain", terrainManager, guiManager);
+	DebugGui::ManipulableTerrainDebugGui manipulableTerrainDebug("Manipulable Terrain", terrainManager, character.getCamera());
+	
+	guiManager.addGui(&terrainDebug);
+	guiManager.addGui(&manipulableTerrainDebug);
 
 	std::vector<MouseCollider*> mouseColliders;
-	mouseColliders.push_back(&spline);
 
 	while (!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_LEFT_ALT)) {
@@ -86,7 +91,6 @@ int main() {
 
 		DrawGrid(100, 10.0f);
 		terrainManager.draw(character.getCamera());
-		spline.draw(character.getCamera());
 
 		EndMode3D();
 

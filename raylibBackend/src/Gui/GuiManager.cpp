@@ -21,6 +21,6 @@ void GuiManager::draw(Camera& camera) {
 	rlImGuiEnd();
 }
 
-void GuiManager::addGui(std::unique_ptr<Gui> gui) {
+void GuiManager::addGui(Gui* gui) {
 	m_gui.push_back(std::move(gui));
 }
